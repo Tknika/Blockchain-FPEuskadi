@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+    {% include 'includes/head.html' %}
+    <title>Blockchain FP Euskadi | NFT bilatzailea</title>
+</head>
+<body class="bg-light">
+    {% include 'includes/menu.html' %}
+    <div class="container">
+        <main>
+            <div class="py-5 text-center">
+                <!--<img class="d-block mx-auto mb-4" src="../assets/brand/bootstrap-logo.svg" alt="" width="72" height="57">-->
+                <h2>NFT Ziurtagiri bilatzailea / Buscador de certificados NFT</h2>
+            </div>
+            <form id="form" action="" method="post">
+                <input type="hidden" id="addr" name="addr" />
+            </form>
+            <div class="col-md-12 col-lg-12">
+                {% if not total %}
+                <h4 class="mb-3">Ez zara zure "Wallet"arekin konektatu edo ez daukazu ziurtagirik / No te has conectado a tu "Wallet" o no tienes certificados</h4>
+                {% else %}
+                <h4 class="mb-3">Zure ziurtagiriak / Tus certificados</h4>
+                <table class="table table-stripped">
+                    <thead>
+                      <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Ziurtagiriaren helbidea</th>
+                        <th scope="col"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    {% for i in range(total) %}
+                      <tr>
+                        <th scope="row">{{ i+1 }}</th>
+                        <td>{{ nfts[i] }}</td>
+                        <td><a href="{{ nfts[i] }}">Deskargatu</a></td>
+                      </tr>
+                    {% endfor%}
+                    </tbody>
+                </table>
+                {% endif %} 
+            </div>
+        </main>
+        <footer class="my-5 pt-5 text-muted text-center text-small">
+            <p class="mb-1">&copy; 2022 - Tknika Blockchain FP Euskadi</p>
+        </footer>
+    </div>
+    <script src="/static/js/jquery-3.6.3.min.js"></script>
+    <script src="/static/js/bootstrap.bundle.min.js"></script> 
+    <script src="/static/js/form-validation.js"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
+    <script>
+        async function Connect(){
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            await provider.send("eth_requestAccounts",[]);
+            const address = await provider.getSigner().getAddress();
+            document.getElementById("addr").value = address;
+            document.getElementById("form").submit();
+        }
+    </script>
+</body>
+</html>

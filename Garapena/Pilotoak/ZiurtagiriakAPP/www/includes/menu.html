@@ -1,0 +1,56 @@
+    <nav class="navbar navbar-expand-lg bg-light text-bg-dark border-bottom" data-bs-theme="light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <img class="bi me-2" src="{{ url_for('static', filename = 'img/FP_euskadi.jpg') }}" height="60" role="img" aria-label="Bootstrap" />
+                <span class="fs-2 fw-bold"> Blockchain</span>
+            </a>
+            <button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon">
+                    <i class="fas fa-bars text-white"></i>
+                </span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/">Hasiera</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/jardunaldia/"><i class="fa fa-plus mr-2"></i> Jardunaldia</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/nft-bilatzailea/">Nire ziurtagiriak</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/lokalizatzailea/">Lokalizatzailea</a>
+                    </li>
+                   <!--  <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            Errezetak
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="index.html">Zerrenda</a></li>
+                            <li><a class="dropdown-item" href="#">Another action</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#">Something else here</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link disabled">Disabled</a>
+                    </li> -->
+                </ul>
+                <div class="text-end">
+                    <button id="connect" class="btn btn-primary me-md-2" onclick="Connect()">
+                        <i class="fa fa-wallet mr-2"></i>
+                        Sartu zure "wallet"-a erabiliz
+                    </button>
+                    <!-- <button type="button" class="btn btn-outline-primary me-2">Login</button>
+                    <button type="button" class="btn btn-primary">Sign-up</button> -->
+                </div>
+            </div>
+        </div>
+    </nav>

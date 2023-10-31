@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% include 'includes/head.html' %}
+    <title>Blockchain FP Euskadi | Lokalizatzailea</title>
+</head>
+<body class="bg-light">
+  {% include 'includes/menu.html' %}
+<div class="container">
+  <main>
+    {% if error %}
+    <div class="alert alert-danger my-2" role="alert">
+      Sartutako lokalizatzailea ez da zuzena / El localizador introducido es incorrecto
+    </div>
+    {% endif %}
+    <div class="py-3 text-center">
+      <h2>Lokalizatzailea</h2>
+      <p class="lead">Mesedez, sartu zure jardunaldi bertaratzeren lokalizatzailea.<br/>Por favor, introduce el localizador de tu formación.</p>
+    </div>
+    <div class="row g-3 align-items-center">
+      <!-- <div class="col-3 align-self-center border"></div> -->
+      <div class="container col-6 align-self-center border">
+        <form action="/lokalizatzailea" method="post">
+          <div class="col-12">
+            <label class="visually-hidden" for="autoSizingInputGroup">Lokalizatzailea</label>
+            <div class="input-group">
+              <div class="input-group-text">
+                <span class="fas fa-code"></span>
+              </div>
+              <input type="text" name="lokalizatzailea" class="form-control form-control-lg" id="autoSizingInputGroup" placeholder="Lokalizatzailea">
+            </div>
+          </div>
+
+          <button class="w-100 btn btn-primary btn-lg my-4" type="submit">Sartu</button>
+        </form>
+      </div>
+      <!-- <div class="col-3 border"></div> -->
+    </div>
+  </main>
+</div>
+{% include 'includes/footer.html' %}
+<!-- Bootstrap -->
+<script src="{{ url_for('static', filename = 'js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

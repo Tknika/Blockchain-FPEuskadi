@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="eu">
+<head>
+    {% include 'includes/head.html' %}
+    <title>Blockchain FP Euskadi | Hasiera</title>
+</head>
+<body class="bg-light">
+    {% include 'includes/menu.html' %}
+    <div class="container-lg">
+        <main>
+            <div class="py-2 text-center">
+                <!--<img class="d-block mx-auto mb-4" src="../assets/brand/bootstrap-logo.svg" alt="" width="72" height="57">-->
+                <h2>Jardunaldi sortzailea / Generador de eventos</h2>
+            </div>
+            <div class="col-md-12 col-lg-12">
+                <!-- <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button id="connect" class="btn btn-primary me-md-2" onclick="Connect()">
+                        <i class="fa fa-wallet mr-2"></i>
+                        Sartu zure "wallet"-a erabiliz
+                    </button>
+                </div> -->
+                <h4 class="mb-3">Formakuntzaren informazioa / Información de la formación</h4>
+                <form class="needs-validation" novalidate action="/jardunaldia/" method="post"
+                    enctype="multipart/form-data" id="formularioa">
+                    <input type="hidden" id="addr" name="addr" value="" />
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <label for="erakundea" class="form-label fw-bold">Erakunde sustatzailea / Entidad
+                                promotora</label>
+                            <!-- <input type="text" class="form-control" id="erakundea" name="erakundea" placeholder=""
+                                value="" required> -->
+                            <select class="form-select form-control" name="erakundea" id="erakundea" aria-label="Erakunde sustatzailea / Entidad
+                            promotora" required>
+                                {% for row in cursor %}                            
+                                <option value="{{ row[0] }}">{{ row[1] }}</option>
+                                {%  endfor %}                                 
+                            </select>
+                            <div class="invalid-feedback">
+                                Informazio hau bete behar da / Esta información es obligatoria.
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label for="emailea" class="form-label fw-bold">Emailea(k) / Impartidor(es)</label>
+                            <input type="text" class="form-control" id="emailea" name="emailea" placeholder="" value=""
+                                required>
+                            <div class="invalid-feedback">
+                                Informazio hau bete behar da / Esta información es obligatoria.
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label for="formakuntza" class="form-label fw-bold">Formakuntza / Formación</label>
+                            <input type="text" class="form-control" id="formakuntza" name="formakuntza" placeholder=""
+                                required>
+                            <div class="invalid-feedback">
+                                Informazio hau bete behar da / Esta información es obligatoria.
+                            </div>
+                        </div>
+                        <div class="col-8">
+                            <label for="lekua" class="form-label fw-bold">Lekua / Lugar</label>
+                            <input type="text" class="form-control" id="lekua" name="lekua" placeholder="" required>
+                            <div class="invalid-feedback">
+                                Informazio hau bete behar da / Esta información es obligatoria.
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <label for="data" class="form-label fw-bold">Data / Fecha</label>
+                            <input type="date" class="form-control" id="data" name="data" placeholder="" required>
+                            <div class="invalid-feedback">
+                                Informazio hau bete behar da / Esta información es obligatoria.
+                            </div>
+                        </div>
+                        <!-- <hr class="my-2"> -->
+                        <h4 class="mb-2">Partehartzaileak / Participantes</h4>
+                        <div class="row gy-1">
+                            <div class="col-md-12">
+                                <label for="csv" class="form-label fw-bold">CSV Fitxategia / Fichero CSV (<a
+                                        href="{{ url_for('static', filename = 'csveredua.csv') }}" download>Eredua
+                                        jaitsi / Descargar modelo</a>)</label>
+                                <input type="file" class="form-control" id="csv" name="csv" placeholder="" required
+                                    accept=".csv">
+                                <small class="text-muted">Fitxategia CSV formatuan egon behar da / El fichero tiene que
+                                    estar en formato CSV</small>
+                                <div class="invalid-feedback">
+                                    El fichero tiene que tener extensión CSV
+                                </div>
+                            </div>
+                            <hr class="my-4">
+                            <button class="w-100 btn btn-primary btn-lg" type="submit" id="botoia">Sortu jardunaldia / Crear evento</button>
+                </form>
+            </div>
+        </main>
+        
+    </div>
+    {% include 'includes/footer.html' %}
+    <script src="/static/js/jquery-3.6.3.min.js"></script>
+    <script src="/static/js/bootstrap.bundle.min.js"></script> 
+    <!-- <script src="{{ url_for('static', filename = 'js/jquery-3.6.3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename = 'js/bootstrap.bundle.min.js') }}"></script> -->
+    <script src="{{ url_for('static', filename = 'js/form-validation.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            $("#formularioa").submit(function() {
+                if (this.checkValidity() === true) {
+                    $("#botoia").prop("disabled", true);
+                    $("#botoia").html(
+                    '<i class="fa fa-spinner fa-spin"></i> Jardunaldia sortzen / Creando el evento'
+                    );
+                }
+            });
+        });
+    </script>
+</body>
+</html>

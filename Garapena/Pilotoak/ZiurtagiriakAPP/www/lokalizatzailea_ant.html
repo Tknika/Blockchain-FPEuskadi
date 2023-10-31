@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blockchain FP Euskadi | Lokalizatzailea</title>
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link href="{{ url_for('static', filename = 'fontawesome/css/fontawesome.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename = 'fontawesome/css/all.min.css') }}" rel="stylesheet">
+  <!-- icheck bootstrap -->
+  <link rel="stylesheet" href="{{ url_for('static', filename = 'css/icheck-bootstrap.min.css') }}">
+  <!-- Theme style -->
+  <link href="{{ url_for('static', filename = 'css/adminlte.min.css') }}" rel="stylesheet">
+</head>
+<!-- <body class="bg-light"> -->
+<body class="bg-light hold-transition login-page">
+  
+<div class="login-box">
+  <!-- /.login-logo -->
+  <div class="card card-outline card-primary">
+    <div class="card-header text-center">
+      <a href="index.html" class="h1">Blockchain <b>FPEuskadi</b></a>
+    </div>
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+      Sartutako lokalizatzailea ez da zuzena / El localizador introducido es incorrecto
+    </div>
+    {% endif %}
+    <div class="card-body">
+      <p class="login-box-msg">Sartu zure jardunaldi bertaratzeren lokalizatzailea</p>
+
+      <form action="/lokalizatzailea" method="post">
+        <div class="input-group mb-3">
+          <input name="lokalizatzailea" type="text" class="form-control" placeholder="Lokalizatzailea">
+          <div class="input-group-append">
+            <div class="input-group-text">
+              <span class="fas fa-code"></span>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-8">
+            <div class="icheck-primary">
+              <!-- <input type="checkbox" id="remember">
+              <label for="remember">
+                Remember Me
+              </label> -->
+            </div>
+          </div>
+          <!-- /.col -->
+          <div class="col-4">
+            <button type="submit" class="btn btn-primary btn-block">Sartu</button>
+          </div>
+          <!-- /.col -->
+        </div>
+      </form>
+    </div>
+    <!-- /.card-body -->
+  </div>
+  <!-- /.card -->
+</div>
+<!-- /.login-box -->
+{% include 'includes/footer.html' %}
+<!-- Bootstrap -->
+<script src="{{ url_for('static', filename = 'js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>
