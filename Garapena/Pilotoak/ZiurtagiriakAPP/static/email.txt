@@ -1,1 +1,7 @@
+Kaixo {izena},
+Email honen bidez egin berri duzun jardunaldiaren informazioa bidaltzen dizugu. Informazioa osoa ikusteko hurrengo botoia sakatu edo http://localhost/lokalizatzailea web orrian sartu eta bertan onako kodea sartu:
 
+{email_lok}
+
+Agurra,
+Tknika - Zamalbide Auzoa z/g - 20100 Errenteria (Gipuzkoa)
