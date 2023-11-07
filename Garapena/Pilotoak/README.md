@@ -4,6 +4,6 @@
 
 ## Instalamos las dependencias necesarias
 Necesitamos intalar las siguientes librerías en el sistema _python3-pip libssl-dev libffi-dev python3-dev build-essential python3-setuptools_
-'''
+```
 apt-get install python3-pip libssl-dev libffi-dev python3-dev build-essential python3-setuptools -y 
-'''
+```
