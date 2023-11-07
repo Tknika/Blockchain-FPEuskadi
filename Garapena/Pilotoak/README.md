@@ -5,17 +5,17 @@
 ## Instalamos las dependencias necesarias
 Necesitamos intalar las siguientes librerías en el sistema _python3-pip libssl-dev libffi-dev python3-dev build-essential python3-setuptools_
 ```
-apt-get install python3-pip libssl-dev libffi-dev python3-dev build-essential python3-setuptools -y 
+sudo apt install python3-pip libssl-dev libffi-dev python3-dev build-essential python3-setuptools -y 
 ```
 Una vez todos los paquetes estén instalados, instala un paquete de entorno virtual de Python con el siguiente comando: 
 ```
-apt-get install python3-venv -y
+sudo apt install python3-venv -y
 ```
 Para continuar, actualiza el PIP a la última versión con el siguiente comando:
 ```
-pip3 install --upgrade pip
+sudo pip3 install --upgrade pip
 ```
 También necesitarás instalar el servidor web Nginx para servir la aplicación Python. Puedes hacerlo usando el siguiente comando:
 ```
-apt-get install nginx -y
+sudo apt install nginx -y
 ```
