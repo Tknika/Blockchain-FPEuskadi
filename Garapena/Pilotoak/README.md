@@ -143,7 +143,7 @@ Para seguir, deberás crear un archivo de configuración de host virtual Nginx p
 sudo nano /etc/nginx/conf.d/flaskapp.conf
 ```
 Añade las siguientes líneas:
-```
+´´´
 server {
     listen 80;
     server_name app.example.com;
@@ -154,7 +154,7 @@ server {
 }
 ```
 Guarda y cierra el archivo y después reinicia Nginx para aplicar los cambios de configuración:
-```
+´´´
 sudo systemctl restart nginx
 ```
 ## Accede a la aplicación de Python 
