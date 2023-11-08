@@ -41,4 +41,6 @@ Para seguir, instala Flask y Gunicorn con el siguiente comando:
 # pip install wheel
 # pip install gunicorn flask
 ```
-Ahora crea una aplicación Python
+Ahora crea la aplicación Python
+
+# Falta la parte de instalar el servicio Gunicor, crear el fichero del servicio y configuración Nginx
