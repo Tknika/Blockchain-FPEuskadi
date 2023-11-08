@@ -19,3 +19,26 @@ También necesitarás instalar el servidor web Nginx para servir la aplicación 
 ```
 sudo apt install nginx -y
 ```
+
+## Crea una aplicación Python
+En esta sección, instalaremos Flask y crearemos una aplicación Python.
+
+Primero, crea un directorio para tu aplicación usando este comando:
+```
+# mkdir ~/nombre_carpeta
+```
+A continuación, cambia el directorio a tu aplicación y crea un entorno virtual de Python. Mediante el entorno virtual puedes instalar librerías que solo afectarán a tu aplicación y no a todo el sistema. De alguna forma estamos aislando las necesidades de nuestra aplicación de las que pueda tener nuestro sistema:
+```
+# cd ~/nombre_carpeta
+# python3 -m venv venv
+```
+Después, activa el entorno virtual con el comando que ves a continuación:
+```
+# source venv/bin/activate
+```
+Para seguir, instala Flask y Gunicorn con el siguiente comando:
+```
+# pip install wheel
+# pip install gunicorn flask
+```
+Ahora crea una aplicación Python
