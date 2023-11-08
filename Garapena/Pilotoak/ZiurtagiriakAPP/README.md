@@ -60,6 +60,7 @@ Ejecutamos el siguiente comando (desde la carpeta en la que está el archivo blo
 ```
 mysql -u blockchain -p blockchain < blockchain-dump.sql
 (Ten en cuenta donde estás y la ruta hasta el archivo con el volcado de la BBDD)
+(pedirá la clave)
 ```
 
 ### Instalación de librerías de Python necesarias
