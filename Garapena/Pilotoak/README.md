@@ -73,9 +73,9 @@ A continuación, desactiva tu entorno virtual Python con el siguiente comando:
 ```
 deactivate
 ```
-# Falta la parte de instalar el servicio Gunicor, crear el fichero del servicio y configuración Nginx
 ## Crea un servicio de ficheros Systemd para tu aplicación Python
 Para continuar, deberás crear un archivo de servicio systemd para administrar la aplicación Python.
+**En el ejemplo el servicio se llamará flaskapp.service pero se puede cambiar sin problema**
 Puedes crearlo con el siguiente comando:
 ```
 sudo nano /etc/systemd/system/flaskapp.service
