@@ -63,7 +63,7 @@ mysql -u blockchain -p blockchain < blockchain-dump.sql
 (pedirá la clave)
 ```
 
-### Instalación de librerías de Python necesarias
+## Instalación de librerías de Python necesarias
 La aplicación necesita de las librerías web3, mysql.connector,...
 Para instalarlas hay que ejecutar lo siguiente (**con el entorno virtual de la aplicación activado**):
 ```
