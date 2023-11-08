@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn instance to serve Flask
+After=network.target
+
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/home/ander/Blockchain/NodeRedAPP  
+Environment="PATH=/home/ander/Blockchain/NodeRedAPP/venv/bin"
+ExecStart=/home/ander/Blockchain/NodeRedAPP/venv/bin/gunicorn --bind 0.0.0.0:5001 wsgi:app
+
+[Install]
+WantedBy=multi-user.target

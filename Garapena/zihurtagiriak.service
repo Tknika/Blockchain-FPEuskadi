@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn instance to serve Flask
+After=network.target
+
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/home/ander/Blockchain/ZiurtagiriakAPP  
+Environment="PATH=/home/ander/Blockchain/ZiurtagiriakAPP/venv/bin"
+ExecStart=/home/ander/Blockchain/ZiurtagiriakAPP/venv/bin/gunicorn --bind 0.0.0.0:5000 --error-logfile /var/log/gunicorn/zihurtagiriak.log wsgi:app
+
+[Install]
+WantedBy=multi-user.target
