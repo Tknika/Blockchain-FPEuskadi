@@ -1,13 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
+// Añadidas importaciones y referencias a las últimas versiones que compilan con solidity 0.8.9
+import "@openzeppelin/contracts@4.9.3/utils/introspection/IERC165.sol";
+import "@openzeppelin/contracts@4.9.3/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts@4.9.3/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts@4.9.3/token/ERC721/extensions/IERC721Metadata.sol";
+import "@openzeppelin/contracts@4.9.3/utils/Address.sol";
+import "@openzeppelin/contracts@4.9.3/utils/Context.sol";
+import "@openzeppelin/contracts@4.9.3/utils/math/Math.sol";
+import "@openzeppelin/contracts@4.9.3/utils/math/SignedMath.sol";
+import "@openzeppelin/contracts@4.9.3/utils/Strings.sol";
+import "@openzeppelin/contracts@4.9.3/utils/introspection/ERC165.sol";
+import "@openzeppelin/contracts@4.9.3/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts@4.9.3/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts@4.9.3/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts@4.9.3/security/Pausable.sol";
+import "@openzeppelin/contracts@4.9.3/access/AccessControl.sol";
+import "@openzeppelin/contracts@4.9.3/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts@4.9.3/utils/Counters.sol";
 
 /// @custom:security-contact ander.lo@icjardin.com
 contract Ziurtagiriak is ERC721, ERC721Enumerable, ERC721URIStorage, Pausable, AccessControl, ERC721Burnable {
@@ -64,7 +75,7 @@ contract Ziurtagiriak is ERC721, ERC721Enumerable, ERC721URIStorage, Pausable, A
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721, ERC721Enumerable, AccessControl)
+        override(ERC721, ERC721Enumerable, ERC721URIStorage, AccessControl)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
