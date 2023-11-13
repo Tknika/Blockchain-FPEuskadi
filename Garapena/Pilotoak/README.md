@@ -98,8 +98,8 @@ WantedBy=multi-user.target
 ```
 Guarda y cierra el archivo y después establece la propiedad y permisos adecuados con el este comando:
 ```
-sudo chown -R root:www-data /root/flaskapp
-sudo chmod -R 775 /root/flaskapp
+sudo chown -R root:www-data /ruta_aplicacion
+sudo chmod -R 775 /ruta_aplicacion
 ```
 Para seguir, recarga el demonio systemd con el siguiente comando: 
 ```
