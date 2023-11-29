@@ -1,7 +1,9 @@
 from flask import Flask, render_template, request
 from web3 import Web3
+import os
 
 app = Flask(__name__, template_folder='www', static_url_path='/static')
+contract_addr = os.environ.get('DIRECCION_CONTRATO_ZIURTAGIRIAK')
 
 
 @app.route("/")
@@ -174,11 +176,6 @@ def post_sortu_nft_baztertu():
     addr = request.form.get('addr')
     lokalizatzailea = request.form.get('lok')
     if addr:
-        # contract_addr = "0x2362662DA14e11063357d2A50a8E5e6e2aE0c710"
-        contract_addr = "0xdfebE52983832da42c1218baC7F09E2Ba8bFa902"
-        # owner_addr = "0x8f9650D7a03C3DB40e1f9A8e520282311C1d557e"
-        
-        
         with open("static/abi/ziurtagiriak.abi", "r") as f:
             abi = f.read()
         web3 = Web3(Web3.HTTPProvider('http://192.168.10.1:8545'))
@@ -189,7 +186,8 @@ def post_sortu_nft_baztertu():
 
 	# Instantiate an Account object from your key:
 	# owner_addr = w3.eth.account.from_key(pk)
-        owner_addr = web3.eth.account.from_key("2bd4f10d3ff5469ec9276c3be7e3235d27cf74bb17692dc21fcd946e5d8a786e")
+        clave_privada = os.environ.get('CLAVE_PRIVADA_CREADOR_CONTRATO_ZIURTAGIRIAK')
+        owner_addr = web3.eth.account.from_key(clave_privada)
         #Bukatu berria
 
         # path = "http://localhost:5000/static/nft/"
@@ -262,7 +260,7 @@ def post_sortu_nft_baztertu():
             print("hola")
             # sse = contract_object.functions.safeMint(addr, uri).transact({"from": owner_addr})
             #Berria 10/11/2023
-            sse = contract_object.functions.safeMint(addr, uri).build_transaction({"from": owner_addr.address, "nonce": web3.eth.get_transaction_count(owner_addr.address),})
+            sse = contract_object.functions.safeMint(addr, uri).build_transaction({"from": owner_addr.address, "nonce": web3.eth.get_transaction_count(owner_addr.address), "maxFeePerGas": 0, "maxPriorityFeePerGas": 0})
             signed_tx = web3.eth.account.sign_transaction(sse, private_key=owner_addr.key)
 
             # Send the raw transaction:
@@ -288,8 +286,6 @@ def post_bilatzailea():
     addr = request.form.get('addr')
     print(addr)
     if addr:
-        contract_addr = "0xdfebE52983832da42c1218baC7F09E2Ba8bFa902"
-        owner_addr = "0x8f9650D7a03C3DB40e1f9A8e520282311C1d557e"
         with open("static/abi/ziurtagiriak.abi", "r") as f:
             abi = f.read()
         web3 = Web3(Web3.HTTPProvider('http://192.168.10.1:8545'))
