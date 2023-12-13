@@ -1,0 +1,30 @@
+{
+  "algorithm": "qbft",
+  "nodes": [    
+    {
+      "name": "besu_node1",
+      "client": "besu",
+      "rpcUrl": "http://besu_node1:8545",
+      "privateTxUrl": ""
+    },
+    {
+      "name": "besu_node2",
+      "client": "besu",
+      "rpcUrl": "http://besu_node2:8545",
+      "privateTxUrl": ""
+    },
+    {
+      "name": "besu_node3",
+      "client": "besu",
+      "rpcUrl": "http://besu_node3:8545",
+      "privateTxUrl": ""
+    },
+    {
+      "name": "besu_node4",
+      "client": "besu",
+      "rpcUrl": "http://besu_node4:8545",
+      "privateTxUrl": ""
+    }
+ ]
+}
+ 

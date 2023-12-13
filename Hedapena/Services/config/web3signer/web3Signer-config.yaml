@@ -1,0 +1,22 @@
+# Chain
+eth1.chain-id: 1337
+
+# Path
+data-path: "/var/lib/besu/web3signer/tmp/web3signerdata" # Path
+key-config-path: "/var/lib/besu/web3signer/keyConfigFiles"
+
+# Signing key locations
+eth1.keystores-path: "/var/lib/besu/web3signer/keys/"
+eth1.keystores-passwords-path: "/var/lib/besu/web3signer/keys/"
+
+# Filecoin network (Se está deprecando)
+#filecoin.network: "TESTNET"
+
+#Puesto por mi (03/11/2023)
+http-listen-host: "0.0.0.0"
+http-listen-port: 9000
+
+eth1.downstream-http-host: "172.16.0.60"
+eth1.downstream-http-port: 8545
+#eth2.slashing-protection-db-url: "jdbc:postgresql://localhost/web3signer"
+#eth2.network: "minimal"

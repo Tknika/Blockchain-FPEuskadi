@@ -1,0 +1,12 @@
+#metamask-account2
+type: "file-raw"
+keyType: "SECP256K1"
+privateKey: "0x8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63"
+
+--- # or specify multiple configurations in a single file by adding a triple-dash separator (---) between configurations. Con esto puedo serparar diferentes key configurations
+# en vez de tener varios archivos
+
+type: "file-keystore"
+keyType: "SECP256K1"
+keystoreFile: "/var/lib/besu/web3signer/keys/UTC--2023-11-09T20-08-50.108Z--fe3b557e8fb62b89f4916b721be55ceb828dbd73.json"
+keystorePasswordFile: "/var/lib/besu/web3signer/keys/UTC--2023-11-09T20-08-50.108Z--fe3b557e8fb62b89f4916b721be55ceb828dbd73.txt"
