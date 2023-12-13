@@ -9,7 +9,7 @@ module.exports = {
   networks: {
     besu: {
 	    allowUnlimitedContractSize: true,
-	    url: "http://localhost:21003", // Replace with the actual Besu node URL
+	    url: "http://localhost:8545", // Replace with the actual Besu node URL (default http RPC port is 8545)
 	    chainId: 1337, // Replace with the actual chain ID
 	    gasPrice: 0,
 	    gas: 0,
