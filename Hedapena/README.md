@@ -43,9 +43,9 @@ Aplicar esos cambios con `source .profile`
 ### 2.1.- Docker swarm y red virtual
 
 Asegurarnos de que al menos 4 nodos están en una red docker swarm.
-- docker swarm init --advertise-addr IP-NODO-PRINCIPAL (en nodo principal)
-- docker swarm join-token manager (en nodo 1, obtener token)
-- docker swarm join --token SWMTKN-1-… IP-NODO-PRINCIPAL:2377 (en los demás nodos)
+- docker swarm init --advertise-addr IP-PÚBLICA-NODO-PRINCIPAL (en el nodo principal)
+- docker swarm join-token manager (en el nodo principal, obtener token de manager)
+- docker swarm join --token SWMTKN-1-… **--advertise-addr IP-PÚBLICA-NODO-ACTUAL** IP-PÚBLICA-NODO-PRINCIPAL:2377 (en los demás nodos)
 
 Asegurarnos de que tenemos la red docker creada:
 - docker network create --attachable --subnet 172.16.0.0/24 --driver overlay besu_network
