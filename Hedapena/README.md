@@ -94,7 +94,10 @@ En el nodo donde queramos desplegar el servicio de monitorización bastará con 
 
 `docker compose -f docker-compose.yml up`
 
-La aplicación de monitorización estará accesible en el puerto 80 del nodo.
+La aplicación de monitorización estará accesible en el **puerto 80** del nodo. Podemos visualizarlo desde el navegador de otra máquina ejecutando este comando en un terminal y acceciendo después en el navegador a `localhost:8080`:
+
+`ssh -p 22222 -N -L 8080:localhost:80 tknika@IP-PÚBLICA-NODO`
+
 
 ## 4.- Despliegue smart-contract
 
