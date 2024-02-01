@@ -1,0 +1,55 @@
+version: '3'
+
+services:
+  web:
+    build:
+      context: ../Pilotoak/ZiurtagiriakAPP
+      dockerfile: Dockerfile
+    hostname: ziurtagiriak
+    restart: always
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    environment:
+      DIRECCION_CONTRATO_ZIURTAGIRIAK: "0x4D5D0548f967218c56696a0A550C11439ACd53DE"
+      CLAVE_PRIVADA_CREADOR_CONTRATO_ZIURTAGIRIAK: "e6a413b0e7813bec1877175e1260502405828b53e83a36e5f9df1966821a402d"
+    networks:
+      - besu_network
+
+  nginx:
+    image: nginx:latest
+    restart: always
+    ports:
+      - "80:80"
+    networks:
+      - besu_network
+    volumes:
+      - ./nginx/:/etc/nginx/
+      - ./nginx/5xx.html:/www/error_pages/5xx.html
+  db:
+    image: mariadb:latest
+    hostname: database
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: blockchain
+      #MYSQL_DATABASE: blockchain
+      #MYSQL_USER: blockchain
+      #MYSQL_PASSWORD: blockchain
+    ports:
+      - "3306:3306"
+    networks:
+      - besu_network
+    volumes:
+      - ../Pilotoak/ZiurtagiriakAPP/blockchain-dump.sql:/docker-entrypoint-initdb.d/blockchain-dump.sql
+      - db_data:/var/lib/mysql
+      #Nuevos scripts con: docker exec -i mariadb-container mysql -u root -p "your_password" < script.sql
+
+networks:
+  besu_network:
+    name: besu_network
+    driver: overlay
+    external: true
+
+volumes:
+  db_data:

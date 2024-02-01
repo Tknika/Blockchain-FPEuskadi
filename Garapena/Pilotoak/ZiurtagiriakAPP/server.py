@@ -1,8 +1,11 @@
 from flask import Flask, render_template, request
 from web3 import Web3
+import os
 
 app = Flask(__name__, template_folder='www', static_url_path='/static')
-
+contract_addr = os.environ.get('DIRECCION_CONTRATO_ZIURTAGIRIAK')
+provider = "http://besu_node3:8545"
+#to-do: definir el provider dentro de las funciones seleccionando uno cada vez
 
 @app.route("/")
 def hello_world():
@@ -11,7 +14,7 @@ def hello_world():
 @app.get("/jardunaldia/")
 def get_jardunaldia():
     import mysql.connector as con
-    bbdd = con.connect(host='localhost', database='blockchain', user='blockchain', password='blockchain', autocommit=True)
+    bbdd = con.connect(host='database', database='ziurtagiriak', user='ziurtagiriak', password='ziurtagiriak', autocommit=True)
     cursor = bbdd.cursor()
     query = "SELECT id, izena FROM erakundeak"
     cursor.execute(query)
@@ -40,7 +43,7 @@ def post_jardunaldia():
     csvFile = request.files['csv'].readlines()
     print(erakundea, emailea, formakuntza, lekua, data)
     #BBDD
-    bbdd = con.connect(host='localhost', database='blockchain', user='blockchain', password='blockchain', autocommit=True)
+    bbdd = con.connect(host='database', database='ziurtagiriak', user='ziurtagiriak', password='ziurtagiriak', autocommit=True)
     cursor = bbdd.cursor()
     query = "INSERT INTO jardunaldiak (iderakundea, emailea, formakuntza, data, lekua) VALUES (%s,%s,%s,%s,%s)"
     cursor.execute(query, (erakundea, emailea, formakuntza, data, lekua))
@@ -57,7 +60,7 @@ def post_jardunaldia():
                 linea = row.decode().split(";")
                 izena = linea[0]
                 receiver_email = linea[1]
-                receiver_email = "ander.lo@icjardin.com"
+                receiver_email = "aiza@fpzornotza.com"
                 localizador = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
                 query = "INSERT INTO partaideak (izena, emaila, lokalizatzailea, id_jardunaldia) VALUES (%s,%s,%s,%s)"
                 cursor.execute(query, (izena, receiver_email, localizador, id_jar))
@@ -94,7 +97,7 @@ def loka(lokalizatzailea):
     import mysql.connector as con
     lok = lokalizatzailea.split("-")
     if (len(lok) == 3):
-        bbdd = con.connect(host='localhost', database='blockchain', user='blockchain', password='blockchain', autocommit=True)
+        bbdd = con.connect(host='database', database='ziurtagiriak', user='ziurtagiriak', password='ziurtagiriak', autocommit=True)
         cursor = bbdd.cursor()
         query = """SELECT p.izena, p.emaila, e.izena, j.emailea, j.formakuntza, j.data, j.lekua, p.id
         FROM partaideak p, jardunaldiak j, erakundeak e
@@ -127,7 +130,7 @@ def loka(lokalizatzailea):
 def ezabatu_ziurtagiria(lokalizatzailea):
     import mysql.connector as con
     lok = lokalizatzailea.split("-")
-    bbdd = con.connect(host='localhost', database='blockchain', user='blockchain', password='blockchain', autocommit=True)
+    bbdd = con.connect(host='database', database='ziurtagiriak', user='ziurtagiriak', password='ziurtagiriak', autocommit=True)
     cursor = bbdd.cursor()
     query = "DELETE FROM partaideak WHERE %s = lokalizatzailea AND %s = id%100"
     cursor.execute(query, (lok[1], int(lok[2])))
@@ -153,7 +156,7 @@ def post_lokalizatzailea():
     return loka(lok)
     """ contract=request.form.get('contract_address')
     print(contract)
-    web3 = Web3(Web3.HTTPProvider('http://localhost:7545'))
+    web3 = Web3(Web3.HTTPProvider(provider))
 
     conexion = None
     metodos = None
@@ -170,19 +173,30 @@ def post_sortu_nft_baztertu():
     import mysql.connector as con
     from xml.dom import minidom
     import hashlib
+    from web3.middleware import geth_poa_middleware
     addr = request.form.get('addr')
     lokalizatzailea = request.form.get('lok')
     if addr:
-        contract_addr = "0x2362662DA14e11063357d2A50a8E5e6e2aE0c710"
-        owner_addr = "0x23e1369D500d5234D01e14dd2235613B3d65017a"
         with open("static/abi/ziurtagiriak.abi", "r") as f:
             abi = f.read()
-        web3 = Web3(Web3.HTTPProvider('http://localhost:7545'))
+        web3 = Web3(Web3.HTTPProvider(provider))
+        #Berria 10/11/2023
+        web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+        # Note: Never commit your key in your code! Use env variables instead:
+	# pk = os.environ.get('PRIVATE_KEY')
+
+	# Instantiate an Account object from your key:
+	# owner_addr = w3.eth.account.from_key(pk)
+        clave_privada = os.environ.get('CLAVE_PRIVADA_CREADOR_CONTRATO_ZIURTAGIRIAK')
+        
+        owner_addr = web3.eth.account.from_key(clave_privada)
+        #Bukatu berria
 
         path = "http://localhost:5000/static/nft/"
+        #path = "http://ziurtagiriak.localhost/static/nft/"
 
         lok = lokalizatzailea.split("-")
-        bbdd = con.connect(host='localhost', database='blockchain', user='blockchain', password='blockchain', autocommit=True)
+        bbdd = con.connect(host='database', database='ziurtagiriak', user='ziurtagiriak', password='ziurtagiriak', autocommit=True)
         cursor = bbdd.cursor()
         query = """SELECT p.izena, p.emaila, e.izena, j.emailea, j.formakuntza, j.data, j.lekua, p.id
         FROM partaideak p, jardunaldiak j, erakundeak e
@@ -244,9 +258,36 @@ def post_sortu_nft_baztertu():
             uri = path+xml_hash+".xml"
 
         if web3.is_connected():
+            print("Web3 conectado, direccion contrato: ", contract_addr, flush=True)
+            #print("Web3 conectado, direccion owner: ", owner_addr.address, flush=True)
             contract_object = web3.eth.contract(abi=abi, address=contract_addr)
-            sse = contract_object.functions.safeMint(addr, uri).transact({"from": owner_addr})
-            print(sse)
+            # sse = contract_object.functions.safeMint(addr, uri).transact({"from": owner_addr})
+            #Berria 10/11/2023
+            #print("Transaction count para este owner: ",  web3.eth.get_transaction_count(owner_addr.address), flush=True);
+            #print("SafeMint addr: ",  addr, flush=True);
+            #print("SafeMint uri:",  uri, flush=True);
+            
+            sse = contract_object.functions.safeMint(addr, uri).build_transaction({"from": owner_addr.address, "nonce": web3.eth.get_transaction_count(owner_addr.address), "maxFeePerGas": 0, "maxPriorityFeePerGas": 0}) 
+            #, "gas": 0, "type": 2})
+            #, "chainId": 1337})
+            #print("SafeMint realizado, clave privada owner: ", owner_addr.key, flush=True)
+            #print("Objeto contrato: ", flush=True)
+            #print(sse, flush=True)
+            #print("SafeMint realizado, clave privada owner: ", owner_addr.key, flush=True)
+            signed_tx = web3.eth.account.sign_transaction(dict(sse), private_key=owner_addr.key)
+            
+            #print("Transaccion firmada, transaccion:", flush=True)
+            #print(signed_tx, flush=True)
+            #print("Transaccion firmada, RAW transaccion:", flush=True)
+            #print(signed_tx.rawTransaction, flush=True)
+            # Send the raw transaction:
+            #assert billboard.functions.message().call() == "gm"
+            tx_hash = web3.eth.send_raw_transaction(Web3.to_hex(signed_tx.rawTransaction))
+            web3.eth.wait_for_transaction_receipt(tx_hash)
+            #assert billboard.functions.message().call() == "gn"
+            #Bukatu Berria
+            #print(sse, flush=True)
+            #print(tx_hash, flush=True)
         ezabatu_ziurtagiria(lokalizatzailea)
         return render_template("nft.html")
     else:
@@ -260,12 +301,11 @@ def get_bilatzailea():
 @app.post("/nft-bilatzailea/")
 def post_bilatzailea():
     addr = request.form.get('addr')
+    print(addr)
     if addr:
-        contract_addr = "0x2362662DA14e11063357d2A50a8E5e6e2aE0c710"
-        owner_addr = "0x23e1369D500d5234D01e14dd2235613B3d65017a"
         with open("static/abi/ziurtagiriak.abi", "r") as f:
             abi = f.read()
-        web3 = Web3(Web3.HTTPProvider('http://localhost:7545'))
+        web3 = Web3(Web3.HTTPProvider(provider))
 
         path = "http://localhost:5000/static/nft/"
         lok = ""

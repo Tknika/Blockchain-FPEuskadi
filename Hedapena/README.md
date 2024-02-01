@@ -92,11 +92,15 @@ donde X es el número de nodo en el que nos encontramos. Tras ejecutarlo en todo
 
 En el nodo donde queramos desplegar el servicio de monitorización bastará con ir a Services/config/chainlens-free/ y ejecutar:
 
-`docker compose -f docker-compose.yml up`
+`docker compose -f docker-composeX.yml up`
+
+donde X es el número de nodo donde vamos a desplegarlo. El ejemplo está hecho para el nodo 2, que se tiene que llamar 'besu_node**2**'. Hay que adaptar ese fichero y el nginx**2**.conf siguiendo el ejemplo hecho para el nodo 2. Solamente habría que sustituir el sufijo 2 por el del número de nodo en los contenidos de los ficheros.
 
 La aplicación de monitorización estará accesible en el **puerto 80** del nodo. Podemos visualizarlo desde el navegador de otra máquina ejecutando este comando en un terminal y acceciendo después en el navegador a `localhost:8080`:
 
 `ssh -p 22222 -N -L 8080:localhost:80 tknika@IP-PÚBLICA-NODO`
+
+La aplicación de monitorización también estará accesible en el servidor web si lo hemos levantado con Docker, bastará con acceder con el hostmane indicado en los ficheros Chainlens**X**.conf del sevidor.
 
 
 ## 4.- Despliegue smart-contract
@@ -105,5 +109,8 @@ Para desplegar un smart-contract en la red que hemos creado basta con ir a la m�
 
 ## 5.- Servidor web
 
+### Sin Docker
 Si queremos que un (nuevo) nodo haga de servidor web que ofrezca apliaciones que se comuniquen con el blockchain, basta con seguir los pasos descritos en el [apartado Pilotoak](https://github.com/Tknika/Blockchain-FPEuskadi/tree/main/Garapena/Pilotoak).
 
+### Con Docker
+Introducimos un nuevo servidor en la red Docker Swarm, colanmos este repositorio y ejecutamos el fichero de docker compose de la [carpeta WebServer](https://github.com/Tknika/Blockchain-FPEuskadi/tree/main/Garapena/WebServer).

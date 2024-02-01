@@ -1,75 +1,81 @@
 version: "3.6"
 services:
-  api:
+  api2:
     image: web3labs/epirus-free-api:latest
+    restart: always
+    hostname: api2
     environment:
-      - NODE_ENDPOINT=http://besu_node1:8545
-      - MONGO_CLIENT_URI=mongodb://mongodb:27017
-      - REINDEX_ENDPOINT=http://ingestion/reindex/
+      - NODE_ENDPOINT=http://besu_node2:8545
+      - MONGO_CLIENT_URI=mongodb://mongodb2:27017
+      - REINDEX_ENDPOINT=http://ingestion2/reindex/
       - MONGO_DB_NAME=epirus
       - MONGO_CREATE_INDICES=true
-      - REDIS_HOST=redis
+      - REDIS_HOST=redis2
       - REDIS_PORT=6379
     depends_on:
-      - redis 
-      - mongodb
+      - redis2 
+      - mongodb2
     networks:
       besu_network:
-        ipv4_address: 172.16.0.245
   
-  mongodb:
+  mongodb2:
     image: mongo:5.0.8
+    restart: always
+    hostname: mongodb2
     environment:
       - COMPOSE_HTTP_TIMEOUT=900
       - DOCKER_CLIENT_TIMEOUT=900
     entrypoint: mongod --bind_ip "0.0.0.0"
     networks:
       besu_network:
-        ipv4_address: 172.16.0.244
 
-  redis:
+  redis2:
     image: redis
-    restart: unless-stopped
-    container_name: redis
+    restart: always
+    hostname: redis2
+    container_name: redis2
     networks:
       besu_network:
-        ipv4_address: 172.16.0.243
 
-  web:
+  web2:
     image: web3labs/epirus-free-web:latest
+    restart: always
+    hostname: web2
     environment:
       - API_URL=/api
       - DISPLAY_NETWORK_TAB=true
     depends_on:
-      - api
+      - api2
     networks:
       besu_network:
-        ipv4_address: 172.16.0.242
   
-  ingestion:
+  ingestion2:
     image: web3labs/epirus-free-ingestion:latest
+    restart: always
+    hostname: ingestion2
     environment:
-      - NODE_ENDPOINT=http://besu_node1:8545
-      - MONGO_CLIENT_URI=mongodb://mongodb:27017
+      - NODE_ENDPOINT=http://besu_node2:8545
+      - MONGO_CLIENT_URI=mongodb://mongodb2:27017
       - MONGO_DB_NAME=epirus
     depends_on:
-      - mongodb
+      - mongodb2
     networks:
       besu_network:
-        ipv4_address: 172.16.0.241
-  nginx:
+
+  chainlens2:
     image: nginx:latest
+    restart: always
+    hostname: chainlens2
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx2.conf:/etc/nginx/nginx.conf
       - ./5xx.html:/www/error_pages/5xx.html
     ports:
-      - ${PORT:-80}:80
+      - 80:80
     depends_on:
-      - api
-      - web
+      - api2
+      - web2
     networks:
       besu_network:
-        ipv4_address: 172.16.0.240
         
 
 networks:
@@ -77,4 +83,5 @@ networks:
     name: besu_network
     driver: overlay
     external: true
+
 
