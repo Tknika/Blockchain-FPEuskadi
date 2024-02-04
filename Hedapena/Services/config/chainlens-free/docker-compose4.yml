@@ -1,0 +1,87 @@
+version: "3.6"
+services:
+  api4:
+    image: web3labs/epirus-free-api:latest
+    restart: always
+    hostname: api4
+    environment:
+      - NODE_ENDPOINT=http://besu_node4:8545
+      - MONGO_CLIENT_URI=mongodb://mongodb4:27017
+      - REINDEX_ENDPOINT=http://ingestion4/reindex/
+      - MONGO_DB_NAME=epirus
+      - MONGO_CREATE_INDICES=true
+      - REDIS_HOST=redis4
+      - REDIS_PORT=6379
+    depends_on:
+      - redis4 
+      - mongodb4
+    networks:
+      besu_network:
+  
+  mongodb4:
+    image: mongo:5.0.8
+    restart: always
+    hostname: mongodb4
+    environment:
+      - COMPOSE_HTTP_TIMEOUT=900
+      - DOCKER_CLIENT_TIMEOUT=900
+    entrypoint: mongod --bind_ip "0.0.0.0"
+    networks:
+      besu_network:
+
+  redis4:
+    image: redis
+    restart: always
+    hostname: redis4
+    container_name: redis4
+    networks:
+      besu_network:
+
+  web4:
+    image: web3labs/epirus-free-web:latest
+    restart: always
+    hostname: web4
+    environment:
+      - API_URL=/api
+      - DISPLAY_NETWORK_TAB=true
+    depends_on:
+      - api4
+    networks:
+      besu_network:
+  
+  ingestion4:
+    image: web3labs/epirus-free-ingestion:latest
+    restart: always
+    hostname: ingestion4
+    environment:
+      - NODE_ENDPOINT=http://besu_node4:8545
+      - MONGO_CLIENT_URI=mongodb://mongodb4:27017
+      - MONGO_DB_NAME=epirus
+    depends_on:
+      - mongodb4
+    networks:
+      besu_network:
+
+  chainlens4:
+    image: nginx:latest
+    restart: always
+    hostname: chainlens4
+    volumes:
+      - ./nginx4.conf:/etc/nginx/nginx.conf
+      - ./5xx.html:/www/error_pages/5xx.html
+    ports:
+      - 80:80
+    depends_on:
+      - api4
+      - web4
+    networks:
+      besu_network:
+        
+
+networks:
+  besu_network:
+    name: besu_network
+    driver: overlay
+    external: true
+
+

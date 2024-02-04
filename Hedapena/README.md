@@ -43,9 +43,9 @@ Aplicar esos cambios con `source .profile`
 ### 2.1.- Docker swarm y red virtual
 
 Asegurarnos de que al menos 4 nodos están en una red docker swarm.
-- docker swarm init --advertise-addr IP-PÚBLICA-NODO-PRINCIPAL (en el nodo principal)
-- docker swarm join-token manager (en el nodo principal, obtener token de manager)
-- docker swarm join --token SWMTKN-1-… **--advertise-addr IP-PÚBLICA-NODO-ACTUAL** IP-PÚBLICA-NODO-PRINCIPAL:2377 (en los demás nodos)
+- `docker swarm init --advertise-addr IP-PÚBLICA-NODO-PRINCIPAL`  (en el nodo principal)
+- `docker swarm join-token manager` (en el nodo principal, obtener token de manager)
+- `docker swarm join --token SWMTKN-1-… --advertise-addr IP-PÚBLICA-NODO-ACTUAL IP-PÚBLICA-NODO-PRINCIPAL:2377` (en los demás nodos)
 
 Asegurarnos de que tenemos la red docker creada:
 - docker network create --attachable --subnet 172.16.0.0/24 --driver overlay besu_network
@@ -110,7 +110,7 @@ Para desplegar un smart-contract en la red que hemos creado basta con ir a la m�
 ## 5.- Servidor web
 
 ### Sin Docker
-Si queremos que un (nuevo) nodo haga de servidor web que ofrezca apliaciones que se comuniquen con el blockchain, basta con seguir los pasos descritos en el [apartado Pilotoak](https://github.com/Tknika/Blockchain-FPEuskadi/tree/main/Garapena/Pilotoak).
+Si queremos que un (nuevo) nodo haga de servidor web que ofrezca apliaciones que se comuniquen con el blockchain, basta con seguir los pasos descritos en [este documento](https://github.com/Tknika/Blockchain-FPEuskadi/tree/main/Garapena/Pilotoak/Instalacion_servidor_web_sin_docker.md).
 
 ### Con Docker
-Introducimos un nuevo servidor en la red Docker Swarm, colanmos este repositorio y ejecutamos el fichero de docker compose de la [carpeta WebServer](https://github.com/Tknika/Blockchain-FPEuskadi/tree/main/Garapena/WebServer).
+Introducimos un nuevo servidor en la red Docker Swarm, clonamos este repositorio y ejecutamos el fichero de docker compose de la [carpeta WebServer](https://github.com/Tknika/Blockchain-FPEuskadi/tree/main/Garapena/WebServer).
