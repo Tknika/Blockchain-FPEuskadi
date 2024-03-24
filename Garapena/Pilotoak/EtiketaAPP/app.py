@@ -86,14 +86,15 @@ def edit_form(form_id):
             db.session.rollback()  # Roll back the transaction
             flash('Error: Ese número de lote ya existe.')
             forms = Form.query.filter_by(user_id=current_user.id).all()
-            return render_template('manage_forms.html', title='Editar lote', nuevo_editar='Editar lote', form=form, forms=forms)
+            return render_template('manage_forms.html', title='Procesos productivos', nuevo_editar='Editar lote', form=form, forms=forms, current_user=current_user)
         return redirect(url_for('manage_forms'))
     elif request.method == 'GET':
         form.responsable.data = form_to_edit.responsable
         form.lote.data = form_to_edit.lote
         form.fecha_elaboracion.data = form_to_edit.fecha_elaboracion
+        
     forms = Form.query.filter_by(user_id=current_user.id).all()
-    return render_template('manage_forms.html', title='Editar lote', nuevo_editar='Editar lote', form=form, forms=forms)
+    return render_template('manage_forms.html', title='Procesos productivos', nuevo_editar='Editar lote', form=form, forms=forms, current_user=current_user)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

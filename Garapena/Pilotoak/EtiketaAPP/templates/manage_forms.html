@@ -7,11 +7,13 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>{{ title }}</h1>
-    <a href="{{ url_for('logout') }}">Salir</a>
-    <hr>
+    <div class="container">
+        <h1 class="page-title">{{ title }}</h1>
+        <span>Usuario: {{ current_user.username }} &nbsp;&nbsp;<a href="{{ url_for('logout') }}" class="boton-salir">Salir</a></span>
+    </div>
     {% with messages = get_flashed_messages() %}
       {% if messages %}
+        <hr>
         <ul class="flashes">
         {% for message in messages %}
           <li>{{ message }}</li>
@@ -20,22 +22,20 @@
         <hr>
       {% endif %}
     {% endwith %}
+    <div class="forms-list">
+        <h2>Tus lotes</h2>
+        <ul>
+            {% for form in forms %}
+                <li>
+                    Responsable: {{ form.responsable }}, Lote: {{ form.lote }}, Fecha: {{ form.fecha_elaboracion.strftime('%Y-%m-%d') }}
+                    <a href="{{ url_for('edit_form', form_id=form.id) }}">Editar</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                </li>
+            {% else %}
+                <li>No se han encontrado lotes</li>
+            {% endfor %}
+        </ul>
+    </div>
     <div class="form-container">
-        <hr>
-        <div class="forms-list">
-            <h2>Tus lotes</h2>
-            <ul>
-                {% for form in forms %}
-                    <li>
-                        Responsable: {{ form.responsable }}, Lote: {{ form.lote }}, Fecha: {{ form.fecha_elaboracion.strftime('%d-%m-%Y') }}
-                        <a href="{{ url_for('edit_form', form_id=form.id) }}">Editar</a>&nbsp;&nbsp;&nbsp;&nbsp;
-                    </li>
-                {% else %}
-                    <li>No se han encontrado lotes</li>
-                {% endfor %}
-            </ul>
-        </div>
-        <hr>
         <h2>{{ nuevo_editar }}</h2>
         <form action="" method="post">
             {{ form.hidden_tag() }}

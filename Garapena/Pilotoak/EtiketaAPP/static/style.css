@@ -5,7 +5,12 @@ body {
     padding: 0;
     background-color: #f4f4f4;
 }
-
+/* Header styling */
+.page-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 /* Container for login and manage forms */
 .container, .form-container, .forms-list {
     width: 80%;
@@ -34,7 +39,7 @@ input[type="text"], input[type="password"], input[type="number"], input[type="da
 }
 
 /* Styling for submit button */
-input[type="submit"] {
+.boton-salir, input[type="submit"] {
     background-color: #007bff;
     color: white;
     padding: 10px 15px;

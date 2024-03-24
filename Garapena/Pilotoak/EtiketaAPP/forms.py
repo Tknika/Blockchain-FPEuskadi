@@ -9,5 +9,5 @@ class LoginForm(FlaskForm):
 class FormForm(FlaskForm):
     responsable = StringField('Responsable', validators=[DataRequired()])
     lote = IntegerField('Lote', validators=[DataRequired()])
-    fecha_elaboracion = DateField('Fecha', format='%d-%m-%Y', validators=[DataRequired()])
+    fecha_elaboracion = DateField('Fecha', format='%Y-%m-%d', validators=[DataRequired()])
     submit = SubmitField('Crear/Modificar lote')
