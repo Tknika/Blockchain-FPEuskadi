@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  web:
+  ziurtagiriak:
     build:
       context: ../Pilotoak/ZiurtagiriakAPP
       dockerfile: Dockerfile
@@ -11,14 +11,29 @@ services:
       - "5000:5000"
     depends_on:
       - db
-    environment:
-      DIRECCION_CONTRATO_ZIURTAGIRIAK: "0x4D5D0548f967218c56696a0A550C11439ACd53DE"
-      CLAVE_PRIVADA_CREADOR_CONTRATO_ZIURTAGIRIAK: "e6a413b0e7813bec1877175e1260502405828b53e83a36e5f9df1966821a402d"
+    env_file:
+      - ziurtagiriak.env
     networks:
       - besu_network
 
-  nginx:
+  etiketa:
+    build:
+      context: ../Pilotoak/EtiketaAPP
+      dockerfile: Dockerfile
+    hostname: etiketa
+    restart: always
+    ports:
+      - "5001:5001"
+    env_file:
+      - etiketa.env
+    depends_on:
+      - db
+    networks:
+      - besu_network
+
+  webserver:
     image: nginx:latest
+    hostname: webserver
     restart: always
     ports:
       - "80:80"
@@ -27,6 +42,7 @@ services:
     volumes:
       - ./nginx/:/etc/nginx/
       - ./nginx/5xx.html:/www/error_pages/5xx.html
+
   db:
     image: mariadb:latest
     hostname: database
@@ -41,7 +57,8 @@ services:
     networks:
       - besu_network
     volumes:
-      - ../Pilotoak/ZiurtagiriakAPP/blockchain-dump.sql:/docker-entrypoint-initdb.d/blockchain-dump.sql
+      - ../Pilotoak/ZiurtagiriakAPP/blockchain-dump.sql:/docker-entrypoint-initdb.d/ziurtagiriak.sql
+      - ../Pilotoak/EtiketaAPP/init_db.sql:/docker-entrypoint-initdb.d/etiketa.sql
       - db_data:/var/lib/mysql
       #Nuevos scripts con: docker exec -i mariadb-container mysql -u root -p "your_password" < script.sql
 

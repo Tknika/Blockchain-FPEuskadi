@@ -5,5 +5,5 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
     # Database configuration
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'mysql+pymysql://user:password@db:3306/appdb'
+        'mysql+pymysql://etiketa:etiketa@db:3306/etiketa'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
