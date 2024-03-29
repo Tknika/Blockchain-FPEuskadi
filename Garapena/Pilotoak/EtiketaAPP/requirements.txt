@@ -8,3 +8,4 @@ mysqlclient==2.2.4
 python-dotenv==1.0.1
 Werkzeug==3.0.1
 PyMySQL==1.1.0
+web3==6.15.0

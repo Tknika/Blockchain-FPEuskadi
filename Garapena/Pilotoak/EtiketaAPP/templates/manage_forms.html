@@ -29,6 +29,7 @@
                 <li>
                     Responsable: {{ form.responsable }}, Lote: {{ form.lote }}, Fecha: {{ form.fecha_elaboracion.strftime('%Y-%m-%d') }}
                     <a href="{{ url_for('edit_form', form_id=form.id) }}">Editar</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                    <a href="{{ url_for('record_form', form_id=form.id) }}">Registrar lote</a>
                 </li>
             {% else %}
                 <li>No se han encontrado lotes</li>

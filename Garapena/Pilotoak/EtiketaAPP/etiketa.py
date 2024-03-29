@@ -5,6 +5,9 @@ from models import db, User, Form
 from forms import LoginForm, FormForm
 from config import Config
 from sqlalchemy.exc import IntegrityError
+from web3 import Web3
+from web3.exceptions import TimeExhausted
+import os
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -15,6 +18,28 @@ bcrypt = Bcrypt(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+# Load environment variables
+etiketa_address = os.environ.get('DIRECCION_CONTRATO_ETIKETA')
+etiketaPK = os.environ.get('CLAVE_PRIVADA_CREADOR_CONTRATO_ETIKETA')
+provider = os.environ.get('WEB3_PROVIDER')
+
+# Setup Web3 connection
+web3 = Web3(Web3.HTTPProvider(provider))  # Change to your Ethereum node URL
+owner_addr = web3.eth.account.from_key(etiketaPK)
+
+# Load contract
+with open('static/abi/etiketa.abi', 'r') as f:
+    etiketa_abi = f.read()
+
+etiketa_contract = web3.eth.contract(abi=etiketa_abi, address=etiketa_address)
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    # Flash a custom message
+    flash('Necesitas iniciar sesión para acceder a esa página.', 'warning')
+    # Redirect to the login page
+    return redirect(url_for('login'))
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -96,5 +121,50 @@ def edit_form(form_id):
     forms = Form.query.filter_by(user_id=current_user.id).all()
     return render_template('manage_forms.html', title='Procesos productivos', nuevo_editar='Editar lote', form=form, forms=forms, current_user=current_user)
 
+@app.route('/record_form/<int:form_id>', methods=['GET'])
+@login_required
+def record_form(form_id):
+    form = Form.query.get_or_404(form_id)
+    if form.user_id != current_user.id:
+        flash('No tiene permiso para registrar este lote.')
+        return redirect(url_for('manage_forms'))
+
+    # Check if web3 connection is working
+    if not web3.is_connected():
+        flash('Error: No se pudo conectar con la blockchain.')
+        return redirect(url_for('manage_forms'))
+    # Prepare transaction
+    nonce = web3.eth.get_transaction_count(owner_addr.address)
+    transaction = etiketa_contract.functions.createForm(
+        form.responsable,
+        form.lote,
+        int(form.fecha_elaboracion.strftime('%s'))
+    ).build_transaction({
+        'from': owner_addr.address,
+        'nonce': nonce,
+        'chainId': 1337,
+        'maxFeePerGas': 0,
+        'maxPriorityFeePerGas': 0,
+        # 'gas': 0,  # It's recommended to not set gas to 0; let Web3.py estimate it or set a realistic limit
+        # 'type': 2  # EIP-1559 transaction type, uncomment if your network supports it and you need it
+    })
+    # Sign transaction with the private key
+    signed_txn = web3.eth.account.sign_transaction(transaction, private_key=etiketaPK)
+
+    # Send transaction
+    txn_hash = web3.eth.send_raw_transaction(Web3.to_hex(signed_txn.rawTransaction))
+    try:
+        txn_receipt = web3.eth.wait_for_transaction_receipt(txn_hash, timeout=30)
+        if txn_receipt.status != 1:
+            flash(f'Error: La transacción no se completó correctamente. Estado: {txn_receipt.status}')
+        else:
+            flash('Lote registrado públicamente con éxito.')
+    except TimeExhausted:
+        flash('Error: La transacción excedió el tiempo de espera.')
+
+    return redirect(url_for('manage_forms'))
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
+
+
