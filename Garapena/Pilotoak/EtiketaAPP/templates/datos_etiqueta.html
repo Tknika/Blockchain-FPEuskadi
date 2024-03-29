@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datos del Lote</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Información del Lote</h1>
+        <div class="form-group">
+            <strong><label>Responsable:</label></strong> {{ form_data.responsable }}
+        </div>
+        <div class="form-group">
+            <strong><label>Número de Lote:</label></strong> {{ form_data.lote }}
+        </div>
+        <div class="form-group">
+            <strong><label>Fecha de Elaboración:</label></strong> {{ form_data.fecha_elaboracion }}
+        </div>
+        <!-- <a href="{{ url_for('manage_forms') }}" class="boton-salir">Volver</a> -->
+    </div>
+</body>
+</html>

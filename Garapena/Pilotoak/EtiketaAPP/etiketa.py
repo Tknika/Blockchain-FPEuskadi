@@ -7,6 +7,7 @@ from config import Config
 from sqlalchemy.exc import IntegrityError
 from web3 import Web3
 from web3.exceptions import TimeExhausted
+from datetime import datetime
 import os
 
 app = Flask(__name__)
@@ -23,6 +24,7 @@ login_manager.login_view = 'login'
 etiketa_address = os.environ.get('DIRECCION_CONTRATO_ETIKETA')
 etiketaPK = os.environ.get('CLAVE_PRIVADA_CREADOR_CONTRATO_ETIKETA')
 provider = os.environ.get('WEB3_PROVIDER')
+chainId = int(os.environ.get('WEB3_CHAIN_ID'))
 
 # Setup Web3 connection
 web3 = Web3(Web3.HTTPProvider(provider))  # Change to your Ethereum node URL
@@ -135,18 +137,25 @@ def record_form(form_id):
         return redirect(url_for('manage_forms'))
     # Prepare transaction
     nonce = web3.eth.get_transaction_count(owner_addr.address)
-    transaction = etiketa_contract.functions.createForm(
+    try:
+        # Check if form exists
+        etiketa_contract.functions.getForm(form.lote).call()
+        # If exists, call updateForm
+        transaction_function = etiketa_contract.functions.updateForm
+    except:
+        # If not exists, call createForm
+        transaction_function = etiketa_contract.functions.createForm
+
+    transaction = transaction_function(
         form.responsable,
         form.lote,
         int(form.fecha_elaboracion.strftime('%s'))
     ).build_transaction({
         'from': owner_addr.address,
         'nonce': nonce,
-        'chainId': 1337,
+        'chainId': chainId,
         'maxFeePerGas': 0,
         'maxPriorityFeePerGas': 0,
-        # 'gas': 0,  # It's recommended to not set gas to 0; let Web3.py estimate it or set a realistic limit
-        # 'type': 2  # EIP-1559 transaction type, uncomment if your network supports it and you need it
     })
     # Sign transaction with the private key
     signed_txn = web3.eth.account.sign_transaction(transaction, private_key=etiketaPK)
@@ -163,6 +172,21 @@ def record_form(form_id):
         flash('Error: La transacción excedió el tiempo de espera.')
 
     return redirect(url_for('manage_forms'))
+
+@app.route('/lote/<int:lote_id>', methods=['GET'])
+def show_form_data(lote_id):
+    try:
+        raw_form_data = etiketa_contract.functions.getForm(lote_id).call()
+    except:
+        message = "No hay datos disponibles para este lote."
+        return render_template('informacion.html', message=message)
+    # Convert raw data into a more suitable format for HTML processing
+    form_data = {
+        'responsable': raw_form_data[0],
+        'lote': raw_form_data[1],
+        'fecha_elaboracion': datetime.utcfromtimestamp(raw_form_data[2]).strftime('%Y-%m-%d')
+    }
+    return render_template('datos_etiqueta.html', form_data=form_data)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
