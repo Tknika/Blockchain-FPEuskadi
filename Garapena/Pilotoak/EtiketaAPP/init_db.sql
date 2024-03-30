@@ -23,7 +23,7 @@ CREATE TABLE users (
 CREATE TABLE forms (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
-    lote INT NOT NULL UNIQUE,
+    lote INT UNSIGNED NOT NULL UNIQUE,
     responsable VARCHAR(255),
     fecha_elaboracion DATE,
     FOREIGN KEY (user_id) REFERENCES users(id)

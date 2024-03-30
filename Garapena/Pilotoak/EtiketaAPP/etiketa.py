@@ -188,6 +188,32 @@ def show_form_data(lote_id):
     }
     return render_template('datos_etiqueta.html', form_data=form_data)
 
+@app.route('/QR/<int:lote_id>', methods=['GET'])
+def show_qr(lote_id):
+    import qrcode
+    try:
+        # Generate QR code
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=8,
+            border=3,
+        )
+        url = f"http://etiketa.localhost/lote/{lote_id}"
+        qr.add_data(url)
+        qr.make(fit=True)
+
+        img = qr.make_image(fill_color="black", back_color="white")
+        img_path = f"static/qr_codes/qr_{lote_id}.png"
+        img.save(img_path)
+        if not isinstance(lote_id, int) or lote_id <= 0:
+            flash('Error: ID de lote inválido.')
+            return redirect(url_for('manage_forms'))
+        return render_template('show_qr.html', img_path=img_path, lote_id=lote_id, url=url)
+    except:
+        flash('Error al generar el QR.')
+        return redirect(url_for('manage_forms'))
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
 

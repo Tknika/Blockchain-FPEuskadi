@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR lote</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>QR del lote {{ lote_id }}</h1>
+        <div>
+            <img src="{{ '/' + img_path }}" alt="QR Code">
+        </div>
+        <div>
+            <a href="{{ url }}">{{ url }}</a>
+        </div>
+        <br>
+        <div>
+            <a href="{{ url_for('manage_forms') }}">Volver a los procesos productivos</a>
+        </div>
+    </div>
+</body>
+</html>
