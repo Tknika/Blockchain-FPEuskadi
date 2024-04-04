@@ -30,7 +30,7 @@
                     <strong>Responsable:</strong> {{ form.responsable }}, <strong>Lote:</strong> {{ form.lote }}, <strong>Fecha:</strong> {{ form.fecha_elaboracion.strftime('%Y-%m-%d') }}
                     <a href="{{ url_for('edit_form', form_id=form.id) }}">Editar</a>&nbsp;&nbsp;&nbsp;&nbsp;
                     <a href="{{ url_for('record_form', form_id=form.id) }}">Registrar lote</a>&nbsp;&nbsp;&nbsp;&nbsp;
-                    <a href="{{ url_for('show_qr', lote_id=form.id) }}">QR etiqueta</a>
+                    <a href="{{ url_for('show_qr', lote_id=form.lote) }}">Etiqueta QR</a>
                 </li>
             {% else %}
                 <li>No se han encontrado lotes</li>
