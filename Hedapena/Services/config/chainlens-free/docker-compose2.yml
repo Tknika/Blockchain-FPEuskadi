@@ -43,6 +43,7 @@ services:
     hostname: web2
     environment:
       - API_URL=/api
+      - WS_API_URL=ws://besu_node2:8090
       - DISPLAY_NETWORK_TAB=true
     depends_on:
       - api2
