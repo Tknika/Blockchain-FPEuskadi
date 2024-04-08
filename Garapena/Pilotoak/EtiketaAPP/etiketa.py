@@ -23,6 +23,7 @@ login_manager.login_view = 'login'
 # Load environment variables
 etiketa_address = os.environ.get('DIRECCION_CONTRATO_ETIKETA')
 etiketaPK = os.environ.get('CLAVE_PRIVADA_CREADOR_CONTRATO_ETIKETA')
+url_etiketa = os.environ.get('URL_ETIKETA')
 provider = os.environ.get('WEB3_PROVIDER')
 chainId = int(os.environ.get('WEB3_CHAIN_ID'))
 
@@ -199,7 +200,7 @@ def show_qr(lote_id):
             box_size=8,
             border=3,
         )
-        url = f"http://etiketa.localhost/lote/{lote_id}"
+        url = f"{url_etiketa}/lote/{lote_id}"
         qr.add_data(url)
         qr.make(fit=True)
 
@@ -214,6 +215,32 @@ def show_qr(lote_id):
         flash('Error al generar el QR.')
         return redirect(url_for('manage_forms'))
 
+'''
+import requests
+from flask import jsonify
+
+@app.route('/thingsboard/<device_id>', methods=['GET'])
+def get_device_data(device_id):
+    # Thingsboard platform details
+    THINGSBOARD_URL = "http://thingsboard.server/api"
+    ACCESS_TOKEN = "YOUR_ACCESS_TOKEN_HERE"
+    
+    headers = {
+        "Content-Type": "application/json",
+        "X-Authorization": f"Bearer {ACCESS_TOKEN}"
+    }
+    
+    try:
+        # Fetching telemetry data for a specific device
+        response = requests.get(f"{THINGSBOARD_URL}/plugins/telemetry/DEVICE/{device_id}/values/timeseries", headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            return jsonify(data), 200
+        else:
+            return jsonify({"error": "Failed to fetch data from Thingsboard"}), response.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+'''
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
 
