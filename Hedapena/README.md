@@ -25,6 +25,12 @@ Pasos a seguir para desplegar Hyperledger Besu en X máquinas físicas distintas
 
 `tar -xvf ./node-v20.10.0-linux-x64.tar.xz`
 
+- Tessera:
+
+`wget https://s01.oss.sonatype.org/service/local/repositories/releases/content/net/consensys/quorum/tessera/tessera-dist/23.4.0/tessera-dist-23.4.0.tar`
+
+`tar -xvf ./tessera-dist-23.4.0.tar`
+
 Añadir esto al fichero *.profile* del usuario Linux para que se incluyan los binarios en el PATH:
 
 > 
@@ -33,6 +39,9 @@ Añadir esto al fichero *.profile* del usuario Linux para que se incluyan los bi
 	fi
 	if [ -d "$HOME/besu-23.10.2/bin" ] ; then
   		PATH="$PATH:$HOME/besu-23.10.2/bin"
+	fi
+	if [ -d "$HOME/tessera-23.4.0/bin" ] ; then
+  		PATH="$PATH:$HOME/tessera-23.4.0/bin"
 	fi
 
 
@@ -69,6 +78,12 @@ Tras configurar **qbftConfigFile.json** como queramos ejecutamos:
 `besu operator generate-blockchain-config --config-file=qbftConfigFile.json --to=networkFiles --private-key-file-name=key`
 
 Esto nos genera la carpeta *networkFiles* con *genesis.json* y las direcciones de los nodos con sus claves dentro.
+
+Para generar las claves de los nodos Tessera podemos utilizar el siguiente comando:
+
+`tessera -keygen -filename nodeKeyX`
+
+En el repositorio actual se proporcionan las claves de cuatro nodos (en producción habría que recrearlos), están en la carpeta TesseraKeys.
 
 #### 2.2.3.- Configuración de los nodos
 
