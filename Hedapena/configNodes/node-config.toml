@@ -12,13 +12,6 @@ data-path="/var/lib/besu/QBFT-Network/Node/data" #The path to the Besu data dire
 p2p-port="30303"
 p2p-host="0.0.0.0"
 
-#Lo que ha hecho cursor
-#[Node]
-#Name = "Node1"
-#DataPath = "/opt/besu/Node-1/data"
-#Host = "0.0.0.0"
-#P2PPort = ${NODE1_P2P_PORT}
-
 # Hecho por mi para la tabla [RPC]
 rpc-http-enabled=true
 rpc-http-host="0.0.0.0" #To allow remote connections, set to 0.0.0.0.
@@ -26,36 +19,17 @@ rpc-http-port="8545" #The port (TCP) on which HTTP JSON-RPC listens. The default
 rpc-ws-enabled=true #Enables or disables the WebSocket JSON-RPC service. The default is false
 rpc-ws-host="0.0.0.0" #To allow remote connections, set to 0.0.0.0
 rpc-ws-port="8546" #The port (TCP) on which WebSocket JSON-RPC listens. The default is 8546
-rpc-http-api=["ADMIN","DEBUG","MINER","ETH","TXPOOL","NET","TRACE","WEB3","PRIV","PLUGINS","QBFT"]
+rpc-http-api=["ADMIN","DEBUG","MINER","ETH","TXPOOL","NET","TRACE","WEB3", "EEA", "PRIV","PLUGINS","QBFT"]
 rpc-http-cors-origins=["all"] # A list of domain URLs for CORS validation. Listed domains can access the node using JSON-RPC. If your client interacts with Besu using a browser app (such as Remix or a block explorer), add the client domain to the list.
 # The default value is "none". If you do not list any domains, browser apps cannot interact with your Besu node.
-
-
-#Lo que ha hecho cursor
-#[RPC]
-#HttpEnabled = true
-#HttpHost = "0.0.0.0"
-#HttpPort = ${NODE1_RPC_HTTP_PORT}
-#WsEnabled = true
-#WsHost = "0.0.0.0"
-#WsPort = ${NODE1_RPC_WS_PORT}
 
 # Hecho por mi para la tabla [Network]
 network-id="1" # The P2P network identifier.
 # Use this option to override the default network ID. The default value is the same 
 # as the chain ID defined in the genesis file.
 
-
-#Lo que ha hecho cursor
-# [Network]
-# ID = ${NETWORK_ID}
-
 # Hecho por mi para la tabla [Genesis]
 genesis-file="/var/lib/besu/QBFT-Network/networkFiles/genesis.json"
-
-#Lo que ha hecho cursor
-# [Genesis]
-# Path = "/opt/besu/genesis.json"
 
 # Hecho por mi para la tabla [Metrics]
 metrics-enabled=true
@@ -66,13 +40,15 @@ metrics-host="127.0.0.1" #The host on which Prometheus accesses Besu metrics. Th
 #The default is 127.0.0.1.
 metrics-port=9545 #The port (TCP) on which Prometheus accesses Besu metrics. The default is 9545. Ports must be exposed appropriately
 
-#Lo que ha hecho cursor
-# [Metrics]
-# Enabled = false
-
 # Hecho por mi para la tabla [Privacy]
-privacy-enabled=false #Enables or disables private transactions. The default is false.
+privacy-enabled=true #Enables or disables private transactions. The default is false.
 # Esta ultima variable es parte de "Private networks" https://besu.hyperledger.org/private-networks/concepts/privacy#privacy-enabled-networks
+#specifies the Q2T server address of the Tessera node (Q2T in tessera.conf)
+# El siguiente parámetro como variable de entorno BESU_PRIVACY_URL para mantener este fichero único
+#privacy-url=http://tessera_nodeX:9102
+rpc-http-authentication-enabled=true
+rpc-http-authentication-jwt-public-key-file="/var/lib/besu/QBFT-Network/Node/Tessera/publicRSAKeyOperator.pem"
+privacy-multi-tenancy-enabled=true
 
 host-allowlist=["*"]
 

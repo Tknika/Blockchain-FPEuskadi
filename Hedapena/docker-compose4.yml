@@ -6,7 +6,9 @@ services:
     restart: always
     volumes:
       - .:/var/lib/besu/QBFT-Network
-
+      - ./networkFiles/keys/key4:/var/lib/besu/QBFT-Network/Node/data/key
+      - ./networkFiles/keys/key4.pub:/var/lib/besu/QBFT-Network/Node/data/key.pub
+      - ./networkFiles/TesseraKeys:/var/lib/besu/QBFT-Network/Node/Tessera
     ports:
 # RPC_HTTP_PORT:8545
 # RPC_WS_PORT:8546
@@ -23,7 +25,8 @@ services:
 #    depends_on:
 #      - prometheus  
     command: --config-file=/var/lib/besu/QBFT-Network/configNodes/node-config.toml
-#    environment:
+    environment:
+      - BESU_PRIVACY_URL=http://tessera_node4:9102
 #      - PATH=/opt/besu/bin:$PATH
 #      - JAVA_HOME=/opt/besu/java-19-openjdk-amd64
 #      - BESU_VERSION=23.10.1-SNAPSHOT #22.1.0-RC5-SNAPSHOT
@@ -32,6 +35,23 @@ services:
     networks:
       besu_network:
         ipv4_address: 172.16.0.5
+
+  tessera-node4:
+    image: quorumengineering/tessera:23.4.0
+    hostname: tessera_node4
+    restart: always
+    volumes:
+      - .:/var/lib/besu/QBFT-Network
+      - ./logs/tessera:/var/log/tessera/
+    ports:
+      - 9101:9101
+      - 9102:9102
+      - 9103:9103
+    depends_on:
+      - besu-node4
+    command: --config-file /var/lib/besu/QBFT-Network/Node/Tessera/tessera4.conf
+    networks:
+      besu_network:
 
 networks:
   besu_network:
