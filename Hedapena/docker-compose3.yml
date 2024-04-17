@@ -8,7 +8,6 @@ services:
       - .:/var/lib/besu/QBFT-Network
       - ./networkFiles/keys/key3:/var/lib/besu/QBFT-Network/Node/data/key
       - ./networkFiles/keys/key3.pub:/var/lib/besu/QBFT-Network/Node/data/key.pub
-      - ./networkFiles/TesseraKeys:/var/lib/besu/QBFT-Network/Node/Tessera
     ports:
 # RPC_HTTP_PORT:8545
 # RPC_WS_PORT:8546
@@ -43,6 +42,7 @@ services:
     volumes:
       - .:/var/lib/besu/QBFT-Network
       - ./logs/tessera:/var/log/tessera/
+      - ./networkFiles/TesseraKeys:/var/lib/besu/QBFT-Network/Node/Tessera
     ports:
       - 9101:9101
       - 9102:9102
