@@ -42,14 +42,13 @@ services:
     volumes:
       - .:/var/lib/besu/QBFT-Network
       - ./logs/tessera:/var/log/tessera/
-      - ./networkFiles/TesseraKeys:/var/lib/besu/QBFT-Network/Node/Tessera
     ports:
       - 9101:9101
       - 9102:9102
       - 9103:9103
     depends_on:
       - besu-node2
-    command: --config-file /var/lib/besu/QBFT-Network/Node/Tessera/tessera2.conf
+    command: --config-file /var/lib/besu/QBFT-Network/configNodes/tessera2.conf
     networks:
       besu_network:
 

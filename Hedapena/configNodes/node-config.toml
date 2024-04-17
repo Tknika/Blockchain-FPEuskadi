@@ -47,7 +47,7 @@ privacy-enabled=true #Enables or disables private transactions. The default is f
 # El siguiente parámetro como variable de entorno BESU_PRIVACY_URL para mantener este fichero único
 #privacy-url=http://tessera_nodeX:9102
 rpc-http-authentication-enabled=true
-rpc-http-authentication-jwt-public-key-file="/var/lib/besu/QBFT-Network/Node/Tessera/publicRSAKeyOperator.pem"
+rpc-http-authentication-jwt-public-key-file="/var/lib/besu/QBFT-Network/networkFiles/TesseraKeys/publicRSAKeyOperator.pem"
 privacy-multi-tenancy-enabled=true
 
 host-allowlist=["*"]
