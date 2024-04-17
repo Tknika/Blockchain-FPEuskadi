@@ -1,0 +1,1 @@
+## Carpeta para logs del nodo Besu
