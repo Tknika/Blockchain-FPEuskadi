@@ -77,13 +77,13 @@ Tras configurar **qbftConfigFile.json** como queramos ejecutamos:
 
 `besu operator generate-blockchain-config --config-file=qbftConfigFile.json --to=networkFiles --private-key-file-name=key`
 
-Esto nos genera la carpeta *networkFiles* con *genesis.json* y las direcciones de los nodos con sus claves dentro.
+Esto nos genera la carpeta *networkFiles* con *genesis.json* y las direcciones de los nodos con sus claves dentro. Estas claves las vamos a copiar a la carpeta padre como keyX y keyX.pub para que con docker-composeX.yml se copien a la carpeta Node/data en su correspondioente nodo.
 
-Para generar las claves de los nodos Tessera podemos utilizar el siguiente comando:
+Para generar las claves de los 'tenant' Tessera (usuarios que pueden hacer sus propias transacciones privadas) podemos utilizar el siguiente comando:
 
-`tessera -keygen -filename nodeKeyX`
+`tessera -keygen -filename tenantKeyX`
 
-En el repositorio actual se proporcionan las claves de cuatro nodos (en producción habría que recrearlos), están en la carpeta TesseraKeys.
+En el repositorio actual se proporcionan las claves de cuatro nodos (en producción habría que recrearlos), están en la carpeta TesseraKeys. Estas claves están referenciadas en el fichero tessera.conf (se ha hecho uno común para todos para simplificar).
 
 #### 2.2.3.- Configuración de los nodos
 
@@ -91,7 +91,7 @@ En la carpeta *configNodes* está el fichero **config-node.toml** (en este caso 
 
 Hay que modificar el apartado *bootnodes=* con las direcciones enode que correspondan a los validadores (con la clave pública + IP:puerto). También vamos a crear el fichero *networkFiles/static-nodes.json* y poner esos mismos enodes.
 
-Lo configurado hasta ahora es válido para todos los nodos pero **cada nodo** tiene que tener su fichero **docker-composeX.yml** bien configurado y en la carpeta */Node/data* de cada nodo tenemos que copiar sus **ficheros key y key.pub de la carpeta networkFiles** (donde se han generado).
+Lo configurado hasta ahora es válido para todos los nodos pero **cada nodo** tiene que tener su fichero **docker-composeX.yml** bien configurado para que en la carpeta */Node/data* de cada nodo queden copiados sus **ficheros key y key.pub de la carpeta networkFiles**.
 
 ## 3.- Despliegue blockchain
 
