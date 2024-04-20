@@ -8,7 +8,8 @@ from sqlalchemy.exc import IntegrityError
 from web3 import Web3
 from web3.exceptions import TimeExhausted
 from datetime import datetime
-import os
+from cryptography.fernet import Fernet
+import os, json
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -147,10 +148,15 @@ def record_form(form_id):
         # If not exists, call createForm
         transaction_function = etiketa_contract.functions.createForm
 
+    # Encrypt form data
+    user_key = current_user.encryption_key
+    fernet = Fernet(user_key)
+    encrypted_data = fernet.encrypt(json.dumps(form.to_json()).encode())
+    # crear la transacción, POR AHORA GUARDAMOS EL MISMO DATO ENCRIPTADO
     transaction = transaction_function(
-        form.responsable,
         form.lote,
-        int(form.fecha_elaboracion.strftime('%s'))
+        json.dumps(form.to_json()),
+        encrypted_data
     ).build_transaction({
         'from': owner_addr.address,
         'nonce': nonce,
@@ -182,10 +188,12 @@ def show_form_data(lote_id):
         message = "No hay datos disponibles para este lote."
         return render_template('informacion.html', message=message)
     # Convert raw data into a more suitable format for HTML processing
+    # vamos a mostrar los datos públicos:
+    publicData = json.loads(raw_form_data[0])  # Convert JSON string to Python dictionary
     form_data = {
-        'responsable': raw_form_data[0],
-        'lote': raw_form_data[1],
-        'fecha_elaboracion': datetime.utcfromtimestamp(raw_form_data[2]).strftime('%Y-%m-%d')
+        'responsable': publicData['responsable'],
+        'lote': publicData['lote'],
+        'fecha_elaboracion': datetime.fromisoformat(publicData['fecha_elaboracion']).strftime('%Y-%m-%d')
     }
     return render_template('datos_etiqueta.html', form_data=form_data)
 

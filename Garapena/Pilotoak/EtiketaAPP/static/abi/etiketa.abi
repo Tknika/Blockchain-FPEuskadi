@@ -7,19 +7,19 @@
     {
       "inputs": [
         {
-          "internalType": "string",
-          "name": "_responsable",
-          "type": "string"
-        },
-        {
           "internalType": "uint256",
           "name": "_lote",
           "type": "uint256"
         },
         {
-          "internalType": "uint256",
-          "name": "_fechaElaboracion",
-          "type": "uint256"
+          "internalType": "string",
+          "name": "_publicData",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_privateData",
+          "type": "string"
         }
       ],
       "name": "createForm",
@@ -43,14 +43,9 @@
           "type": "string"
         },
         {
-          "internalType": "uint256",
+          "internalType": "string",
           "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
+          "type": "string"
         }
       ],
       "stateMutability": "view",
@@ -59,19 +54,19 @@
     {
       "inputs": [
         {
-          "internalType": "string",
-          "name": "_responsable",
-          "type": "string"
-        },
-        {
           "internalType": "uint256",
           "name": "_lote",
           "type": "uint256"
         },
         {
-          "internalType": "uint256",
-          "name": "_fechaElaboracion",
-          "type": "uint256"
+          "internalType": "string",
+          "name": "_publicData",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_privateData",
+          "type": "string"
         }
       ],
       "name": "updateForm",
