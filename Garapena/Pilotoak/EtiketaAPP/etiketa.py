@@ -151,7 +151,7 @@ def record_form(form_id):
     # Encrypt form data
     user_key = current_user.encryption_key
     fernet = Fernet(user_key)
-    encrypted_data = fernet.encrypt(json.dumps(form.to_json()).encode())
+    encrypted_data = fernet.encrypt(json.dumps(form.to_json()).encode()).decode()
     # crear la transacción, POR AHORA GUARDAMOS EL MISMO DATO ENCRIPTADO
     transaction = transaction_function(
         form.lote,
