@@ -46,8 +46,8 @@ privacy-enabled=true #Enables or disables private transactions. The default is f
 #specifies the Q2T server address of the Tessera node (Q2T in tessera.conf)
 # El siguiente parámetro como variable de entorno BESU_PRIVACY_URL para mantener este fichero único
 #privacy-url=http://tessera_nodeX:9102
-rpc-http-authentication-enabled=true
-rpc-http-authentication-jwt-public-key-file="/var/lib/besu/QBFT-Network/networkFiles/TesseraKeys/publicRSAKeyOperator.pem"
+#rpc-http-authentication-enabled=true
+#rpc-http-authentication-jwt-public-key-file="/var/lib/besu/QBFT-Network/networkFiles/TesseraKeys/publicRSAKeyOperator.pem"
 privacy-multi-tenancy-enabled=true
 
 host-allowlist=["*"]

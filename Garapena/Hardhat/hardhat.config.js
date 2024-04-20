@@ -4,7 +4,7 @@ const fs = require('fs'); // Required to read files from the filesystem
 const { ziurtagiriakPK, etiketaPK } = require('./secrets.json'); // Import private keys from secrets.json
 
 // Read the JWT token from a file named jwt.token
-const jwtToken = fs.readFileSync('JWT_1', 'utf8');
+// const jwtToken = fs.readFileSync('JWT_1', 'utf8');
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -32,9 +32,9 @@ module.exports = {
         etiketaPK, // Etiketa contract deployer private key
         // Additional private keys can be added here if needed
       ],
-      httpHeaders: {
-        Authorization: `Bearer ${jwtToken}` // Use the JWT token read from jwt.token file for secured endpoints
-      },
+      // httpHeaders: {
+      //   Authorization: `Bearer ${jwtToken}` // Use the JWT token read from jwt.token file for secured endpoints
+      // },
     },
   },
 };
