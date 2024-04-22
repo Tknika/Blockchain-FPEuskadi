@@ -58,6 +58,7 @@ services:
       - NODE_ENDPOINT=http://besu_node1:8545
       - MONGO_CLIENT_URI=mongodb://mongodb1:27017
       - MONGO_DB_NAME=epirus
+      #- NODE_AUTH_BEARER=
     depends_on:
       - mongodb1
     networks:
