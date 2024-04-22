@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datos completos del Lote</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Lote {{ form_data_public.lote }}</h1>
+    </div>
+    <div class="container">
+        <h1>Información pública del Lote</h1>
+        <div class="form-group">
+            <strong><label>Responsable:</label></strong> {{ form_data_public.responsable }}
+        </div>
+        <div class="form-group">
+            <strong><label>Número de Lote:</label></strong> {{ form_data_public.lote }}
+        </div>
+        <div class="form-group">
+            <strong><label>Fecha de Elaboración:</label></strong> {{ form_data_public.fecha_elaboracion }}
+        </div>
+        <!-- <a href="{{ url_for('manage_forms') }}" class="boton-salir">Volver</a> -->
+    </div>
+    <div class="container">
+        <h1>Información privada del Lote</h1>
+        <div class="form-group">
+            <strong><label>Responsable:</label></strong> {{ form_data_private.responsable }}
+        </div>
+        <div class="form-group">
+            <strong><label>Número de Lote:</label></strong> {{ form_data_private.lote }}
+        </div>
+        <div class="form-group">
+            <strong><label>Fecha de Elaboración:</label></strong> {{ form_data_private.fecha_elaboracion }}
+        </div>
+        <!-- <a href="{{ url_for('manage_forms') }}" class="boton-salir">Volver</a> -->
+    </div>
+</body>
+</html>

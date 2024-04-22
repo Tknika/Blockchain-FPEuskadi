@@ -180,8 +180,9 @@ def record_form(form_id):
 
     return redirect(url_for('manage_forms'))
 
+# Muestra la información pública del lote, no hace falta login
 @app.route('/lote/<int:lote_id>', methods=['GET'])
-def show_form_data(lote_id):
+def show_form_public_data(lote_id):
     try:
         raw_form_data = etiketa_contract.functions.getForm(lote_id).call()
     except:
@@ -197,25 +198,32 @@ def show_form_data(lote_id):
     }
     return render_template('datos_etiqueta.html', form_data=form_data)
 
-@app.route('/lotePriv/<int:lote_id>', methods=['GET'])
+@app.route('/datosCompletos/<int:lote_id>', methods=['GET'])
 @login_required
-def show_form_private_data(lote_id):
+def show_form_all_data(lote_id):
     try:
         raw_form_data = etiketa_contract.functions.getForm(lote_id).call()
     except:
         message = "No hay datos disponibles para este lote."
         return render_template('informacion.html', message=message)
     # Convert raw data into a more suitable format for HTML processing
+    # vamos a mostrar los datos pblicos:
+    publicData = json.loads(raw_form_data[0])  # Convert JSON string to Python dictionary
+    form_data_public = {
+        'responsable': publicData['responsable'],
+        'lote': publicData['lote'],
+        'fecha_elaboracion': datetime.fromisoformat(publicData['fecha_elaboracion']).strftime('%Y-%m-%d')
+    }
     # vamos a mostrar los datos privados:
     fernet = Fernet(current_user.encryption_key)
     decrypted_data = fernet.decrypt(raw_form_data[1].encode()).decode()
     privateData = json.loads(decrypted_data)  # Convert decrypted JSON string to Python dictionary
-    form_data = {
+    form_data_private = {
         'responsable': privateData['responsable'],
         'lote': privateData['lote'],
         'fecha_elaboracion': datetime.fromisoformat(privateData['fecha_elaboracion']).strftime('%Y-%m-%d')
     }
-    return render_template('datos_etiqueta.html', form_data=form_data)
+    return render_template('datos_completos.html', form_data_public=form_data_public, form_data_private=form_data_private)
 
 @app.route('/QR/<int:lote_id>', methods=['GET'])
 def show_qr(lote_id):
