@@ -4,7 +4,7 @@ const fs = require('fs'); // Required to read files from the filesystem
 const { ziurtagiriakPK, etiketaPK } = require('./secrets.json'); // Import private keys from secrets.json
 
 // Read the JWT token from a file named jwt.token
-const jwtToken = fs.readFileSync('JWT_1', 'utf8');
+const jwtToken = fs.readFileSync('JWT_1', 'utf8').trim();
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
