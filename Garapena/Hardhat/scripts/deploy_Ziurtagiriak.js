@@ -7,10 +7,16 @@
 const hre = require("hardhat");
 
 async function main() {
+  const accounts = await hre.ethers.getSigners();
+  const deployer = accounts[0]; // Using the first account for deployment
+  // Create a contract factory for the Ziurtagiriak contract with the deployer account
+  const ZiurtagiriakFactory = await hre.ethers.getContractFactory("Ziurtagiriak", deployer);
 
-  const ziurtagiriak = await hre.ethers.deployContract("Ziurtagiriak", {
-    gasPrice: null, gasLimit: null,
-  });
+  //const ziurtagiriak = await hre.ethers.deployContract("Ziurtagiriak", {
+    //gasPrice: null, gasLimit: null,
+  //});
+
+  const ziurtagiriak = await ZiurtagiriakFactory.deploy({gasPrice: null, gasLimit: null,});
 
   await ziurtagiriak.waitForDeployment();
 
