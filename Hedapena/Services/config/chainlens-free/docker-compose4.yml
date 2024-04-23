@@ -58,7 +58,7 @@ services:
       - NODE_ENDPOINT=http://besu_node4:8545
       - MONGO_CLIENT_URI=mongodb://mongodb4:27017
       - MONGO_DB_NAME=epirus
-      #- NODE_AUTH_BEARER=
+      - NODE_AUTH_BEARER=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwZXJtaXNzaW9ucyI6WyIqOioiXSwicHJpdmFjeVB1YmxpY0tleSI6IjdxSHJ0RG85TVc0UHRPSXgrTkJDWWNqTTNqN0UzaU0rYUExL20rNmpzbnM9In0.ICgnXpZsQJ3R6RK9tFb5Qgyq5X27Qwg_4mVbQVZZteF2cSC7OhfeO_x7FUg1at29G3ifOQmQZFmsnCPDsjVan9GxzzUKgcKsBUNcQ2tgoldOsBzfx9sOxKLZMLHTgNNqXVcc3eX_cpOCxsUKEhrAFNtGIXGx0YR80fdKBT5JZunowQahT8V0JZ6VtnBnqLcoCNwsVx_8X8qb4Tj7PVJLWQL6z7FngZdk27asj5BzGpRdumlhtgmDoBvWldMMocEJp0wjC-mHR5B1dv441SeHfw6doM3yHLeJve3TGW9gPOuronY2DI-CvFuNqohcm_OZ0repfvIQcgoer5Clm4WFeg
     depends_on:
       - mongodb4
     networks:
