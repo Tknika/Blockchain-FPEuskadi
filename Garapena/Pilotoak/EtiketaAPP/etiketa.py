@@ -129,6 +129,7 @@ def edit_form(form_id):
 @login_required
 def record_form(form_id):
     form = Form.query.get_or_404(form_id)
+    
     if form.user_id != current_user.id:
         flash('No tiene permiso para registrar este lote.')
         return redirect(url_for('manage_forms'))
@@ -136,6 +137,15 @@ def record_form(form_id):
     # Check if web3 connection is working
     if not web3.is_connected():
         flash('Error: No se pudo conectar con la blockchain.')
+        return redirect(url_for('manage_forms'))
+
+    # Create a new empty form instance
+    form_private = Form()
+    # Assign custom data to the form fields
+    try:
+        form_private.t_almacenamiento = get_device_data('temperature')
+    except Exception as e:
+        flash(f'Error al obtener datos de los dispositivos desde Thingsboard: {str(e)}')
         return redirect(url_for('manage_forms'))
     # Prepare transaction
     nonce = web3.eth.get_transaction_count(owner_addr.address)
@@ -148,10 +158,10 @@ def record_form(form_id):
         # If not exists, call createForm
         transaction_function = etiketa_contract.functions.createForm
 
-    # Encrypt form data
+    # Encrypt form_private data
     user_key = current_user.encryption_key
     fernet = Fernet(user_key)
-    encrypted_data = fernet.encrypt(json.dumps(form.to_json()).encode()).decode()
+    encrypted_data = fernet.encrypt(json.dumps(form_private.to_json()).encode()).decode()
     # crear la transacción, POR AHORA GUARDAMOS EL MISMO DATO ENCRIPTADO
     transaction = transaction_function(
         form.lote,
@@ -219,9 +229,7 @@ def show_form_all_data(lote_id):
     decrypted_data = fernet.decrypt(raw_form_data[1].encode()).decode()
     privateData = json.loads(decrypted_data)  # Convert decrypted JSON string to Python dictionary
     form_data_private = {
-        'responsable': privateData['responsable'],
-        'lote': privateData['lote'],
-        'fecha_elaboracion': datetime.fromisoformat(privateData['fecha_elaboracion']).strftime('%Y-%m-%d')
+        't_almacenamiento': privateData['t_almacenamiento']
     }
     return render_template('datos_completos.html', form_data_public=form_data_public, form_data_private=form_data_private)
 
@@ -256,14 +264,14 @@ def get_device_data(key):
     # Thingsboard platform details
     import requests, time, datetime
     # Configuration
-    device_token = 'e5297620-e700-11ee-b3d4-b1dd2ec4cdc2'
+    device_token = '27219850-0196-11ef-b82d-172c57c297f6' # DS18B20_Frigorifico_PT
     with open('refresh_JWT.txt', 'r') as file:
         refresh_token = file.read().strip()
     thingsboard_host = 'thingsboard.tknika.eus'
     #key = 'temperature'  # The telemetry key you want to average
     #start_ts = 1713265235112  # Start timestamp in milliseconds
     #end_ts = 1713265295110 # End timestamp in milliseconds
-    current_ts = int(time.time() * 1000)  # Current timestamp in milliseconds, adjusted by adding 2 hours
+    current_ts = int(time.time() * 1000)  # Current timestamp in milliseconds
     interval_ts = 60000  # Interval in milliseconds
     start_ts = current_ts - interval_ts  # Start timestamp (60 seconds ago)
     end_ts = current_ts  # End timestamp (current time)

@@ -1,6 +1,8 @@
 # Use an official Python runtime as a parent image
 FROM python:3.10-slim
 
+ENV TZ=Europe/Madrid
+
 RUN apt-get update && apt-get install -y default-libmysqlclient-dev build-essential pkg-config
 
 # Set the working directory in the container

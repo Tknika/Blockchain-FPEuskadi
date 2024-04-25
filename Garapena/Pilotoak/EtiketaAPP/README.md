@@ -2,11 +2,12 @@
 
 ### 1. Instalación
 
-Mediante contenedores Docker tal y como está definido en el docker-compose.yml de la carpeta Webserver junto con el fichero de las variables de entorno.
+Mediante contenedores Docker tal y como está definido en el docker-compose.yml de la carpeta Webserver junto con el fichero de las variables de entorno (etiketa.env).
+
 ### 2. Ejecución
 
-Accediendo a etiketa.localhost en el navegador.
-Los dos usuarios/contraseña creados son empresa1/password1 y empresa2/password2
+Accediendo a etiketa.localhost en el navegador. Si la URL es diferente hay que modificar la configuración en /Garapena/Webserver/nginx/conf.d/EtiketaApp.conf
+Los usuarios/contraseña creados son desde empresa1/password1 hasta empresa10/password10
 
 ### 3. Funcionamiento
 
