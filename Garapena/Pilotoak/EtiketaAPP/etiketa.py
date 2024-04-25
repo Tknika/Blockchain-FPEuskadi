@@ -139,11 +139,11 @@ def record_form(form_id):
         flash('Error: No se pudo conectar con la blockchain.')
         return redirect(url_for('manage_forms'))
 
-    # Create a new empty form instance
-    form_private = Form()
-    # Assign custom data to the form fields
+    # Create a dictionary to store private data
+    private_data = {}
+    # Retrieve and assign temperature data to the dictionary
     try:
-        form_private.t_almacenamiento = get_device_data('temperature')
+        private_data['t_almacenamiento'] = get_device_data('temperature')
     except Exception as e:
         flash(f'Error al obtener datos de los dispositivos desde Thingsboard: {str(e)}')
         return redirect(url_for('manage_forms'))
@@ -161,7 +161,7 @@ def record_form(form_id):
     # Encrypt form_private data
     user_key = current_user.encryption_key
     fernet = Fernet(user_key)
-    encrypted_data = fernet.encrypt(json.dumps(form_private.to_json()).encode()).decode()
+    encrypted_data = fernet.encrypt(json.dumps(private_data).encode()).decode()
     # crear la transacción, POR AHORA GUARDAMOS EL MISMO DATO ENCRIPTADO
     transaction = transaction_function(
         form.lote,
@@ -228,8 +228,9 @@ def show_form_all_data(lote_id):
     fernet = Fernet(current_user.encryption_key)
     decrypted_data = fernet.decrypt(raw_form_data[1].encode()).decode()
     privateData = json.loads(decrypted_data)  # Convert decrypted JSON string to Python dictionary
+    # Check if the key 't_almacenamiento' exists in privateData, if not, leave it blank
     form_data_private = {
-        't_almacenamiento': privateData['t_almacenamiento']
+        't_almacenamiento': privateData.get('t_almacenamiento', '')
     }
     return render_template('datos_completos.html', form_data_public=form_data_public, form_data_private=form_data_private)
 
@@ -320,6 +321,7 @@ def get_device_data(key):
     #print(f"returned_ts: {datetime.datetime.fromtimestamp(returned_ts / 1000.0).strftime('%Y-%m-%d %H:%M:%S')}", file=sys.stderr)
     # Lo que se obtiene es: {'temperature': [{'ts': 1713265265111, 'value': '2.0516666666666667'}]}
     # Extract the average value from the response
+    '''
     if key in data and data[key]:
         avg_value = data[key][0]['value']  # Assuming the first (and only) entry is the average
         start_dt = datetime.datetime.fromtimestamp(start_ts / 1000.0).strftime('%Y-%m-%d %H:%M:%S')
@@ -329,7 +331,14 @@ def get_device_data(key):
     else:
         message = f'No se ha encontrado información para la clave {key} en el rango temporal dado.'
         return render_template('informacion.html', message=message)
-
+    '''
+    if key in data and data[key]:
+        avg_value = data[key][0]['value']  # Assuming the first (and only) entry is the average
+        return f"{float(avg_value):.2f}"
+    else:
+        # If no data is found for the given key and time range, raise an exception
+        raise Exception(f'No se ha encontrado información para la clave {key} en el rango temporal dado.')
+    
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
 
