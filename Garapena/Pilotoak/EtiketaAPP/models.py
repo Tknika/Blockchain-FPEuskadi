@@ -24,6 +24,7 @@ class Form(db.Model):
 
     def to_json(self):
         return {
+            'user_id': self.user_id,
             'lote': self.lote,
             'responsable': self.responsable,            
             'fecha_elaboracion': self.fecha_elaboracion.isoformat() # Use isoformat() for datetime object to make it JSON serializable

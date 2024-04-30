@@ -206,7 +206,9 @@ def show_form_public_data(lote_id):
         'lote': publicData['lote'],
         'fecha_elaboracion': datetime.fromisoformat(publicData['fecha_elaboracion']).strftime('%Y-%m-%d')
     }
-    return render_template('datos_etiqueta.html', form_data=form_data)
+    user_id = publicData['user_id']
+    img_path = f"static/images/{user_id}.jpg"
+    return render_template('datos_etiqueta.html', form_data=form_data, img_path=img_path)
 
 @app.route('/datosCompletos/<int:lote_id>', methods=['GET'])
 @login_required
@@ -224,6 +226,8 @@ def show_form_all_data(lote_id):
         'lote': publicData['lote'],
         'fecha_elaboracion': datetime.fromisoformat(publicData['fecha_elaboracion']).strftime('%Y-%m-%d')
     }
+    user_id = publicData['user_id']
+    img_path = f"static/images/{user_id}.jpg"
     # vamos a mostrar los datos privados:
     fernet = Fernet(current_user.encryption_key)
     decrypted_data = fernet.decrypt(raw_form_data[1].encode()).decode()
@@ -232,7 +236,7 @@ def show_form_all_data(lote_id):
     form_data_private = {
         't_almacenamiento': privateData.get('t_almacenamiento', '')
     }
-    return render_template('datos_completos.html', form_data_public=form_data_public, form_data_private=form_data_private)
+    return render_template('datos_completos.html', form_data_public=form_data_public, form_data_private=form_data_private, img_path=img_path)
 
 @app.route('/QR/<int:lote_id>', methods=['GET'])
 def show_qr(lote_id):
