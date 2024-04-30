@@ -21,9 +21,11 @@
         <div class="form-group">
             <strong><label>Fecha de Elaboración:</label></strong> {{ form_data_public.fecha_elaboracion }}
         </div>
-        <div>
-            <img src="{{ '/' + img_path }}" alt="Imagen">
+        {% if img_path %}
+        <div style="width: 100%;">
+            <img src="{{ '/' + img_path }}" alt="Imagen" style="width: 100%;">
         </div>
+        {% endif %}
         <!-- <a href="{{ url_for('manage_forms') }}" class="boton-salir">Volver</a> -->
     </div>
     <div class="container">
