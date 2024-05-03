@@ -2,37 +2,42 @@
 pragma solidity ^0.8.0;
 
 contract Etiketa {
+    // Define a struct with two strings: publicData and privateData
     struct Form {
-        string responsable;
-        uint256 lote;
-        uint256 fechaElaboracion;
+        string publicData;
+        string privateData;
     }
 
     address private owner;
+    // Mapping to store forms using a uint256 identifier, renamed from id to lote
     mapping(uint256 => Form) private forms;
 
     constructor() {
-        owner = msg.sender;
+        owner = msg.sender; // Set the contract deployer as the owner
     }
 
+    // Modifier to restrict function access to the contract owner
     modifier onlyOwner() {
         require(msg.sender == owner, "Only the contract owner can perform this action");
         _;
     }
 
-    function createForm(string memory _responsable, uint256 _lote, uint256 _fechaElaboracion) public onlyOwner {
-        require(forms[_lote].lote == 0, "Form with this lote already exists");
-        forms[_lote] = Form(_responsable, _lote, _fechaElaboracion);
+    // Function to create a new form with publicData and privateData
+    function createForm(uint256 _lote, string memory _publicData, string memory _privateData) public onlyOwner {
+        require(bytes(forms[_lote].publicData).length == 0, "Form with this lote already exists");
+        forms[_lote] = Form(_publicData, _privateData);
     }
 
-    function getForm(uint256 _lote) public view returns (string memory, uint256, uint256) {
-        require(forms[_lote].lote != 0, "Form does not exist");
+    // Function to retrieve form data by its lote
+    function getForm(uint256 _lote) public view returns (string memory, string memory) {
+        require(bytes(forms[_lote].publicData).length != 0, "Form does not exist");
         Form memory form = forms[_lote];
-        return (form.responsable, form.lote, form.fechaElaboracion);
+        return (form.publicData, form.privateData);
     }
 
-    function updateForm(string memory _responsable, uint256 _lote, uint256 _fechaElaboracion) public onlyOwner {
-        require(forms[_lote].lote != 0, "Form does not exist");
-        forms[_lote] = Form(_responsable, _lote, _fechaElaboracion);
+    // Function to update an existing form with new publicData and privateData
+    function updateForm(uint256 _lote, string memory _publicData, string memory _privateData) public onlyOwner {
+        require(bytes(forms[_lote].publicData).length != 0, "Form does not exist");
+        forms[_lote] = Form(_publicData, _privateData);
     }
 }
