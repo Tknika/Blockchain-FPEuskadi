@@ -1,14 +1,31 @@
     # Thingsboard platform details
 import requests, time, datetime
 from flask import flash, url_for, redirect  # Importing flash from Flask
- 
+
+thingsboard_host = 'thingsboard.tknika.eus'
+# Function to refresh JWT token
+def refresh_jwt_token():
+    with open('refresh_JWT.txt', 'r') as file:
+        refresh_token = file.read().strip()
+    refresh_url = f"https://{thingsboard_host}/api/auth/token"
+    refresh_headers = {
+        "Content-Type": "application/json"
+    }
+    refresh_body = {
+        "refreshToken": refresh_token
+    }
+    refresh_response = requests.post(refresh_url, headers=refresh_headers, json=refresh_body)
+    if refresh_response.status_code == 200:
+        return refresh_response.json()['token']
+    else:
+        flash('Error obteniendo token JWT.')
+        return None
+
 #@app.route('/thingsboard/<key>', methods=['GET'])
 def get_device_data(key):
    # Configuration
     device_token = '27219850-0196-11ef-b82d-172c57c297f6' # DS18B20_Frigorifico_PT
-    with open('refresh_JWT.txt', 'r') as file:
-        refresh_token = file.read().strip()
-    thingsboard_host = 'thingsboard.tknika.eus'
+
     #key = 'temperature'  # The telemetry key you want to average
     #start_ts = 1713265235112  # Start timestamp in milliseconds
     #end_ts = 1713265295110 # End timestamp in milliseconds
@@ -17,26 +34,11 @@ def get_device_data(key):
     start_ts = current_ts - interval_ts  # Start timestamp (60 seconds ago)
     end_ts = current_ts  # End timestamp (current time)
     
-    # Function to refresh JWT token
-    def refresh_jwt_token():
-        refresh_url = f"https://{thingsboard_host}/api/auth/token"
-        refresh_headers = {
-            "Content-Type": "application/json"
-        }
-        refresh_body = {
-            "refreshToken": refresh_token
-        }
-        refresh_response = requests.post(refresh_url, headers=refresh_headers, json=refresh_body)
-        if refresh_response.status_code == 200:
-            return refresh_response.json()['token']
-        else:
-            flash('Error obteniendo token JWT.')
-            return None
-
     # Get a fresh JWT token
     JWT_token = refresh_jwt_token()
     if JWT_token is None:
-        return redirect(url_for('manage_forms'))
+        raise Exception('No se ha obtenido token JWT para la lectura de datos')
+
     #import sys
     #print(f"JWT_token: {JWT_token}", file=sys.stderr)
     # Prepare the API endpoint and headers
