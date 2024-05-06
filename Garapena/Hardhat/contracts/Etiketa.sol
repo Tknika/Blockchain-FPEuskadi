@@ -36,4 +36,10 @@ contract Etiketa {
         forms[_lote] = Form(_publicData, _privateData);
         emit FormUpdated(_lote, _publicData, _privateData);
     }
+    // Function to retrieve form data by its lote
+    function getForm(uint256 _lote) public view returns (string memory, string memory) {
+        require(bytes(forms[_lote].publicData).length != 0, "Form does not exist");
+        Form memory form = forms[_lote];
+        return (form.publicData, form.privateData);
+    }
 }
