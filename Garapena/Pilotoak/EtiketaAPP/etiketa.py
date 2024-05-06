@@ -244,8 +244,8 @@ def show_form_all_data(lote_id):
 def show_all_transacions(lote_id):
     try:
         # Retrieve the FormCreated and FormUpdated events for the specified lote_id
-        form_created_filter = etiketa_contract.events.FormCreated.createFilter(fromBlock=0, argument_filters={'lote': lote_id})
-        form_updated_filter = etiketa_contract.events.FormUpdated.createFilter(fromBlock=0, argument_filters={'lote': lote_id})
+        form_created_filter = etiketa_contract.events.FormCreated.create_filter(fromBlock=0, argument_filters={'lote': lote_id})
+        form_updated_filter = etiketa_contract.events.FormUpdated.create_filter(fromBlock=0, argument_filters={'lote': lote_id})
         
         # Get all entries from the filters
         created_events = form_created_filter.get_all_entries()
