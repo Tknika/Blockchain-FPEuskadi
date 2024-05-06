@@ -255,7 +255,7 @@ def show_all_transacions(lote_id):
         transactions = []
         for event in created_events:
             transactions.append({
-                'type': 'Created',
+                'type': 'Creado',
                 'lote': event['args']['lote'],
                 'publicData': event['args']['publicData'],
                 'privateData': event['args']['privateData'],
@@ -263,7 +263,7 @@ def show_all_transacions(lote_id):
             })
         for event in updated_events:
             transactions.append({
-                'type': 'Updated',
+                'type': 'Actualizado',
                 'lote': event['args']['lote'],
                 'publicData': event['args']['publicData'],
                 'privateData': event['args']['privateData'],

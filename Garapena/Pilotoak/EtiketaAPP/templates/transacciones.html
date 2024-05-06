@@ -9,31 +9,34 @@
 <body>
     <h1>Transacciones del Lote {{ lote_id }}</h1>
     {% if transactions %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Tipo de Transacción</th>
-                    <th>Lote</th>
-                    <th>Datos Públicos</th>
-                    <th>Datos Privados</th>
-                    <th>Número de Bloque</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for transaction in transactions %}
-                    <tr>
-                        <td>{{ transaction.type }}</td>
-                        <td>{{ transaction.lote }}</td>
-                        <td>{{ transaction.publicData }}</td>
-                        <td>{{ transaction.privateData }}</td>
-                        <td>{{ transaction.blockNumber }}</td>
+        <div style="overflow-x: auto;">
+            <table style="border-collapse: collapse; width: 100%;">
+                <thead>
+                    <tr style="background-color: #a7a5a5;">
+                        <th style="border: 1px solid #ddd; padding: 8px;">Tipo de Transacción</th>
+                        <th style="border: 1px solid #ddd; padding: 8px;">Datos Públicos</th>
+                        <th style="border: 1px solid #ddd; padding: 8px;">Datos Privados</th>
+                        <th style="border: 1px solid #ddd; padding: 8px;">Número de Bloque</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                        <tr style="background-color: {% if loop.index % 2 == 0 %}#ffffff{% else %}#d7d7d7{% endif %};">
+                            <td style="border: 1px solid #ddd; padding: 8px;">{{ transaction.type }}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">{{ transaction.publicData }}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ transaction.privateData }}">
+                                {{ transaction.privateData }}
+                            </td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">{{ transaction.blockNumber }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     {% else %}
         <p>No se encontraron transacciones para este lote.</p>
     {% endif %}
+    <br>
     <a href="{{ url_for('manage_forms') }}">Volver a la gestión de formularios</a>
 </body>
 </html>
