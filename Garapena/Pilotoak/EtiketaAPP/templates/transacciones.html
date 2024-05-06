@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transacciones del Lote</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Transacciones del Lote {{ lote_id }}</h1>
+    {% if transactions %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Tipo de Transacción</th>
+                    <th>Lote</th>
+                    <th>Datos Públicos</th>
+                    <th>Datos Privados</th>
+                    <th>Número de Bloque</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.type }}</td>
+                        <td>{{ transaction.lote }}</td>
+                        <td>{{ transaction.publicData }}</td>
+                        <td>{{ transaction.privateData }}</td>
+                        <td>{{ transaction.blockNumber }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No se encontraron transacciones para este lote.</p>
+    {% endif %}
+    <a href="{{ url_for('manage_forms') }}">Volver a la gestión de formularios</a>
+</body>
+</html>
