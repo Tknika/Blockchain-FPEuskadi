@@ -10,7 +10,7 @@ from web3.exceptions import TimeExhausted
 from datetime import datetime
 from cryptography.fernet import Fernet
 import os, json
-from thingsboard import get_device_data
+from thingsboard import get_devices_data
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -144,7 +144,7 @@ def record_form(form_id):
     private_data = {}
     # Retrieve and assign temperature data to the dictionary
     try:
-        private_data['t_almacenamiento'] = get_device_data('temperature')
+        private_data['t_almacenamiento'] = get_devices_data()
     except Exception as e:
         flash(f'Error al obtener datos de los dispositivos desde Thingsboard: {str(e)}')
         return redirect(url_for('manage_forms'))

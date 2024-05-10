@@ -22,7 +22,7 @@ def refresh_jwt_token():
         return None
 
 #@app.route('/thingsboard/<key>', methods=['GET'])
-def get_device_data(key):
+def get_devices_data():
    # Configuration
     device_token = '27219850-0196-11ef-b82d-172c57c297f6' # DS18B20_Frigorifico_PT
 
@@ -43,6 +43,8 @@ def get_device_data(key):
     #print(f"JWT_token: {JWT_token}", file=sys.stderr)
     # Prepare the API endpoint and headers
     url = f"https://{thingsboard_host}/api/plugins/telemetry/DEVICE/{device_token}/values/timeseries"
+    key = "temperature"
+
     headers = {
         "Content-Type": "application/json",
         "X-Authorization": f"Bearer {JWT_token}"
@@ -78,6 +80,6 @@ def get_device_data(key):
         avg_value = data[key][0]['value']  # Assuming the first (and only) entry is the average
         return f"{float(avg_value):.2f}"
     else:
-        # If no data is found for the given key and time range, raise an exception
-        raise Exception(f'No se ha encontrado información para la clave {key} en el rango temporal dado.')
+        # If no data is found for the given key and time range, show an error message
+        flash(f'No se ha encontrado información para la clave {key} en el rango temporal dado.')
     
