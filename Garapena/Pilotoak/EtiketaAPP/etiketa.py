@@ -234,10 +234,10 @@ def show_form_all_data(lote_id):
     decrypted_data = fernet.decrypt(raw_form_data[1].encode()).decode()
     privateData = json.loads(decrypted_data)  # Convert decrypted JSON string to Python dictionary
     # Check if the key 't_almacenamiento' exists in privateData, if not, leave it blank
-    #form_data_private = {
-    #    't_almacenamiento': privateData.get('t_almacenamiento', '')
-    #}
-    return render_template('datos_completos.html', form_data_public=form_data_public, form_data_private=privateData, img_path=img_path)
+    form_data_private = {}
+    for key, value in privateData.items():
+        form_data_private[key] = value
+    return render_template('datos_completos.html', form_data_public=form_data_public, form_data_private=form_data_private, img_path=img_path)
 
 @app.route('/transacciones/<int:lote_id>', methods=['GET'])
 @login_required
