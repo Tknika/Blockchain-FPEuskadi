@@ -28,9 +28,11 @@
     </div>
     <div class="container">
         <h1>Información privada del Lote</h1>
+        {% for key, value in form_data_private.items() %}
         <div class="form-group">
-            <strong><label>Temp. almacenamiento:</label></strong> {{ form_data_private.t_almacenamiento }}
+            <strong><label>{{ key }}:</label></strong> {{ value }}
         </div>
+        {% endfor %}
         <!-- <a href="{{ url_for('manage_forms') }}" class="boton-salir">Volver</a> -->
     </div>
 </body>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transacciones del Lote</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Transacciones del Lote {{ lote_id }}</h1>
+    {% if transactions %}
+        <div style="overflow-x: auto;">
+            <table style="border-collapse: collapse; width: 100%;">
+                <thead>
+                    <tr style="background-color: #a7a5a5;">
+                        <th style="border: 1px solid #ddd; padding: 8px;">Tipo de Transacción</th>
+                        <th style="border: 1px solid #ddd; padding: 8px;">Datos Públicos</th>
+                        <th style="border: 1px solid #ddd; padding: 8px;">Datos Privados</th>
+                        <th style="border: 1px solid #ddd; padding: 8px;">Número de Bloque</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                        <tr style="background-color: {% if loop.index % 2 == 0 %}#ffffff{% else %}#d7d7d7{% endif %};">
+                            <td style="border: 1px solid #ddd; padding: 8px;">{{ transaction.type }}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">{{ transaction.publicData }}</td>
+                            <td style="border: 1px solid #ddd; padding: 8px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ transaction.privateData }}">
+                                {{ transaction.privateData }}
+                            </td>
+                            <td style="border: 1px solid #ddd; padding: 8px;">{{ transaction.blockNumber }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>No se encontraron transacciones para este lote.</p>
+    {% endif %}
+    <br>
+    <a href="{{ url_for('manage_forms') }}">Volver a la gestión de formularios</a>
+</body>
+</html>
