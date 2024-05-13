@@ -142,9 +142,9 @@ def record_form(form_id):
 
     # Create a dictionary to store private data
     private_data = {}
-    # Retrieve and assign temperature data to the dictionary
+    # Retrieve and assign data to the dictionary
     try:
-        private_data['t_almacenamiento'] = get_devices_data()
+        private_data = get_devices_data()
     except Exception as e:
         flash(f'Error al obtener datos de los dispositivos desde Thingsboard: {str(e)}')
         return redirect(url_for('manage_forms'))

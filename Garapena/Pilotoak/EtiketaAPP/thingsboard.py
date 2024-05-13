@@ -143,7 +143,7 @@ def get_data(JWT_token, device_token, device_name, device_key, start_ts, end_ts,
     # Fetch the telemetry data
     response = requests.get(url, headers=headers, params=params)
     data = response.json()
-    number = None
+    number = ''
     # print(f"data: {data}", file=sys.stderr)
     #returned_ts = data[key][0]['ts'] PARECE QUE HAY UN DESVÍO DE 2 HORAS
     #print(f"returned_ts: {datetime.datetime.fromtimestamp(returned_ts / 1000.0).strftime('%Y-%m-%d %H:%M:%S')}", file=sys.stderr)
