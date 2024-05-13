@@ -16,7 +16,8 @@ p2p-host="0.0.0.0"
 rpc-http-enabled=true
 rpc-http-host="0.0.0.0" #To allow remote connections, set to 0.0.0.0.
 rpc-http-port="8545" #The port (TCP) on which HTTP JSON-RPC listens. The default is 8545
-rpc-http-api=["ADMIN","DEBUG","MINER","ETH","TXPOOL","NET","TRACE","WEB3", "EEA", "PRIV","PLUGINS","QBFT"]
+# Como por ahora no hemos habilitado autenticación HTTP, eliminamos el acceso a ciertas API
+rpc-http-api=["ETH","TXPOOL","NET","TRACE","WEB3", "EEA", "PLUGINS"]
 rpc-http-cors-origins=["all"] # A list of domain URLs for CORS validation. Listed domains can access the node using JSON-RPC. If your client interacts with Besu using a browser app (such as Remix or a block explorer), add the client domain to the list.
 # The default value is "none". If you do not list any domains, browser apps cannot interact with your Besu node.
 rpc-ws-enabled=true #Enables or disables the WebSocket JSON-RPC service. The default is false
@@ -47,11 +48,14 @@ privacy-enabled=true #Enables or disables private transactions. The default is f
 #specifies the Q2T server address of the Tessera node (Q2T in tessera.conf)
 # El siguiente parámetro como variable de entorno BESU_PRIVACY_URL para mantener este fichero único
 #privacy-url=http://tessera_nodeX:9102
-rpc-http-authentication-enabled=true
-rpc-http-authentication-jwt-public-key-file="/var/lib/besu/QBFT-Network/networkFiles/TesseraKeys/publicRSAKeyOperator.pem"
+# Activamos autenticación solamente para RPC mediante WS por ahora
+#rpc-http-authentication-enabled=true
+#rpc-http-authentication-jwt-public-key-file="/var/lib/besu/QBFT-Network/networkFiles/TesseraKeys/publicRSAKeyOperator.pem"
 rpc-ws-authentication-enabled=true
 rpc-ws-authentication-jwt-public-key-file="/var/lib/besu/QBFT-Network/networkFiles/TesseraKeys/publicRSAKeyOperator.pem"
 privacy-multi-tenancy-enabled=true
+# Necesario si activamos privacidad y permisionado de cuentas:
+privacy-marker-transaction-signing-key-file="/var/lib/besu/QBFT-Network/Node/data/key"
 
 host-allowlist=["*"]
 
