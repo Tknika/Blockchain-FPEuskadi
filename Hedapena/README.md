@@ -91,7 +91,7 @@ En la carpeta *configNodes* está el fichero **config-node.toml** (en este caso 
 
 Hay que modificar el apartado *bootnodes=* con las direcciones enode que correspondan a los validadores (con la clave pública + IP:puerto). También vamos a crear el fichero *networkFiles/static-nodes.json* y poner esos mismos enodes.
 
-Lo configurado hasta ahora es válido para todos los nodos pero **cada nodo** tiene que tener su fichero **docker-composeX.yml** bien configurado para que en la carpeta */Node/data* de cada nodo queden copiados sus **ficheros key y key.pub de la carpeta networkFiles**.
+Lo configurado hasta ahora es válido para todos los nodos pero **cada nodo** tiene que tener su fichero **docker-composeX.yml** bien configurado para que en la carpeta */Node/data* de cada nodo queden copiados sus **ficheros key y key.pub de la carpeta networkFiles**. En esa misma carpeta se encuentra el fichero **permissions_config.toml** que debe contener al menos los enodes de los validadores (o eliminarlo si queremos que por defecto cualquier nodo pueda operar).
 
 ## 3.- Despliegue blockchain
 
