@@ -59,7 +59,7 @@ def get_devices_data():
     private_data[nombre_campo] = get_data(JWT_token, device_token, device_name, device_key, start_ts, end_ts, interval_ts)
 
     # --------------- TEMP FERMENTACIÓN ZUMOS ---------------
-    device_token = '3ade8b00-0196-11ef-b82d-172c57c297f6' # DS18B20_Fermentacion_Zumos  ¿¿IGUAL AL ALTERIOR??
+    device_token = '3ade8b00-0196-11ef-b82d-172c57c297f6' # DS18B20_Fermentacion_Zumos
     device_name = 'DS18B20_Fermentacion_Zumos'
     device_key = 'temperature'
     nombre_campo = 't_fermentacion_zumos'
@@ -143,7 +143,7 @@ def get_data(JWT_token, device_token, device_name, device_key, start_ts, end_ts,
     # Fetch the telemetry data
     response = requests.get(url, headers=headers, params=params)
     data = response.json()
-    number = ''
+    number = None
     # print(f"data: {data}", file=sys.stderr)
     #returned_ts = data[key][0]['ts'] PARECE QUE HAY UN DESVÍO DE 2 HORAS
     #print(f"returned_ts: {datetime.datetime.fromtimestamp(returned_ts / 1000.0).strftime('%Y-%m-%d %H:%M:%S')}", file=sys.stderr)
