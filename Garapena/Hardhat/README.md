@@ -6,25 +6,15 @@ Nos permitirá compilar y desplegar nuestro smart contract con ficheros de confi
 
 ## Instalación
 
-Creamos una carpeta que puede llamarse "hardhat" por ejemplo e inicializamos un proyecto Node.js:
-
-`npm init -y`
-
-Instalamos Hardhat:
+En esta misma carpeta instalamos Hardhat:
 
 `npm install --save-dev hardhat`
 
-Podemos crear un proyecto inicial ejecutando:
+Instalamos dependencias de Hardhat:
 
-`npx hardhat init`
+`npm install --save-dev @nomicfoundation/hardhat-toolbox`
 
-Seleccionamos "Create a JavaScript project" y aceptamos la respuesta poir defecto en las demás preguntas (pulsar Intro) salvo tal vez la opción de mandar reportes de errores.
-
-## Compilar contrato
-
-Copiamos Ziurtagiriak.sol a la carpeta contracts (como se encuentra en este repositorio) y eliminamos otros que no sean de nuestro proyecto.
-
-Ejecutamos este comando para descargar las dependencias de Ziurtagiriak.sol:
+Instalamos otras dependencias que necesitemos, en este caso dependencias de OpenZeppelin para el contrato Ziurtagiriak.sol:
 
 `npm install --save-dev @openzeppelin/contracts@4.9.3`
 
@@ -32,18 +22,22 @@ Es importante indicarle la versión a descargar porque el contrato está diseña
 
 Las importaciones de Ziurtagiriak.sol ya no tienen que indicar esa versión porque al descargar se han guardado en una carpeta sin indicar la versión.
 
-Creamos un fichero **secrets.json** como el que se encuentra en este repositorio para almacenar la clave privada del creador del contrato.
+## Compilar contrato
 
-Sustituimos el fichero **hardhat.config.js** con el que se encuentra en este repositorio y actualizamos la configuración.
+Creamos/modificamos el fichero **secrets.json** para almacenar las claves privadas de los creadores de cada contrato.
+
+Revisamos el fichero **hardhat.config.js** por si hay que modificar la configuración.
 
 Compilamos:
 
 `npx hardhat compile`
 
-## Desplegar contrato
+## Desplegar contratos
 
-Copiamos el fichero deploy_Ziurtagiriak.js a la carpeta scripts (como se encuentra en este repositorio) y ejecutamos:
-
+### Ziurtagiriak:
 `npx hardhat run --network besu scripts/deploy_Ziurtagiriak.js`
 
-Si se ha ejecutado correctamente nos devolverá la dirección del contrato.
+### Etiketa Inteligente:
+`npx hardhat run --network besu scripts/deploy_Etiketa.js`
+
+Si se han ejecutado correctamente nos devolverán las direcciones de los contratos, que habrá que actualizar en los ficheros de las variables de entorno de cada proyecto en la carpeta WebServer.
