@@ -87,11 +87,17 @@ En el repositorio actual se proporcionan las claves de cuatro nodos (en producci
 
 #### 2.2.3.- Configuración de los nodos
 
-En la carpeta *configNodes* está el fichero **config-node.toml** (en este caso común para todos) donde se configuran parámetros del nodo.
+En la carpeta *configNodes* está el fichero **config-node.toml** (en este caso común para todos) donde se configuran parámetros del nodo. Además hay una serie de ficheros de configuración a los que se hace referencia en el mismo y hay que modificar:
 
-Hay que modificar el apartado *bootnodes=* con las direcciones enode que correspondan a los validadores (con la clave pública + IP:puerto). También vamos a crear el fichero *networkFiles/static-nodes.json* y poner esos mismos enodes.
+- En el fichero *networkFiles/static-nodes.json* las direcciones enode que correspondan a los validadores (con la clave pública + IP:puerto).
 
-Lo configurado hasta ahora es válido para todos los nodos pero **cada nodo** tiene que tener su fichero **docker-composeX.yml** bien configurado para que en la carpeta */Node/data* de cada nodo queden copiados sus **ficheros key y key.pub de la carpeta networkFiles**. En esa misma carpeta se encuentra el fichero **permissions_config.toml** que debe contener al menos los enodes de los validadores (o eliminarlo si queremos que por defecto cualquier nodo pueda operar).
+- En el fichero *networkFiles/nodes_permissions_config.toml* incluir los nodos a los que se permite conectar.
+
+- En el fichero *networkFiles/accounts_permissions_config.toml* incluir las cuentas (direcciones) a las que se permite operar. Vamos a incluir las direcciones de cada nodo, las direcciones configuradas en el génesis y las direcciones asociadas a las claves privadas que van a desplegar contratos en la red. COMPROBAR QUE ESTOS PERMISOS SE HAN AÑADIDO.
+
+Lo configurado hasta ahora es válido para todos los nodos pero **cada nodo** tiene que tener su fichero **docker-composeX.yml** bien configurado para que en la carpeta */Node/data* de cada nodo queden copiados sus **ficheros key y key.pub de la carpeta networkFiles**.
+
+En la carpeta *configNodes* también está el fichero **tessera.conf** que hay que adaptar para configurar los demás nodos Tessera con los que se comunica y la ubicación de las claves de los 'tennants'.
 
 ## 3.- Despliegue blockchain
 
@@ -129,3 +135,26 @@ Si queremos que un (nuevo) nodo haga de servidor web que ofrezca apliaciones que
 
 ### Con Docker
 Introducimos un nuevo servidor en la red Docker Swarm, clonamos este repositorio y ejecutamos el fichero de docker compose de la [carpeta WebServer](https://github.com/Tknika/Blockchain-FPEuskadi/tree/main/Garapena/WebServer).
+
+## 6.- Herramienta para operar con la API
+
+Como hemos activado autenticación en el protocolo ws (WebSocket) y por seguridad algunos grupos de API solamente están accesibles mediante el mismo, una herramienta útil para operar desde la línea de comandos puede ser [websocat](https://github.com/vi/websocat).
+
+Descargamos el binario del repositorio, le damos permisos de ejecución y con un token JWT válido ejecutamos:
+
+`websocat -H="Authorization: Bearer TOKEN_JWT" ws://localhost:8546`
+
+Se conectará y quedará a la espera de comandos. Por ejemplo podemos consultar los nodos que tienen permiso para operar:
+
+`{"jsonrpc":"2.0","method":"perm_getNodesAllowlist","params":[], "id":1}`
+
+O las cuentas autorizadas para operar:
+
+`{"jsonrpc":"2.0","method":"perm_getAccountsAllowlist","params":[], "id":1}`
+
+Si la lista está vacía o queremos añadir neuvas cuentas:
+
+`{"jsonrpc":"2.0","method":"perm_addAccountsToAllowlist","params":[["0x867e3DCc2E546AB8d62aB8B25E6800C328ca2DD8","0x89b84B7FA93E429F2ce4632505074eED74E89351","0x92C83b4052230b836E100C42701cDc83d7baEb8a","0xC6261C951d52b563d6a91afB774Db1c2516CaAC4","0x432132E8561785c33Afe931762cf8EEb9c80E3aD","0xcB88953e60948E3A76FA658d65b7c2d5043c6409","0xDd76406B124f9E3AE9fBeb47e4d8Dc0ab143902D"]], "id":1}`
+
+
+

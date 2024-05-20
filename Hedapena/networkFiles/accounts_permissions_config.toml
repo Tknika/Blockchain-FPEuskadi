@@ -5,12 +5,9 @@ accounts-allowlist=[
     "0xC6261C951d52b563d6a91afB774Db1c2516CaAC4",
     "0x432132E8561785c33Afe931762cf8EEb9c80E3aD",
     "0xcB88953e60948E3A76FA658d65b7c2d5043c6409",
-    "0xDd76406B124f9E3AE9fBeb47e4d8Dc0ab143902D",
-    "0x432132E8561785c33Afe931762cf8EEb9c80E3aD",
-    "0xcB88953e60948E3A76FA658d65b7c2d5043c6409"
+    "0xDd76406B124f9E3AE9fBeb47e4d8Dc0ab143902D"
 ]
 # las cuatro primeras son las direcciones asociadas las claves privadas de los 4 nodos.
 # las tres siguientes son direcciones con ether definidas en el genesis.json
-# la siguiente es la dirección asociada a la clave privada que hace transacciones en Ziurtagiriak
-# la siguiente es la dirección asociada a la clave privada que hace transacciones en Etiketa
+# Hay que asegurarse de que están las direcciones asociadas a las claves privadas que van a desplegar contratos en la red.
 
