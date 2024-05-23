@@ -24,9 +24,30 @@ CREATE TABLE users (
 CREATE TABLE forms (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT,
-    lote INT UNSIGNED NOT NULL UNIQUE,
-    responsable VARCHAR(255),
+    -- Información pública
+    nombre_producto VARCHAR(255),
+    lote INT UNSIGNED NOT NULL UNIQUE,    
     fecha_elaboracion DATE,
+    obrador_elaborador VARCHAR(255),
+    registro_sanitario VARCHAR(255),
+    modo_produccion VARCHAR(255),
+    modo_elaboracion VARCHAR(255),
+    ingredientes VARCHAR(255),
+    aditivos VARCHAR(255),
+    conservantes VARCHAR(255),
+    tratamiento_conservacion VARCHAR(255),
+    formato VARCHAR(255),
+    apto_celiaco VARCHAR(255),
+    producto_vegano VARCHAR(255),
+    tipo_envase VARCHAR(255),
+    fecha_caducidad DATE,
+    -- Información privada
+    nombre_elaborador VARCHAR(255),
+    fecha_almacenamiento_mp DATE,
+    lugar_almacenamiento VARCHAR(255),
+    tratamiento_termico VARCHAR(255),
+    fecha_registro DATE,
+
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 

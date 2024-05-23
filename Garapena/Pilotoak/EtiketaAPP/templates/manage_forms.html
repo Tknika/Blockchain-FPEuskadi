@@ -27,7 +27,7 @@
         <ul>
             {% for form in forms %}
                 <li>
-                    <strong>Responsable:</strong> {{ form.responsable }}, <strong>Lote:</strong> {{ form.lote }}, <strong>Fecha:</strong> {{ form.fecha_elaboracion.strftime('%Y-%m-%d') }}<br>
+                    <strong>Elaborador:</strong> {{ form.nombre_elaborador }}, <strong>Lote:</strong> {{ form.lote }}, <strong>Fecha:</strong> {{ form.fecha_elaboracion.strftime('%Y-%m-%d') }}<br>
                     <a href="{{ url_for('edit_form', form_id=form.id) }}">Editar</a>&nbsp;&nbsp;&nbsp;&nbsp;
                     <a href="{{ url_for('show_qr', lote_id=form.lote) }}">Etiqueta QR</a>&nbsp;&nbsp;&nbsp;&nbsp;
                     <a href="{{ url_for('record_form', form_id=form.id) }}">Registrar lote</a>&nbsp;&nbsp;&nbsp;&nbsp;
@@ -44,9 +44,9 @@
         <form action="" method="post">
             {{ form.hidden_tag() }}
             <div class="form-group">
-                {{ form.responsable.label }}<br>
-                {{ form.responsable(size=20) }}<br>
-                {% for error in form.responsable.errors %}
+                {{ form.nombre_producto.label }}<br>
+                {{ form.nombre_producto(size=20) }}<br>
+                {% for error in form.nombre_producto.errors %}
                     <span style="color: red;">[{{ error }}]</span>
                 {% endfor %}
             </div>
@@ -61,6 +61,104 @@
                 {{ form.fecha_elaboracion.label }}<br>
                 {{ form.fecha_elaboracion(size=20) }}<br>
                 {% for error in form.fecha_elaboracion.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.nombre_elaborador.label }}<br>
+                {{ form.nombre_elaborador(size=20) }}<br>
+                {% for error in form.nombre_elaborador.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.obrador_elaborador.label }}<br>
+                {{ form.obrador_elaborador(size=20) }}<br>
+                {% for error in form.obrador_elaborador.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.registro_sanitario.label }}<br>
+                {{ form.registro_sanitario(size=20) }}<br>
+                {% for error in form.registro_sanitario.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.modo_produccion.label }}<br>
+                {{ form.modo_produccion(size=20) }}<br>
+                {% for error in form.modo_produccion.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.modo_elaboracion.label }}<br>
+                {{ form.modo_elaboracion(size=20) }}<br>
+                {% for error in form.modo_elaboracion.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.ingredientes.label }}<br>
+                {{ form.ingredientes(size=20) }}<br>
+                {% for error in form.ingredientes.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.aditivos.label }}<br>
+                {{ form.aditivos(size=20) }}<br>
+                {% for error in form.aditivos.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.conservantes.label }}<br>
+                {{ form.conservantes(size=20) }}<br>
+                {% for error in form.conservantes.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.tratamiento_conservacion.label }}<br>
+                {{ form.tratamiento_conservacion(size=20) }}<br>
+                {% for error in form.tratamiento_conservacion.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.formato.label }}<br>
+                {{ form.formato(size=20) }}<br>
+                {% for error in form.formato.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.apto_celiaco.label }}<br>
+                {{ form.apto_celiaco(size=20) }}<br>
+                {% for error in form.apto_celiaco.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.producto_vegano.label }}<br>
+                {{ form.producto_vegano(size=20) }}<br>
+                {% for error in form.producto_vegano.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.tipo_envase.label }}<br>
+                {{ form.tipo_envase(size=20) }}<br>
+                {% for error in form.tipo_envase.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.fecha_caducidad.label }}<br>
+                {{ form.fecha_caducidad(size=20) }}<br>
+                {% for error in form.fecha_caducidad.errors %}
                     <span style="color: red;">[{{ error }}]</span>
                 {% endfor %}
             </div>

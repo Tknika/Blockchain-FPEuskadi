@@ -10,13 +10,55 @@
     <div class="container">
         <h1>Información del Lote</h1>
         <div class="form-group">
-            <strong><label>Responsable:</label></strong> {{ form_data.responsable }}
+            <strong><label>Nombre del producto:</label></strong> {{ form_data.nombre_producto }}
         </div>
         <div class="form-group">
             <strong><label>Número de Lote:</label></strong> {{ form_data.lote }}
         </div>
         <div class="form-group">
             <strong><label>Fecha de Elaboración:</label></strong> {{ form_data.fecha_elaboracion }}
+        </div>
+        <div class="form-group">
+            <strong><label>Nombre del elaborador:</label></strong> {{ form_data.nombre_elaborador }}
+        </div>
+        <div class="form-group">
+            <strong><label>Obrador elaborador:</label></strong> {{ form_data.obrador_elaborador }}
+        </div>
+        <div class="form-group">
+            <strong><label>Registro sanitario:</label></strong> {{ form_data.registro_sanitario }}
+        </div>
+        <div class="form-group">
+            <strong><label>Modo de producción:</label></strong> {{ form_data.modo_produccion }}
+        </div>
+        <div class="form-group">
+            <strong><label>Modo de elaboración:</label></strong> {{ form_data.modo_elaboracion }}
+        </div>
+        <div class="form-group">
+            <strong><label>Ingredientes:</label></strong> {{ form_data.ingredientes }}
+        </div>
+        <div class="form-group">
+            <strong><label>Aditivos:</label></strong> {{ form_data.aditivos }}
+        </div>
+        <div class="form-group">
+            <strong><label>Conservantes:</label></strong> {{ form_data.conservantes }}
+        </div>
+        <div class="form-group">
+            <strong><label>Tratamiento de conservación:</label></strong> {{ form_data.tratamiento_conservacion }}
+        </div>
+        <div class="form-group">
+            <strong><label>Formato:</label></strong> {{ form_data.formato }}
+        </div>
+        <div class="form-group">
+            <strong><label>Apto para celiacos:</label></strong> {{ form_data.apto_celiaco }}
+        </div>
+        <div class="form-group">
+            <strong><label>Producto vegano:</label></strong> {{ form_data.producto_vegano }}
+        </div>
+        <div class="form-group">
+            <strong><label>Tipo de envase:</label></strong> {{ form_data.tipo_envase }}
+        </div>
+        <div class="form-group">
+            <strong><label>Fecha de caducidad:</label></strong> {{ form_data.fecha_caducidad }}
         </div>
         <div style="width: 100%;">
             <img src="{{ '/' + img_path }}" alt="" style="width: 100%;">
