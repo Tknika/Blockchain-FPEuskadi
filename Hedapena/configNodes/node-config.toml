@@ -6,7 +6,7 @@
 min-gas-price=0
 
 # Hecho por mi para la tabla [Node]
-
+data-storage-format="FOREST" # Necesario para privacidad (en posteriores versiones por defecto es "BONSAI")
 data-path="/var/lib/besu/QBFT-Network/Node/data" #The path to the Besu data directory. 
 #The default is the directory you installed Besu in, or /opt/besu/database if using the Besu Docker image.
 p2p-port="30303"
@@ -55,8 +55,8 @@ privacy-enabled=true #Enables or disables private transactions. The default is f
 rpc-ws-authentication-enabled=true
 rpc-ws-authentication-jwt-public-key-file="/var/lib/besu/QBFT-Network/networkFiles/TesseraKeys/publicRSAKeyOperator.pem"
 privacy-multi-tenancy-enabled=true
-# Necesario si activamos privacidad y permisionado de cuentas:
-privacy-marker-transaction-signing-key-file="/var/lib/besu/QBFT-Network/Node/data/key"
+# Necesario si activamos privacidad y permisionado de cuentas: POR VARIABLE DE ENTORNO
+#privacy-marker-transaction-signing-key-file="/var/lib/besu/QBFT-Network/Node/data/key"
 
 host-allowlist=["*"]
 
