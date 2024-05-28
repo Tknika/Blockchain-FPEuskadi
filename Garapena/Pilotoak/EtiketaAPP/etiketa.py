@@ -83,11 +83,8 @@ def logout():
 @app.route('/manage_forms', methods=['GET', 'POST'])
 @login_required
 def manage_forms():
-    import sys
-    print(f"Estamos en manage_forms", file=sys.stderr)
     form = FormForm()
     if form.validate_on_submit():
-        print(f"Estamos en validate on submit", file=sys.stderr)
         new_form = Form(
             nombre_producto=form.nombre_producto.data,
             lote=form.lote.data,
@@ -127,7 +124,6 @@ def manage_forms():
             for err in errorMessages:
                 flash(f'Error en {fieldName}: {err}', 'error')
 
-    print(f"Estamos antes de la consulta de forms creados", file=sys.stderr)
     forms = Form.query.filter_by(user_id=current_user.id).all()
     return render_template('manage_forms.html', title='Procesos productivos', nuevo_editar='Nuevo lote', form=form, forms=forms)
 
@@ -157,6 +153,9 @@ def edit_form(form_id):
         form_to_edit.producto_vegano = form.producto_vegano.data
         form_to_edit.tipo_envase = form.tipo_envase.data
         form_to_edit.fecha_caducidad = form.fecha_caducidad.data
+        form_to_edit.fecha_almacenamiento_mp = form.fecha_almacenamiento_mp.data
+        form_to_edit.lugar_almacenamiento = form.lugar_almacenamiento.data
+        form_to_edit.tratamiento_termico = form.tratamiento_termico.data
         try:
             db.session.commit()
             flash('Datos actualizados correctamente.')
@@ -187,7 +186,14 @@ def edit_form(form_id):
         form.producto_vegano.data = form_to_edit.producto_vegano
         form.tipo_envase.data = form_to_edit.tipo_envase
         form.fecha_caducidad.data = form_to_edit.fecha_caducidad
-        
+        form.fecha_almacenamiento_mp.data = form_to_edit.fecha_almacenamiento_mp
+        form.lugar_almacenamiento.data = form_to_edit.lugar_almacenamiento
+        form.tratamiento_termico.data = form_to_edit.tratamiento_termico
+    else:
+        for fieldName, errorMessages in form.errors.items():
+            for err in errorMessages:
+                flash(f'Error en {fieldName}: {err}', 'error')
+
     forms = Form.query.filter_by(user_id=current_user.id).all()
     return render_template('manage_forms.html', title='Procesos productivos', nuevo_editar='Editar lote', form=form, forms=forms, current_user=current_user)
 
