@@ -85,7 +85,29 @@ def logout():
 def manage_forms():
     form = FormForm()
     if form.validate_on_submit():
-        new_form = Form(responsable=form.responsable.data, lote=form.lote.data, fecha_elaboracion=form.fecha_elaboracion.data, user_id=current_user.id)
+        new_form = Form(
+            nombre_producto=form.nombre_producto.data,
+            lote=form.lote.data,
+            fecha_elaboracion=form.fecha_elaboracion.data,
+            nombre_elaborador=form.nombre_elaborador.data,
+            obrador_elaborador=form.obrador_elaborador.data,
+            registro_sanitario=form.registro_sanitario.data,
+            modo_produccion=form.modo_produccion.data,
+            modo_elaboracion=form.modo_elaboracion.data,
+            ingredientes=form.ingredientes.data,
+            aditivos=form.aditivos.data,
+            conservantes=form.conservantes.data,
+            tratamiento_conservacion=form.tratamiento_conservacion.data,
+            formato=form.formato.data,
+            apto_celiaco=form.apto_celiaco.data,
+            producto_vegano=form.producto_vegano.data,
+            tipo_envase=form.tipo_envase.data,
+            fecha_caducidad=form.fecha_caducidad.data,
+            fecha_almacenamiento_mp=form.fecha_almacenamiento_mp.data,
+            lugar_almacenamiento=form.lugar_almacenamiento.data,
+            tratamiento_termico=form.tratamiento_termico.data,
+            user_id=current_user.id
+        )
         db.session.add(new_form)
         try:
             db.session.commit()
@@ -94,6 +116,10 @@ def manage_forms():
         except IntegrityError:
             db.session.rollback()  # Roll back the transaction
             flash('Error: Ese número de lote ya existe.')
+        except Exception as e:
+            db.session.rollback()  # Roll back the transaction for any other unexpected exception
+            flash(f'Error inesperado: {str(e)}')
+
     forms = Form.query.filter_by(user_id=current_user.id).all()
     return render_template('manage_forms.html', title='Procesos productivos', nuevo_editar='Nuevo lote', form=form, forms=forms)
 
@@ -131,6 +157,9 @@ def edit_form(form_id):
             flash('Error: Ese número de lote ya existe.')
             forms = Form.query.filter_by(user_id=current_user.id).all()
             return render_template('manage_forms.html', title='Procesos productivos', nuevo_editar='Editar lote', form=form, forms=forms, current_user=current_user)
+        except Exception as e:
+            db.session.rollback()  # Roll back the transaction for any other unexpected exception
+            flash(f'Error inesperado: {str(e)}')
         return redirect(url_for('manage_forms'))
     elif request.method == 'GET':
         form.nombre_producto.data = form_to_edit.nombre_producto
