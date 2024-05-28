@@ -122,6 +122,10 @@ def manage_forms():
         except Exception as e:
             db.session.rollback()  # Roll back the transaction for any other unexpected exception
             flash(f'Error inesperado: {str(e)}')
+    else:
+        for fieldName, errorMessages in form.errors.items():
+            for err in errorMessages:
+                flash(f'Error en {fieldName}: {err}', 'error')
 
     print(f"Estamos antes de la consulta de forms creados", file=sys.stderr)
     forms = Form.query.filter_by(user_id=current_user.id).all()
