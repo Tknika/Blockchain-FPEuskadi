@@ -83,8 +83,11 @@ def logout():
 @app.route('/manage_forms', methods=['GET', 'POST'])
 @login_required
 def manage_forms():
+    import sys
+    print(f"Estamos en manage_forms", file=sys.stderr)
     form = FormForm()
     if form.validate_on_submit():
+        print(f"Estamos en validate on submit", file=sys.stderr)
         new_form = Form(
             nombre_producto=form.nombre_producto.data,
             lote=form.lote.data,
@@ -120,6 +123,7 @@ def manage_forms():
             db.session.rollback()  # Roll back the transaction for any other unexpected exception
             flash(f'Error inesperado: {str(e)}')
 
+    print(f"Estamos antes de la consulta de forms creados", file=sys.stderr)
     forms = Form.query.filter_by(user_id=current_user.id).all()
     return render_template('manage_forms.html', title='Procesos productivos', nuevo_editar='Nuevo lote', form=form, forms=forms)
 
