@@ -223,7 +223,7 @@ def record_form(form_id):
     private_data['fecha_almacenamiento'] = form.fecha_almacenamiento_mp.strftime('%Y-%m-%d') if form.fecha_almacenamiento_mp else None
     private_data['lugar_almacenamiento'] = form.lugar_almacenamiento
     private_data['tratamiento_termico'] = form.tratamiento_termico
-    private_data['fecha_registro'] = datetime.datetime.now().strftime('%Y-%m-%d')
+    private_data['fecha_registro'] = datetime.now().strftime('%Y-%m-%d')
     
     # Prepare transaction
     nonce = web3.eth.get_transaction_count(owner_addr.address)
