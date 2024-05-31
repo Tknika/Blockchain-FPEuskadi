@@ -260,10 +260,12 @@ def record_form(form_id):
     txn_hash = web3.eth.send_raw_transaction(Web3.to_hex(signed_txn.rawTransaction))
     try:
         txn_receipt = web3.eth.wait_for_transaction_receipt(txn_hash, timeout=30)
-        if txn_receipt.status != 1:
-            flash(f'Error: La transacción no se completó correctamente. Estado: {txn_receipt.status}')
-        else:
+        if txn_receipt.status == 1:
             flash('Lote registrado públicamente con éxito.')
+        elif txn_receipt.status == 0:
+            flash('Error: La transacción ha fallado y ha sido revertida.')
+        else:
+            flash(f'Error: La transacción no se completó correctamente. Estado desconocido: {txn_receipt.status}')
     except TimeExhausted:
         flash('Error: La transacción excedió el tiempo de espera.')
 
@@ -274,8 +276,11 @@ def record_form(form_id):
 def show_form_public_data(lote_id):
     try:
         raw_form_data = etiketa_contract.functions.getForm(lote_id).call()
-    except:
-        message = "No hay datos disponibles para este lote."
+        if not raw_form_data:
+            message = "No hay datos disponibles para este lote."
+            return render_template('informacion.html', message=message)
+    except Exception as e:
+        message = f"Error al recuperar los datos: {str(e)}"
         return render_template('informacion.html', message=message)
     # Convert raw data into a more suitable format for HTML processing
     # vamos a mostrar los datos públicos:
