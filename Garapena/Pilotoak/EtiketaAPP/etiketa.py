@@ -219,8 +219,14 @@ def record_form(form_id):
     except Exception as e:
         flash(f'Error al obtener datos de los dispositivos desde Thingsboard: {str(e)}')
         return redirect(url_for('manage_forms'))
+    # añadimos los campos privados que no se almacenarán en los datos públicos
+    private_data['t_almacenamiento'] = form.fecha_almacenamiento_mp.data
+    private_data['lugar_almacenamiento'] = form.lugar_almacenamiento.data
+    private_data['tratamiento_termico'] = form.tratamiento_termico.data
     # Prepare transaction
     nonce = web3.eth.get_transaction_count(owner_addr.address)
+
+
     try:
         # Check if form exists
         etiketa_contract.functions.getForm(form.lote).call()
@@ -292,7 +298,7 @@ def show_form_public_data(lote_id):
         'fecha_caducidad': datetime.fromisoformat(publicData['fecha_caducidad']).strftime('%Y-%m-%d')
     }
     user_id = publicData['user_id']
-    img_path = f"static/images/{user_id}.jpg"
+    img_path = f"static/images/{user_id}" #carpeta donde se encuentran las imágenes
     return render_template('datos_etiqueta.html', form_data=form_data, img_path=img_path)
 
 @app.route('/datosCompletos/<int:lote_id>', methods=['GET'])
@@ -325,7 +331,7 @@ def show_form_all_data(lote_id):
         'fecha_caducidad': datetime.fromisoformat(publicData['fecha_caducidad']).strftime('%Y-%m-%d')
     }
     user_id = publicData['user_id']
-    img_path = f"static/images/{user_id}.jpg"
+    img_path = f"static/images/{user_id}"
     # vamos a mostrar los datos privados:
     fernet = Fernet(current_user.encryption_key)
     decrypted_data = fernet.decrypt(raw_form_data[1].encode()).decode()

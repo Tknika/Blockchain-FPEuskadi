@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, SubmitField, DateField, PasswordField
-from wtforms.validators import DataRequired, NumberRange
+from wtforms.validators import DataRequired, NumberRange, custom
+from datetime import date
 
 class LoginForm(FlaskForm):
     username = StringField('Usuario', validators=[DataRequired()])
@@ -10,7 +11,7 @@ class LoginForm(FlaskForm):
 class FormForm(FlaskForm):
     nombre_producto = StringField('Nombre del producto', validators=[DataRequired()])
     lote = IntegerField('Número de lote', validators=[DataRequired(), NumberRange(min=1, message='El número de lote debe ser un entero positivo')])
-    fecha_elaboracion = DateField('Fecha de elaboración', format='%Y-%m-%d', validators=[DataRequired()])
+    fecha_elaboracion = DateField('Fecha de elaboración', format='%Y-%m-%d', validators=[DataRequired(), custom(lambda form, field: field.data <= date.today(), message="La fecha de elaboración debe ser anterior o igual a la fecha actual")])
     nombre_elaborador = StringField('Nombre del elaborador', validators=[DataRequired()])
     obrador_elaborador = StringField('Obrador elaborador', validators=[DataRequired()])
     registro_sanitario = StringField('Registro sanitario', validators=[DataRequired()])
@@ -25,7 +26,7 @@ class FormForm(FlaskForm):
     producto_vegano = StringField('Producto vegano', validators=[DataRequired()])
     tipo_envase = StringField('Tipo de envase', validators=[DataRequired()])
     fecha_caducidad = DateField('Fecha de caducidad', format='%Y-%m-%d', validators=[DataRequired()])
-    fecha_almacenamiento_mp = DateField('Fecha de almacenamiento de la materia prima', format='%Y-%m-%d', validators=[DataRequired()])
+    fecha_almacenamiento_mp = DateField('Fecha de almacenamiento de la materia prima', format='%Y-%m-%d', validators=[DataRequired(), custom(lambda form, field: field.data < form.fecha_elaboracion.data, message="La fecha de almacenamiento de la materia prima debe ser anterior a la fecha de elaboración")])
     lugar_almacenamiento = StringField('Lugar de almacenamiento', validators=[DataRequired()])
     tratamiento_termico = StringField('Tratamiento térmico', validators=[DataRequired()])
     submit = SubmitField('Crear/Modificar lote')

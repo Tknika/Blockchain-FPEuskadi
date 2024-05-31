@@ -19,16 +19,22 @@
             <strong><label>Fecha de Elaboración:</label></strong> {{ form_data.fecha_elaboracion }}
         </div>
         <div class="form-group">
-            <strong><label>Nombre del elaborador:</label></strong> {{ form_data.nombre_elaborador }}
-        </div>
-        <div class="form-group">
             <strong><label>Obrador elaborador:</label></strong> {{ form_data.obrador_elaborador }}
         </div>
         <div class="form-group">
             <strong><label>Registro sanitario:</label></strong> {{ form_data.registro_sanitario }}
         </div>
+        <div style="width: 100%;">
+            <img src="{{ '/' + img_path + 'empresa.jpg' }}" alt="" style="width: 100%;">
+        </div>
+        <div style="width: 100%;">
+            <img src="{{ '/' + img_path + 'logo.jpg' }}" alt="" style="width: 100%;">
+        </div>
         <div class="form-group">
             <strong><label>Modo de producción:</label></strong> {{ form_data.modo_produccion }}
+        </div>
+        <div style="width: 100%;">
+            <img src="{{ '/' + img_path + 'certificacion.jpg' }}" alt="" style="width: 100%;">
         </div>
         <div class="form-group">
             <strong><label>Modo de elaboración:</label></strong> {{ form_data.modo_elaboracion }}
@@ -57,13 +63,14 @@
         <div class="form-group">
             <strong><label>Tipo de envase:</label></strong> {{ form_data.tipo_envase }}
         </div>
+        <div style="width: 100%;">
+            <img src="{{ '/' + img_path + 'gestion_residuos.jpg' }}" alt="" style="width: 100%;">
+        </div>
         <div class="form-group">
             <strong><label>Fecha de caducidad:</label></strong> {{ form_data.fecha_caducidad }}
         </div>
-        <div style="width: 100%;">
-            <img src="{{ '/' + img_path }}" alt="" style="width: 100%;">
-        </div>
         <!-- <a href="{{ url_for('manage_forms') }}" class="boton-salir">Volver</a> -->
+
     </div>
 </body>
 </html>
