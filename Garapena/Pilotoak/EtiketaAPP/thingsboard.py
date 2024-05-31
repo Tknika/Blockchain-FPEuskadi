@@ -1,10 +1,25 @@
 # Thingsboard platform requests
-import requests, time
+import requests, time, json
 from flask import flash  # Importing flash from Flask
 
 thingsboard_host = 'thingsboard.tknika.eus'
 # Function to refresh JWT token
-def refresh_jwt_token():
+def get_jwt_token():
+    AUTH_URL = f"https://{thingsboard_host}/api/auth/login"
+    with open('Thingsboard_access.json') as f:
+        credentials = json.load(f)
+    payload = {
+        'username': credentials['username'],
+        'password': credentials['password']
+    }
+    response = requests.post(AUTH_URL, json=payload)
+    if response.status_code == 200:
+        return response.json()['token']
+    else:
+        flash('Error obteniendo token JWT.')
+        return None
+    
+    '''
     with open('refresh_JWT.txt', 'r') as file:
         refresh_token = file.read().strip()
     refresh_url = f"https://{thingsboard_host}/api/auth/token"
@@ -20,11 +35,12 @@ def refresh_jwt_token():
     else:
         flash('Error obteniendo token JWT.')
         return None
+    '''
 
 #@app.route('/thingsboard/<key>', methods=['GET'])
 def get_devices_data():
     # Get a fresh JWT token
-    JWT_token = refresh_jwt_token()
+    JWT_token = get_jwt_token()
     if JWT_token is None:
         raise Exception('No se ha obtenido token JWT para la lectura de datos')
 
