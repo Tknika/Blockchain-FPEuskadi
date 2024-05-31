@@ -53,7 +53,7 @@ privacy-enabled=true #Enables or disables private transactions. The default is f
 #rpc-http-authentication-enabled=true
 #rpc-http-authentication-jwt-public-key-file="/var/lib/besu/QBFT-Network/networkFiles/TesseraKeys/publicRSAKeyOperator.pem"
 rpc-ws-authentication-enabled=true
-rpc-ws-authentication-jwt-public-key-file="/var/lib/besu/QBFT-Network/networkFiles/TesseraKeys/publicRSAKeyOperator.pem"
+rpc-ws-authentication-jwt-public-key-file="/var/lib/besu/QBFT-Network/networkFiles/JWTkeys/publicRSAKeyOperator.pem"
 privacy-multi-tenancy-enabled=true
 # Necesario si activamos privacidad y permisionado de cuentas: POR VARIABLE DE ENTORNO
 #privacy-marker-transaction-signing-key-file="/var/lib/besu/QBFT-Network/Node/data/key"

@@ -61,7 +61,7 @@ Asegurarnos de que tenemos la red docker creada:
 
 ### 2.2.- Ficheros de configuración
 
-En cada servidor se puede crear una carpeta llamada *QBFT-Network* por ejemplo y copiar todos los ficheros de este repositorio para utilizar como configuración base. Esta configuración es válida tal y como está pero se recomienda ajustar los parámetros (número de nodos, tiempo entre bloques...) y regenerar el *genesis.json* con nuevas direcciones.
+La configuración proporcionada en este repositorio es válida tal y como está pero se recomienda ajustar los parámetros (número de nodos, tiempo entre bloques...) y regenerar el *genesis.json* con nuevas direcciones.
 
 #### 2.2.1.- Generar nuevas direcciones
 
@@ -77,7 +77,7 @@ Tras configurar **qbftConfigFile.json** como queramos ejecutamos:
 
 `besu operator generate-blockchain-config --config-file=qbftConfigFile.json --to=networkFiles --private-key-file-name=key`
 
-Esto nos genera la carpeta *networkFiles* con *genesis.json* y las direcciones de los nodos con sus claves dentro. Estas claves las vamos a copiar a la carpeta padre como keyX y keyX.pub para que con docker-composeX.yml se copien a la carpeta Node/data en su correspondioente nodo.
+Esto nos genera la carpeta *networkFiles* con *genesis.json* y las direcciones de los nodos con sus claves dentro. Estas claves privadas las vamos a copiar a la carpeta padre como keyX (tal y como se ve en este repositorio como ejemplo) para que se referencien desde el docker-composeX.yml de cada nodo sin tener que poner la ruta con la carpeta que tiene como nombre la dirección asociada.
 
 Para generar las claves de los 'tenant' Tessera (usuarios que pueden hacer sus propias transacciones privadas) podemos utilizar el siguiente comando:
 
@@ -93,11 +93,23 @@ En la carpeta *configNodes* está el fichero **config-node.toml** (en este caso 
 
 - En el fichero *networkFiles/nodes_permissions_config.toml* incluir los nodos a los que se permite conectar.
 
-- En el fichero *networkFiles/accounts_permissions_config.toml* incluir las cuentas (direcciones) a las que se permite operar. Vamos a incluir las direcciones de cada nodo, las direcciones configuradas en el génesis y las direcciones asociadas a las claves privadas que van a desplegar contratos en la red. COMPROBAR QUE ESTOS PERMISOS SE HAN AÑADIDO.
+- En el fichero *networkFiles/accounts_permissions_config.toml* incluir las cuentas (direcciones) a las que se permite operar. Vamos a incluir las direcciones de cada nodo, las direcciones configuradas en el génesis y las direcciones asociadas a las claves privadas que van a desplegar contratos en la red.
 
-Lo configurado hasta ahora es válido para todos los nodos pero **cada nodo** tiene que tener su fichero **docker-composeX.yml** bien configurado para que en la carpeta */Node/data* de cada nodo queden copiados sus **ficheros key y key.pub de la carpeta networkFiles**.
+Lo configurado hasta ahora es válido para todos los nodos pero **cada nodo** tiene que tener su fichero **docker-composeX.yml** bien configurado para que reciba la ruta apropiada a su **clave privada keyX de la carpeta networkFiles/keys**.
 
-En la carpeta *configNodes* también está el fichero **tessera.conf** que hay que adaptar para configurar los demás nodos Tessera con los que se comunica y la ubicación de las claves de los 'tennants'.
+En la carpeta *configNodes* también está el fichero **tessera.conf** que hay que adaptar para configurar los demás nodos Tessera con los que se comunica y la ubicación de las claves de los 'tenants'.
+
+### 2.3.- Autenticación: generar tokens JWT
+
+Necesitaremos autenticarnos mediante tokens JWT si queremos acceder a las API administrativas de los nodos o queremos hacer transacciones privadas mediante tenants (todo ello mediante el protocolo ws). Para ello lo primero es crear un par de claves público-privada mediante los siguientes comandos:
+
+`openssl genrsa -out privateRSAKeyOperator.pem 2048`
+
+`openssl rsa -pubout -in privateRSAKeyOperator.pem -out publicRSAKeyOperator.pem`
+
+Estos ficheros deben situarse en la carpeta **networkFiles/JWTkeys** y se llamarán **privateRSAKeyOperator.pem** y **publicRSAKeyOperator.pem**.
+
+Para generar los tokens JWT ejecutamos el script *createJWT.py* de la carpeta *Pilotoak/Erremintak/*. También podemos utilizar la herramienta [jwt.io](https://jwt.io/) para generar los tokens JWT.
 
 ## 3.- Despliegue blockchain
 
@@ -152,7 +164,7 @@ O las cuentas autorizadas para operar:
 
 `{"jsonrpc":"2.0","method":"perm_getAccountsAllowlist","params":[], "id":1}`
 
-Si la lista está vacía o queremos añadir neuvas cuentas:
+Si la lista está vacía o queremos añadir nuevas cuentas:
 
 `{"jsonrpc":"2.0","method":"perm_addAccountsToAllowlist","params":[["0x867e3DCc2E546AB8d62aB8B25E6800C328ca2DD8","0x89b84B7FA93E429F2ce4632505074eED74E89351","0x92C83b4052230b836E100C42701cDc83d7baEb8a","0xC6261C951d52b563d6a91afB774Db1c2516CaAC4","0x432132E8561785c33Afe931762cf8EEb9c80E3aD","0xcB88953e60948E3A76FA658d65b7c2d5043c6409","0xDd76406B124f9E3AE9fBeb47e4d8Dc0ab143902D"]], "id":1}`
 
