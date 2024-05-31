@@ -220,12 +220,13 @@ def record_form(form_id):
         flash(f'Error al obtener datos de los dispositivos desde Thingsboard: {str(e)}')
         return redirect(url_for('manage_forms'))
     # añadimos los campos privados que no se almacenarán en los datos públicos
-    private_data['t_almacenamiento'] = form.fecha_almacenamiento_mp.data
-    private_data['lugar_almacenamiento'] = form.lugar_almacenamiento.data
-    private_data['tratamiento_termico'] = form.tratamiento_termico.data
+    private_data['fecha_almacenamiento'] = form.fecha_almacenamiento_mp.strftime('%Y-%m-%d') if form.fecha_almacenamiento_mp else None
+    private_data['lugar_almacenamiento'] = form.lugar_almacenamiento
+    private_data['tratamiento_termico'] = form.tratamiento_termico
+    private_data['fecha_registro'] = datetime.datetime.now().strftime('%Y-%m-%d')
+    
     # Prepare transaction
     nonce = web3.eth.get_transaction_count(owner_addr.address)
-
 
     try:
         # Check if form exists
@@ -411,5 +412,3 @@ def show_qr(lote_id):
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
-
-
