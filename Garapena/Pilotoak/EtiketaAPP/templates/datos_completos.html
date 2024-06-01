@@ -13,7 +13,7 @@
     <div class="container">
         <h1>Información pública del Lote</h1>
         <div class="form-group">
-            <strong><label>Responsable:</label></strong> {{ form_data_public.responsable }}
+            <strong><label>Nombre del producto:</label></strong> {{ form_data_public.nombre_producto }}
         </div>
         <div class="form-group">
             <strong><label>Número de Lote:</label></strong> {{ form_data_public.lote }}
@@ -21,8 +21,47 @@
         <div class="form-group">
             <strong><label>Fecha de Elaboración:</label></strong> {{ form_data_public.fecha_elaboracion }}
         </div>
-        <div style="width: 100%;">
-            <img src="{{ '/' + img_path }}" alt="" style="width: 100%;">
+        <div class="form-group">
+            <strong><label>Nombre del elaborador:</label></strong> {{ form_data_public.nombre_elaborador }}
+        </div>
+        <div class="form-group">
+            <strong><label>Obrador elaborador:</label></strong> {{ form_data_public.obrador_elaborador }}
+        </div>
+        <div class="form-group">
+            <strong><label>Registro sanitario:</label></strong> {{ form_data_public.registro_sanitario }}
+        </div>
+        <div class="form-group">
+            <strong><label>Modo de producción:</label></strong> {{ form_data_public.modo_produccion }}
+        </div>
+        <div class="form-group">
+            <strong><label>Modo de elaboración:</label></strong> {{ form_data_public.modo_elaboracion }}
+        </div>
+        <div class="form-group">
+            <strong><label>Ingredientes:</label></strong> {{ form_data_public.ingredientes }}
+        </div>
+        <div class="form-group">
+            <strong><label>Aditivos:</label></strong> {{ form_data_public.aditivos }}
+        </div>
+        <div class="form-group">
+            <strong><label>Conservantes:</label></strong> {{ form_data_public.conservantes }}
+        </div>
+        <div class="form-group">
+            <strong><label>Tratamiento de conservación:</label></strong> {{ form_data_public.tratamiento_conservacion }}
+        </div>
+        <div class="form-group">
+            <strong><label>Formato:</label></strong> {{ form_data_public.formato }}
+        </div>
+        <div class="form-group">
+            <strong><label>Apto para celiacos:</label></strong> {{ form_data_public.apto_celiaco }}
+        </div>
+        <div class="form-group">
+            <strong><label>Producto vegano:</label></strong> {{ form_data_public.producto_vegano }}
+        </div>
+        <div class="form-group">
+            <strong><label>Tipo de envase:</label></strong> {{ form_data_public.tipo_envase }}
+        </div>
+        <div class="form-group">
+            <strong><label>Fecha de caducidad:</label></strong> {{ form_data_public.fecha_caducidad }}
         </div>
         <!-- <a href="{{ url_for('manage_forms') }}" class="boton-salir">Volver</a> -->
     </div>

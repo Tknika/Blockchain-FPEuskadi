@@ -85,7 +85,29 @@ def logout():
 def manage_forms():
     form = FormForm()
     if form.validate_on_submit():
-        new_form = Form(responsable=form.responsable.data, lote=form.lote.data, fecha_elaboracion=form.fecha_elaboracion.data, user_id=current_user.id)
+        new_form = Form(
+            nombre_producto=form.nombre_producto.data,
+            lote=form.lote.data,
+            fecha_elaboracion=form.fecha_elaboracion.data,
+            nombre_elaborador=form.nombre_elaborador.data,
+            obrador_elaborador=form.obrador_elaborador.data,
+            registro_sanitario=form.registro_sanitario.data,
+            modo_produccion=form.modo_produccion.data,
+            modo_elaboracion=form.modo_elaboracion.data,
+            ingredientes=form.ingredientes.data,
+            aditivos=form.aditivos.data,
+            conservantes=form.conservantes.data,
+            tratamiento_conservacion=form.tratamiento_conservacion.data,
+            formato=form.formato.data,
+            apto_celiaco=form.apto_celiaco.data,
+            producto_vegano=form.producto_vegano.data,
+            tipo_envase=form.tipo_envase.data,
+            fecha_caducidad=form.fecha_caducidad.data,
+            fecha_almacenamiento_mp=form.fecha_almacenamiento_mp.data,
+            lugar_almacenamiento=form.lugar_almacenamiento.data,
+            tratamiento_termico=form.tratamiento_termico.data,
+            user_id=current_user.id
+        )
         db.session.add(new_form)
         try:
             db.session.commit()
@@ -94,6 +116,14 @@ def manage_forms():
         except IntegrityError:
             db.session.rollback()  # Roll back the transaction
             flash('Error: Ese número de lote ya existe.')
+        except Exception as e:
+            db.session.rollback()  # Roll back the transaction for any other unexpected exception
+            flash(f'Error inesperado: {str(e)}')
+    else:
+        for fieldName, errorMessages in form.errors.items():
+            for err in errorMessages:
+                flash(f'Error en {fieldName}: {err}', 'error')
+
     forms = Form.query.filter_by(user_id=current_user.id).all()
     return render_template('manage_forms.html', title='Procesos productivos', nuevo_editar='Nuevo lote', form=form, forms=forms)
 
@@ -106,9 +136,26 @@ def edit_form(form_id):
         flash('No tiene permiso para editar este lote.')
         return redirect(url_for('manage_forms'))
     if form.validate_on_submit():
-        form_to_edit.responsable = form.responsable.data
+        form_to_edit.nombre_producto = form.nombre_producto.data
         form_to_edit.lote = form.lote.data
         form_to_edit.fecha_elaboracion = form.fecha_elaboracion.data
+        form_to_edit.nombre_elaborador = form.nombre_elaborador.data
+        form_to_edit.obrador_elaborador = form.obrador_elaborador.data
+        form_to_edit.registro_sanitario = form.registro_sanitario.data
+        form_to_edit.modo_produccion = form.modo_produccion.data
+        form_to_edit.modo_elaboracion = form.modo_elaboracion.data
+        form_to_edit.ingredientes = form.ingredientes.data
+        form_to_edit.aditivos = form.aditivos.data
+        form_to_edit.conservantes = form.conservantes.data
+        form_to_edit.tratamiento_conservacion = form.tratamiento_conservacion.data
+        form_to_edit.formato = form.formato.data
+        form_to_edit.apto_celiaco = form.apto_celiaco.data
+        form_to_edit.producto_vegano = form.producto_vegano.data
+        form_to_edit.tipo_envase = form.tipo_envase.data
+        form_to_edit.fecha_caducidad = form.fecha_caducidad.data
+        form_to_edit.fecha_almacenamiento_mp = form.fecha_almacenamiento_mp.data
+        form_to_edit.lugar_almacenamiento = form.lugar_almacenamiento.data
+        form_to_edit.tratamiento_termico = form.tratamiento_termico.data
         try:
             db.session.commit()
             flash('Datos actualizados correctamente.')
@@ -117,12 +164,36 @@ def edit_form(form_id):
             flash('Error: Ese número de lote ya existe.')
             forms = Form.query.filter_by(user_id=current_user.id).all()
             return render_template('manage_forms.html', title='Procesos productivos', nuevo_editar='Editar lote', form=form, forms=forms, current_user=current_user)
+        except Exception as e:
+            db.session.rollback()  # Roll back the transaction for any other unexpected exception
+            flash(f'Error inesperado: {str(e)}')
         return redirect(url_for('manage_forms'))
     elif request.method == 'GET':
-        form.responsable.data = form_to_edit.responsable
+        form.nombre_producto.data = form_to_edit.nombre_producto
         form.lote.data = form_to_edit.lote
         form.fecha_elaboracion.data = form_to_edit.fecha_elaboracion
-        
+        form.nombre_elaborador.data = form_to_edit.nombre_elaborador
+        form.obrador_elaborador.data = form_to_edit.obrador_elaborador
+        form.registro_sanitario.data = form_to_edit.registro_sanitario
+        form.modo_produccion.data = form_to_edit.modo_produccion
+        form.modo_elaboracion.data = form_to_edit.modo_elaboracion
+        form.ingredientes.data = form_to_edit.ingredientes
+        form.aditivos.data = form_to_edit.aditivos
+        form.conservantes.data = form_to_edit.conservantes
+        form.tratamiento_conservacion.data = form_to_edit.tratamiento_conservacion
+        form.formato.data = form_to_edit.formato
+        form.apto_celiaco.data = form_to_edit.apto_celiaco
+        form.producto_vegano.data = form_to_edit.producto_vegano
+        form.tipo_envase.data = form_to_edit.tipo_envase
+        form.fecha_caducidad.data = form_to_edit.fecha_caducidad
+        form.fecha_almacenamiento_mp.data = form_to_edit.fecha_almacenamiento_mp
+        form.lugar_almacenamiento.data = form_to_edit.lugar_almacenamiento
+        form.tratamiento_termico.data = form_to_edit.tratamiento_termico
+    else:
+        for fieldName, errorMessages in form.errors.items():
+            for err in errorMessages:
+                flash(f'Error en {fieldName}: {err}', 'error')
+
     forms = Form.query.filter_by(user_id=current_user.id).all()
     return render_template('manage_forms.html', title='Procesos productivos', nuevo_editar='Editar lote', form=form, forms=forms, current_user=current_user)
 
@@ -203,9 +274,22 @@ def show_form_public_data(lote_id):
     # vamos a mostrar los datos públicos:
     publicData = json.loads(raw_form_data[0])  # Convert JSON string to Python dictionary
     form_data = {
-        'responsable': publicData['responsable'],
+        'nombre_producto': publicData['nombre_producto'],
         'lote': publicData['lote'],
-        'fecha_elaboracion': datetime.fromisoformat(publicData['fecha_elaboracion']).strftime('%Y-%m-%d')
+        'fecha_elaboracion': datetime.fromisoformat(publicData['fecha_elaboracion']).strftime('%Y-%m-%d'),
+        'obrador_elaborador': publicData['obrador_elaborador'],
+        'registro_sanitario': publicData['registro_sanitario'],
+        'modo_produccion': publicData['modo_produccion'],
+        'modo_elaboracion': publicData['modo_elaboracion'],
+        'ingredientes': publicData['ingredientes'],
+        'aditivos': publicData['aditivos'],
+        'conservantes': publicData['conservantes'],
+        'tratamiento_conservacion': publicData['tratamiento_conservacion'],
+        'formato': publicData['formato'],
+        'apto_celiaco': publicData['apto_celiaco'],
+        'producto_vegano': publicData['producto_vegano'],
+        'tipo_envase': publicData['tipo_envase'],
+        'fecha_caducidad': datetime.fromisoformat(publicData['fecha_caducidad']).strftime('%Y-%m-%d')
     }
     user_id = publicData['user_id']
     img_path = f"static/images/{user_id}.jpg"
@@ -223,9 +307,22 @@ def show_form_all_data(lote_id):
     # vamos a mostrar los datos pblicos:
     publicData = json.loads(raw_form_data[0])  # Convert JSON string to Python dictionary
     form_data_public = {
-        'responsable': publicData['responsable'],
+        'nombre_producto': publicData['nombre_producto'],
         'lote': publicData['lote'],
-        'fecha_elaboracion': datetime.fromisoformat(publicData['fecha_elaboracion']).strftime('%Y-%m-%d')
+        'fecha_elaboracion': datetime.fromisoformat(publicData['fecha_elaboracion']).strftime('%Y-%m-%d'),
+        'obrador_elaborador': publicData['obrador_elaborador'],
+        'registro_sanitario': publicData['registro_sanitario'],
+        'modo_produccion': publicData['modo_produccion'],
+        'modo_elaboracion': publicData['modo_elaboracion'],
+        'ingredientes': publicData['ingredientes'],
+        'aditivos': publicData['aditivos'],
+        'conservantes': publicData['conservantes'],
+        'tratamiento_conservacion': publicData['tratamiento_conservacion'],
+        'formato': publicData['formato'],
+        'apto_celiaco': publicData['apto_celiaco'],
+        'producto_vegano': publicData['producto_vegano'],
+        'tipo_envase': publicData['tipo_envase'],
+        'fecha_caducidad': datetime.fromisoformat(publicData['fecha_caducidad']).strftime('%Y-%m-%d')
     }
     user_id = publicData['user_id']
     img_path = f"static/images/{user_id}.jpg"
