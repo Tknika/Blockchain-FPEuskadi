@@ -18,7 +18,7 @@ rpc-http-host="0.0.0.0" #To allow remote connections, set to 0.0.0.0.
 rpc-http-port="8545" #The port (TCP) on which HTTP JSON-RPC listens. The default is 8545
 # Como por ahora no hemos habilitado autenticación HTTP, eliminamos el acceso a ciertas API
 # ADMIN hay que dejar para que Chainlens funcione bien. ¿CAMBIAR de monitorización?
-rpc-http-api=["ADMIN","DEBUG","ETH","TXPOOL","NET","TRACE","WEB3","EEA","PLUGINS"]
+rpc-http-api=["DEBUG","ETH","TXPOOL","NET","TRACE","WEB3","PLUGINS"]
 rpc-http-cors-origins=["all"] # A list of domain URLs for CORS validation. Listed domains can access the node using JSON-RPC. If your client interacts with Besu using a browser app (such as Remix or a block explorer), add the client domain to the list.
 # The default value is "none". If you do not list any domains, browser apps cannot interact with your Besu node.
 rpc-ws-enabled=true #Enables or disables the WebSocket JSON-RPC service. The default is false

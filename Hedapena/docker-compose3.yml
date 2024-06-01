@@ -18,6 +18,8 @@ services:
       - BESU_PRIVACY_URL=http://172.16.0.24:9102
       - BESU_NODE_PRIVATE_KEY_FILE=/var/lib/besu/QBFT-Network/networkFiles/keys/key3
       - BESU_PRIVACY_MARKER_TRANSACTION_SIGNING_KEY_FILE=/var/lib/besu/QBFT-Network/networkFiles/keys/key3
+    depends_on:
+      - tessera-node3
     networks:
       besu_network:
         ipv4_address: 172.16.0.4
