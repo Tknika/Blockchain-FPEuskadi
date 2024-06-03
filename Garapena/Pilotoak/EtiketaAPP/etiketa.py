@@ -222,9 +222,9 @@ def record_form(form_id):
     fecha_registro = datetime.now() #int(datetime.now().timestamp() * 1000)
     try:
         import sys
-        print(f"Fecha almacenamiento: {form.fecha_almacenamiento_mp}", file=sys.stderr)
-        print(f"Fecha elaboración: { form.fecha_elaboracion}", file=sys.stderr)
-        print(f"Fecha registro: { fecha_registro}", file=sys.stderr)
+        print(f"Fecha almacenamiento: {date_to_timestamp(form.fecha_almacenamiento_mp)}", file=sys.stderr)
+        print(f"Fecha elaboración: {date_to_timestamp(form.fecha_elaboracion)}", file=sys.stderr)
+        print(f"Fecha registro: {int(fecha_registro.timestamp() * 1000)}", file=sys.stderr)
         private_data = get_devices_data(date_to_timestamp(form.fecha_almacenamiento_mp), date_to_timestamp(form.fecha_elaboracion), int(fecha_registro.timestamp() * 1000))
 
     except Exception as e:
