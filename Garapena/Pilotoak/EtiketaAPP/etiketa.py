@@ -7,7 +7,7 @@ from config import Config
 from sqlalchemy.exc import IntegrityError
 from web3 import Web3
 from web3.exceptions import TimeExhausted
-from datetime import datetime
+from datetime import datetime, time
 from cryptography.fernet import Fernet
 import os, json
 from thingsboard import get_devices_data
@@ -38,6 +38,11 @@ with open('static/abi/etiketa.abi', 'r') as f:
     etiketa_abi = f.read()
 
 etiketa_contract = web3.eth.contract(abi=etiketa_abi, address=etiketa_address)
+
+def date_to_timestamp(date_obj):
+    # Convert a date object to a datetime object at midnight of the same day
+    datetime_obj = datetime.combine(date_obj, time())
+    return int(datetime_obj.timestamp() * 1000)
 
 @login_manager.unauthorized_handler
 def unauthorized():
@@ -217,10 +222,10 @@ def record_form(form_id):
     fecha_registro = datetime.now() #int(datetime.now().timestamp() * 1000)
     try:
         import sys
-        print(f"User Password Hash: {form.fecha_almacenamiento_mp}", file=sys.stderr)
-        print(f"Form Password Data: { form.fecha_elaboracion}", file=sys.stderr)
-        print(f"Form Password Data: { fecha_registro}", file=sys.stderr)
-        private_data = get_devices_data(int(form.fecha_almacenamiento_mp.timestamp() * 1000), int(form.fecha_elaboracion.timestamp() * 1000), int(fecha_registro.timestamp() * 1000))
+        print(f"Fecha almacenamiento: {form.fecha_almacenamiento_mp}", file=sys.stderr)
+        print(f"Fecha elaboración: { form.fecha_elaboracion}", file=sys.stderr)
+        print(f"Fecha registro: { fecha_registro}", file=sys.stderr)
+        private_data = get_devices_data(date_to_timestamp(form.fecha_almacenamiento_mp), date_to_timestamp(form.fecha_elaboracion), int(fecha_registro.timestamp() * 1000))
 
     except Exception as e:
         flash(f'Error al obtener datos de los dispositivos desde Thingsboard: {str(e)}')
