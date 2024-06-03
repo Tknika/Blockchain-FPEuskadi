@@ -214,8 +214,14 @@ def record_form(form_id):
     # Create a dictionary to store private data
     private_data = {}
     # Retrieve and assign data to the dictionary
+    fecha_registro = datetime.now()
     try:
-        private_data = get_devices_data()
+        import sys
+        print(f"User Password Hash: {form.fecha_almacenamiento_mp}", file=sys.stderr)
+        print(f"Form Password Data: { form.fecha_elaboracion}", file=sys.stderr)
+        print(f"Form Password Data: { fecha_registro}", file=sys.stderr)
+        private_data = get_devices_data(form.fecha_almacenamiento_mp, form.fecha_elaboracion, fecha_registro)
+
     except Exception as e:
         flash(f'Error al obtener datos de los dispositivos desde Thingsboard: {str(e)}')
         return redirect(url_for('manage_forms'))
@@ -223,7 +229,7 @@ def record_form(form_id):
     private_data['fecha_almacenamiento'] = form.fecha_almacenamiento_mp.strftime('%Y-%m-%d') if form.fecha_almacenamiento_mp else None
     private_data['lugar_almacenamiento'] = form.lugar_almacenamiento
     private_data['tratamiento_termico'] = form.tratamiento_termico
-    private_data['fecha_registro'] = datetime.now().strftime('%Y-%m-%d')
+    private_data['fecha_registro'] = fecha_registro.strftime('%Y-%m-%d')
     
     # Prepare transaction
     nonce = web3.eth.get_transaction_count(owner_addr.address)
