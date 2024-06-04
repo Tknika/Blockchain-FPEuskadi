@@ -7,7 +7,7 @@ from config import Config
 from sqlalchemy.exc import IntegrityError
 from web3 import Web3
 from web3.exceptions import TimeExhausted
-from datetime import datetime
+from datetime import datetime, time
 from cryptography.fernet import Fernet
 import os, json
 from thingsboard import get_devices_data
@@ -38,6 +38,11 @@ with open('static/abi/etiketa.abi', 'r') as f:
     etiketa_abi = f.read()
 
 etiketa_contract = web3.eth.contract(abi=etiketa_abi, address=etiketa_address)
+
+def date_to_timestamp(date_obj):
+    # Convert a date object to a datetime object at midnight of the same day
+    datetime_obj = datetime.combine(date_obj, time())
+    return int(datetime_obj.timestamp() * 1000)
 
 @login_manager.unauthorized_handler
 def unauthorized():
@@ -214,13 +219,21 @@ def record_form(form_id):
     # Create a dictionary to store private data
     private_data = {}
     # Retrieve and assign data to the dictionary
+    fecha_registro = datetime.now() #int(datetime.now().timestamp() * 1000)
     try:
-        private_data = get_devices_data()
+        private_data = get_devices_data(date_to_timestamp(form.fecha_almacenamiento_mp), date_to_timestamp(form.fecha_elaboracion), int(fecha_registro.timestamp() * 1000))
+
     except Exception as e:
         flash(f'Error al obtener datos de los dispositivos desde Thingsboard: {str(e)}')
         return redirect(url_for('manage_forms'))
+    # añadimos los campos privados que no se almacenarán en los datos públicos
+    private_data['fecha_almacenamiento'] = form.fecha_almacenamiento_mp.strftime('%Y-%m-%d') if form.fecha_almacenamiento_mp else None
+    private_data['lugar_almacenamiento'] = form.lugar_almacenamiento
+    private_data['tratamiento_termico'] = form.tratamiento_termico
+    private_data['fecha_registro'] = fecha_registro.strftime('%Y-%m-%d %H:%M:%S')
     # Prepare transaction
     nonce = web3.eth.get_transaction_count(owner_addr.address)
+
     try:
         # Check if form exists
         etiketa_contract.functions.getForm(form.lote).call()
@@ -253,10 +266,12 @@ def record_form(form_id):
     txn_hash = web3.eth.send_raw_transaction(Web3.to_hex(signed_txn.rawTransaction))
     try:
         txn_receipt = web3.eth.wait_for_transaction_receipt(txn_hash, timeout=30)
-        if txn_receipt.status != 1:
-            flash(f'Error: La transacción no se completó correctamente. Estado: {txn_receipt.status}')
-        else:
+        if txn_receipt.status == 1:
             flash('Lote registrado públicamente con éxito.')
+        elif txn_receipt.status == 0:
+            flash('Error: La transacción ha fallado y ha sido revertida.')
+        else:
+            flash(f'Error: La transacción no se completó correctamente. Estado desconocido: {txn_receipt.status}')
     except TimeExhausted:
         flash('Error: La transacción excedió el tiempo de espera.')
 
@@ -267,8 +282,11 @@ def record_form(form_id):
 def show_form_public_data(lote_id):
     try:
         raw_form_data = etiketa_contract.functions.getForm(lote_id).call()
-    except:
-        message = "No hay datos disponibles para este lote."
+        if not raw_form_data:
+            message = "No hay datos disponibles para este lote."
+            return render_template('informacion.html', message=message)
+    except Exception as e:
+        message = f"Error al recuperar los datos: {str(e)}"
         return render_template('informacion.html', message=message)
     # Convert raw data into a more suitable format for HTML processing
     # vamos a mostrar los datos públicos:
@@ -292,7 +310,7 @@ def show_form_public_data(lote_id):
         'fecha_caducidad': datetime.fromisoformat(publicData['fecha_caducidad']).strftime('%Y-%m-%d')
     }
     user_id = publicData['user_id']
-    img_path = f"static/images/{user_id}.jpg"
+    img_path = f"static/images/{user_id}/" #carpeta donde se encuentran las imágenes
     return render_template('datos_etiqueta.html', form_data=form_data, img_path=img_path)
 
 @app.route('/datosCompletos/<int:lote_id>', methods=['GET'])
@@ -325,7 +343,7 @@ def show_form_all_data(lote_id):
         'fecha_caducidad': datetime.fromisoformat(publicData['fecha_caducidad']).strftime('%Y-%m-%d')
     }
     user_id = publicData['user_id']
-    img_path = f"static/images/{user_id}.jpg"
+    img_path = f"static/images/{user_id}/"
     # vamos a mostrar los datos privados:
     fernet = Fernet(current_user.encryption_key)
     decrypted_data = fernet.decrypt(raw_form_data[1].encode()).decode()
@@ -405,5 +423,3 @@ def show_qr(lote_id):
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
-
-
