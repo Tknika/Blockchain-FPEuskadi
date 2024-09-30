@@ -15,14 +15,13 @@ services:
       - 8551:8551 # WS_ENGINE_JSON_RPC_PORT:8551
     command: --config-file=/var/lib/besu/QBFT-Network/configNodes/node-config.toml
     environment:
-      - BESU_PRIVACY_URL=http://172.16.0.22:9102
+      - BESU_PRIVACY_URL=http://tessera-node1:9102
       - BESU_NODE_PRIVATE_KEY_FILE=/var/lib/besu/QBFT-Network/networkFiles/keys/key1
       - BESU_PRIVACY_MARKER_TRANSACTION_SIGNING_KEY_FILE=/var/lib/besu/QBFT-Network/networkFiles/keys/key1
     depends_on:
       - tessera-node1
     networks:
-      besu_network:
-        ipv4_address: 172.16.0.2
+      - besu_network
 
   tessera-node1:
     image: quorumengineering/tessera:23.4.0
@@ -36,11 +35,9 @@ services:
       - 9103:9103
     command: --config-file /var/lib/besu/QBFT-Network/configNodes/tessera.conf
     networks:
-      besu_network:
-        ipv4_address: 172.16.0.22
+      - besu_network
 
 networks:
   besu_network:
     name: besu_network
-    driver: overlay
-    external: true
+    driver: bridge
