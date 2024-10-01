@@ -5,7 +5,7 @@ services:
     restart: always
     hostname: api3
     environment:
-      - NODE_ENDPOINT=http://besu_node3:8545
+      - NODE_ENDPOINT=http://besu-node3:8545
       - MONGO_CLIENT_URI=mongodb://mongodb3:27017
       - REINDEX_ENDPOINT=http://ingestion3/reindex/
       - MONGO_DB_NAME=epirus
@@ -16,7 +16,7 @@ services:
       - redis3 
       - mongodb3
     networks:
-      besu_network:
+      - besu_network
   
   mongodb3:
     image: mongo:5.0.8
@@ -27,7 +27,7 @@ services:
       - DOCKER_CLIENT_TIMEOUT=900
     entrypoint: mongod --bind_ip "0.0.0.0"
     networks:
-      besu_network:
+      - besu_network
 
   redis3:
     image: redis
@@ -35,7 +35,7 @@ services:
     hostname: redis3
     container_name: redis3
     networks:
-      besu_network:
+      - besu_network
 
   web3:
     image: web3labs/epirus-free-web:latest
@@ -43,26 +43,26 @@ services:
     hostname: web3
     environment:
       - API_URL=/api
-      - WS_API_URL=ws://besu_node3:8090
+      - WS_API_URL=ws://besu-node3:8090
       - DISPLAY_NETWORK_TAB=true
     depends_on:
       - api3
     networks:
-      besu_network:
+      - besu_network
   
   ingestion3:
     image: web3labs/epirus-free-ingestion:latest
     restart: always
     hostname: ingestion3
     environment:
-      - NODE_ENDPOINT=http://besu_node3:8545
+      - NODE_ENDPOINT=http://besu-node3:8545
       - MONGO_CLIENT_URI=mongodb://mongodb3:27017
       - MONGO_DB_NAME=epirus
       #- NODE_AUTH_BEARER=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwZXJtaXNzaW9ucyI6WyIqOioiXSwicHJpdmFjeVB1YmxpY0tleSI6IjdxSHJ0RG85TVc0UHRPSXgrTkJDWWNqTTNqN0UzaU0rYUExL20rNmpzbnM9In0.ICgnXpZsQJ3R6RK9tFb5Qgyq5X27Qwg_4mVbQVZZteF2cSC7OhfeO_x7FUg1at29G3ifOQmQZFmsnCPDsjVan9GxzzUKgcKsBUNcQ2tgoldOsBzfx9sOxKLZMLHTgNNqXVcc3eX_cpOCxsUKEhrAFNtGIXGx0YR80fdKBT5JZunowQahT8V0JZ6VtnBnqLcoCNwsVx_8X8qb4Tj7PVJLWQL6z7FngZdk27asj5BzGpRdumlhtgmDoBvWldMMocEJp0wjC-mHR5B1dv441SeHfw6doM3yHLeJve3TGW9gPOuronY2DI-CvFuNqohcm_OZ0repfvIQcgoer5Clm4WFeg
     depends_on:
       - mongodb3
     networks:
-      besu_network:
+      - besu_network
 
   chainlens3:
     image: nginx:latest
@@ -77,13 +77,12 @@ services:
       - api3
       - web3
     networks:
-      besu_network:
+      - besu_network
         
 
 networks:
   besu_network:
     name: besu_network
-    driver: overlay
-    external: true
+    driver: bridge
 
 

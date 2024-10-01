@@ -8,6 +8,8 @@ Basta con que la máquina que vaya a hacer de servidor web esté dentro de la re
 
 - Revisar la dirección del contrato y la clave privada que se mandan como variables de entorno en la apliación web.
 
+- Revisar password de la base de datos en el fichero docker-compose.yml
+
 ## Los servicios que se despliegan
 - **ziurtagiriak**: la aplicación Ziurtagiriak, situada en ../Pilotoak/ZiurtagiriakAPP. Estará accesible en el servidor accediendo como *localhost* ó *ziurtagiriak.localhost*.
 - **etiketa**: la aplicación Etiqueta Inteligente, situada en ../Pilotoak/EtiketaAPP. Estará accesible en el servidor accediendo como *etiketa.localhost*.

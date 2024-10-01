@@ -14,7 +14,7 @@ services:
     env_file:
       - ziurtagiriak.env
     networks:
-      - besu_network
+      - server_network
 
   etiketa:
     build:
@@ -29,7 +29,7 @@ services:
     depends_on:
       - db
     networks:
-      - besu_network
+      - server_network
 
   webserver:
     image: nginx:latest
@@ -38,7 +38,7 @@ services:
     ports:
       - "80:80"
     networks:
-      - besu_network
+      - server_network
     volumes:
       - ./nginx/:/etc/nginx/
       - ./nginx/5xx.html:/www/error_pages/5xx.html
@@ -55,7 +55,7 @@ services:
     ports:
       - "3306:3306"
     networks:
-      - besu_network
+      - server_network
     volumes:
       - ../Pilotoak/ZiurtagiriakAPP/blockchain-dump.sql:/docker-entrypoint-initdb.d/ziurtagiriak.sql
       - ../Pilotoak/EtiketaAPP/init_db.sql:/docker-entrypoint-initdb.d/etiketa.sql
@@ -63,10 +63,9 @@ services:
       #Nuevos scripts con: docker exec -i mariadb-container mysql -u root -p "your_password" < script.sql
 
 networks:
-  besu_network:
-    name: besu_network
-    driver: overlay
-    external: true
+  server_network:
+    name: server_network
+    driver: bridge
 
 volumes:
   db_data:

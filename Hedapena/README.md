@@ -49,21 +49,11 @@ Aplicar esos cambios con `source .profile`
 
 ## 2.- Configuración inicial
 
-### 2.1.- Docker swarm y red virtual
-
-Asegurarnos de que al menos 4 nodos están en una red docker swarm.
-- `docker swarm init --advertise-addr IP-PÚBLICA-NODO-PRINCIPAL`  (en el nodo principal)
-- `docker swarm join-token manager` (en el nodo principal, obtener token de manager)
-- `docker swarm join --token SWMTKN-1-… --advertise-addr IP-PÚBLICA-NODO-ACTUAL IP-PÚBLICA-NODO-PRINCIPAL:2377` (en los demás nodos)
-
-Asegurarnos de que tenemos la red docker creada:
-- docker network create --attachable --subnet 172.16.0.0/24 --driver overlay besu_network
-
-### 2.2.- Ficheros de configuración
+### 2.1.- Ficheros de configuración
 
 La configuración proporcionada en este repositorio es válida tal y como está pero se recomienda ajustar los parámetros (número de nodos, tiempo entre bloques...) y regenerar el *genesis.json* con nuevas direcciones.
 
-#### 2.2.1.- Generar nuevas direcciones
+#### 2.1.1.- Generar nuevas direcciones
 
 Con Besu instalado podemos tantas crear nuevas direcciones como queramos para asignarles una cantidad de ETH inicial en el génesis. Podemos hacerlo con estos comandos:
 
@@ -71,7 +61,7 @@ Con Besu instalado podemos tantas crear nuevas direcciones como queramos para as
 
 `besu --data-path=./address1 public-key export-address --to=./address1/address`
 
-#### 2.2.2.- Generar genesis.json y claves de nodos
+#### 2.1.2.- Generar genesis.json y claves de nodos
 
 Tras configurar **qbftConfigFile.json** como queramos ejecutamos:
 
@@ -85,21 +75,21 @@ Para generar las claves de los 'tenant' Tessera (usuarios que pueden hacer sus p
 
 En el repositorio actual se proporcionan las claves de cuatro nodos (en producción habría que recrearlos), están en la carpeta TesseraKeys. Estas claves están referenciadas en el fichero tessera.conf (se ha hecho uno común para todos para simplificar).
 
-#### 2.2.3.- Configuración de los nodos
+#### 2.1.3.- Configuración de los nodos
 
 En la carpeta *configNodes* está el fichero **config-node.toml** (en este caso común para todos) donde se configuran parámetros del nodo. Además hay una serie de ficheros de configuración a los que se hace referencia en el mismo y hay que modificar:
 
-- En el fichero *networkFiles/static-nodes.json* las direcciones enode que correspondan a los validadores (con la clave pública + IP:puerto).
+- En el fichero *networkFiles/static-nodes.json* las direcciones enode que correspondan a los validadores (con la clave pública + IP:puerto). *Hay que poner las IP públicas de cada nodo.*
 
-- En el fichero *networkFiles/nodes_permissions_config.toml* incluir los nodos a los que se permite conectar.
+- En el fichero *networkFiles/nodes_permissions_config.toml* incluir los nodos a los que se permite conectar. *Hay que poner las IP públicas de cada nodo.*
 
 - En el fichero *networkFiles/accounts_permissions_config.toml* incluir las cuentas (direcciones) a las que se permite operar. Vamos a incluir las direcciones de cada nodo, las direcciones configuradas en el génesis y las direcciones asociadas a las claves privadas que van a desplegar contratos en la red.
 
 Lo configurado hasta ahora es válido para todos los nodos pero **cada nodo** tiene que tener su fichero **docker-composeX.yml** bien configurado para que reciba la ruta apropiada a su **clave privada keyX de la carpeta networkFiles/keys**.
 
-En la carpeta *configNodes* también está el fichero **tessera.conf** que hay que adaptar para configurar los demás nodos Tessera con los que se comunica y la ubicación de las claves de los 'tenants'.
+En la carpeta *configNodes* también está el fichero **tessera.conf** que hay que adaptar para configurar los demás nodos Tessera con los que se comunica y la ubicación de las claves de los 'tenants'. *Hay que poner las IP públicas de cada nodo.*
 
-### 2.3.- Autenticación: generar tokens JWT
+### 2.2.- Autenticación: generar tokens JWT
 
 Necesitaremos autenticarnos mediante tokens JWT si queremos acceder a las API administrativas de los nodos o queremos hacer transacciones privadas mediante tenants (todo ello mediante el protocolo ws). Para ello lo primero es crear un par de claves público-privada mediante los siguientes comandos:
 
@@ -127,7 +117,7 @@ En el nodo donde queramos desplegar el servicio de monitorización bastará con 
 
 `docker compose -f docker-composeX.yml up`
 
-donde X es el número de nodo donde vamos a desplegarlo. El ejemplo está hecho para el nodo 2, que se tiene que llamar 'besu_node**2**'. Hay que adaptar ese fichero y el nginx**2**.conf siguiendo el ejemplo hecho para el nodo 2. Solamente habría que sustituir el sufijo 2 por el del número de nodo en los contenidos de los ficheros.
+donde X es el número de nodo donde vamos a desplegarlo.
 
 La aplicación de monitorización estará accesible en el **puerto 80** del nodo. Podemos visualizarlo desde el navegador de otra máquina ejecutando este comando en un terminal y acceciendo después en el navegador a `localhost:8080`:
 
