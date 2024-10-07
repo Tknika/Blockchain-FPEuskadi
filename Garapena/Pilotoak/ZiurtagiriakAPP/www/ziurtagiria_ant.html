@@ -154,7 +154,7 @@
 
     <script src="{{ url_for('static', filename = 'js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename = 'js/form-validation.js') }}"></script>
-    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
+    <script src="{{ url_for('static', filename = 'js/ethers-5.2.umd.min.js') }}"></script>
     <script>
         async function Connect(){
             const provider = new ethers.providers.Web3Provider(window.ethereum);
