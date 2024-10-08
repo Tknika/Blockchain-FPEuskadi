@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__, template_folder='www', static_url_path='/static')
 contract_addr = os.environ.get('DIRECCION_CONTRATO_ZIURTAGIRIAK')
-provider = "http://192.168.100.1:8545"
+provider = os.environ.get('WEB3_PROVIDER')
 #to-do: definir el provider dentro de las funciones seleccionando uno cada vez
 
 @app.route("/")
