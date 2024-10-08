@@ -2,6 +2,8 @@
 
 Pasos a seguir para desplegar Hyperledger Besu en X máquinas físicas distintas (ejemplo del repositorio hecho para 4 máquinas) cada una con su propia IP pública distinta.
 
+Se puede saltar al apartado 3 si se quiere probar la configuración por defecto (preparado para 4 nodos Besu + Tessera y un servidor web, siendo las IPs de los nodos 192.168.100.1, 192.168.100.2, 192.168.100.3 y 192.168.100.4).
+
 ## 1.- Software necesario
 
 ### 1.1.- Todas las máquinas
@@ -79,15 +81,15 @@ En el repositorio actual se proporcionan las claves de cuatro nodos (en producci
 
 En la carpeta *configNodes* está el fichero **config-node.toml** (en este caso común para todos) donde se configuran parámetros del nodo. Además hay una serie de ficheros de configuración a los que se hace referencia en el mismo y hay que modificar:
 
-- En el fichero *networkFiles/static-nodes.json* las direcciones enode que correspondan a los validadores (con la clave pública + IP:puerto). *Hay que poner las IP públicas de cada nodo.*
+- En el fichero *networkFiles/static-nodes.json* las direcciones enode que correspondan a los validadores (con la clave pública + IP:puerto). **Hay que poner las IP públicas de cada nodo.**
 
-- En el fichero *networkFiles/nodes_permissions_config.toml* incluir los nodos a los que se permite conectar. *Hay que poner las IP públicas de cada nodo.*
+- En el fichero *networkFiles/nodes_permissions_config.toml* incluir los nodos a los que se permite conectar. **Hay que poner las IP públicas de cada nodo.**
 
 - En el fichero *networkFiles/accounts_permissions_config.toml* incluir las cuentas (direcciones) a las que se permite operar. Vamos a incluir las direcciones de cada nodo, las direcciones configuradas en el génesis y las direcciones asociadas a las claves privadas que van a desplegar contratos en la red.
 
 Lo configurado hasta ahora es válido para todos los nodos pero **cada nodo** tiene que tener su fichero **docker-composeX.yml** bien configurado para que reciba la ruta apropiada a su **clave privada keyX de la carpeta networkFiles/keys**.
 
-En la carpeta *configNodes* también está el fichero **tessera.conf** que hay que adaptar para configurar los demás nodos Tessera con los que se comunica y la ubicación de las claves de los 'tenants'. *Hay que poner las IP públicas de cada nodo.*
+En la carpeta *configNodes* también está el fichero **tessera.conf** que hay que adaptar para configurar los demás nodos Tessera con los que se comunica y la ubicación de las claves de los 'tenants'. **Hay que poner las IP públicas de cada nodo.**
 
 ### 2.2.- Autenticación: generar tokens JWT
 
@@ -136,7 +138,9 @@ Para desplegar un smart-contract en la red que hemos creado basta con ir a la m�
 Si queremos que un (nuevo) nodo haga de servidor web que ofrezca apliaciones que se comuniquen con el blockchain, basta con seguir los pasos descritos en [este documento](https://github.com/Tknika/Blockchain-FPEuskadi/tree/main/Garapena/Pilotoak/Instalacion_servidor_web_sin_docker.md).
 
 ### Con Docker
-Introducimos un nuevo servidor en la red Docker Swarm, clonamos este repositorio y ejecutamos el fichero de docker compose de la [carpeta WebServer](https://github.com/Tknika/Blockchain-FPEuskadi/tree/main/Garapena/WebServer).
+En un servidor clonamos este repositorio y ejecutamos el fichero de docker compose de la [carpeta WebServer](https://github.com/Tknika/Blockchain-FPEuskadi/tree/main/Garapena/WebServer).
+
+**Cambiar/adaptar las IPs de los ficheros .env de la carpeta WebServer**
 
 ## 6.- Herramienta para operar con la API
 
