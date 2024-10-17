@@ -72,3 +72,21 @@ permissions-nodes-config-file="/var/lib/besu/QBFT-Network/networkFiles/nodes_per
 permissions-accounts-config-file-enabled=true
 permissions-accounts-config-file="/var/lib/besu/QBFT-Network/networkFiles/accounts_permissions_config.toml"
 
+# Enables or disables random prioritization of incoming connections. Enable in small, stable networks to prevent closed groups of peers forming
+random-peer-priority-enabled=true
+# The minimum number of peers required before starting sync. The default is 5. Set to 1 to enable static peers to contribute to the initial sync
+sync-min-peers=1
+# The default is FULL when connecting to a private network by not using the --network option and specifying the --genesis-file option
+sync-mode="FULL"
+# Enables or disables using the --remote-connections-max-percentage option to limit the percentage of remote P2P connections initiated by peers. The default is true.
+remote-connections-limit-enabled=false
+# Set to sequenced to use the sequenced transaction pool. The default is sequenced for the enterprise/private profile.
+tx-pool="SEQUENCED"
+# If this option is set to true, senders of transactions submitted via RPC are not prioritized over remote transactions in the transaction pool. The default is false.
+tx-pool-no-local-priority=true
+# The maximum percentage of transactions from a single sender kept in the transaction pool. Accepted values are in the range (0–1]. The default is .001, or 0.1% of transactions from a single sender to be kept in the pool.
+tx-pool-limit-by-account-percentage=0.15
+# The maximum number of allowed JSON-RPC HTTP connections. Once this limit is reached, incoming connections are rejected. The default is 80.
+rpc-http-max-active-connections=300
+# Enables or disables limiting the number of Bonsai Trie logs that are retained. When enabled, this limit is set to the value of --bonsai-historical-block-limit. The default is true, unless --sync-mode=FULL is set, in which case this option is disallowed and must be set to false.
+bonsai-limit-trie-logs-enabled=false
