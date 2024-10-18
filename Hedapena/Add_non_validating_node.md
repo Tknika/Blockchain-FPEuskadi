@@ -20,7 +20,7 @@ Se habrán creado los ficheros: **tenantKeyNewNode.pub** y **tenantKeyNewNode.ke
 
 Estos ficheros serán los que se proporcionen al administrador del nuevo nodo.
 
-Deberá añadir la clave pública (con su IP y puerto) al fichero **nodes_permissions_config.toml** en todos los nodos que forman la red (para que si hay un reinicio de la red, el nuevo nodo pueda conectarse a ella). **Este fichero actualizado hay que proporcionárselo al administrador del nuevo nodo.**
+Deberá añadir la clave pública (con su IP y puerto) al fichero **nodes_permissions_config.toml** en todos los nodos que forman la red (para que si hay un reinicio de la red, el nuevo nodo pueda conectarse a ella). Este fichero actualizado hay que proporcionárselo al administrador del nuevo nodo (aparentemente no es necesario).
 
 Deberá hacer uso de la API PERM para indicar a los demás nodos, mientras están en marcha, que el nuevo nodo puede conectarse con ellos. Esto se puede hacer así:
 `websocat -H="Authorization: Bearer TOKEN_JWT" ws://IP_NODO:8546`
@@ -30,17 +30,20 @@ Esto habrá que hacerlo para todos los nodos en los que permitiremos que se cone
 Para comprobar que se ha añadido correctamente, se puede ejecutar:
 `{"jsonrpc":"2.0","method":"perm_getNodesAllowlist","params":[], "id":1}`
 
+Otra posibilidad más sencilla para administrar la red es que cada nuevo integrante siga los pasos necesarios para configurar su nodo como prefiera y proporcione el e-node para añadirlo al fichero **nodes_permissions_config.toml** de cada nodo y ejecutar el comando PERM en cada nodo.
+
 
 ## Administrador del nuevo nodo
 
 El administrador del nuevo nodo tiene que:
 - Clonar el repositorio.
-- Sustituir el fichero **nodes_permissions_config.toml** con el contenido del fichero que le proporcionemos los administradores de la red.
 - Incorporar las claves proporcionadas:
     - **key** en el fichero **networkFiles/keys/keyNewNode**
     - **tenantKeyNewNode.pub** en el fichero **networkFiles/TesseraKeys/tenantKeyNewNode.pub**
     - **tenantKeyNewNode.key** en el fichero **networkFiles/TesseraKeys/tenantKeyNewNode.key**
-- Si quiere hacer transacciones privadas con otro nodo, indicarlo en el apartado **peer** del fichero **configNodes/tesseraNewNode.conf**. También tendrá que generar tokens JWT para ello si no ha modificado el fichero de configuración del nodo, *node-config.toml*.
+- Generar nueva clave **networkFiles/JWTkeys/publicRSAKeyOperator.pem** y nuevos tokens JWT para operar con permisos el nuevo nodo si es que el fichero de configuración **configNodes/node-config.toml** se ha dejado como estaba y hay métodos API que lo requieran.
+- Si se quieren hacer transacciones privadas con otro nodo, indicarlo en el apartado **peer** del fichero **configNodes/tesseraNewNode.conf**. También tendrá que generar tokens JWT para ello si no ha modificado el fichero de configuración del nodo, *node-config.toml*.
+- No parece necesario: *Sustituir el fichero **nodes_permissions_config.toml** con el contenido del fichero que proporcionen los administradores de la red.*
 - Ejecutar `docker compose -f docker-composeNewNode.yml up`
 
 Si todo va bien, el nuevo nodo se conectará a la red y se sincronizará.
