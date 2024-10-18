@@ -1,7 +1,7 @@
 version: '3'
 services:
   besu-node2:
-    image: hyperledger/besu:23.10.2
+    image: hyperledger/besu:24.10.0
     hostname: besu_node2
     restart: always
     volumes:
@@ -24,7 +24,7 @@ services:
       - besu_network
 
   tessera-node2:
-    image: quorumengineering/tessera:23.4.0
+    image: quorumengineering/tessera:24.4.2
     hostname: tessera_node2
     restart: always
     volumes:
