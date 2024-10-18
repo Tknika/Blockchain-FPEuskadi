@@ -162,5 +162,7 @@ Si la lista está vacía o queremos añadir nuevas cuentas:
 
 `{"jsonrpc":"2.0","method":"perm_addAccountsToAllowlist","params":[["0x867e3DCc2E546AB8d62aB8B25E6800C328ca2DD8","0x89b84B7FA93E429F2ce4632505074eED74E89351","0x92C83b4052230b836E100C42701cDc83d7baEb8a","0xC6261C951d52b563d6a91afB774Db1c2516CaAC4","0x432132E8561785c33Afe931762cf8EEb9c80E3aD","0xcB88953e60948E3A76FA658d65b7c2d5043c6409","0xDd76406B124f9E3AE9fBeb47e4d8Dc0ab143902D"]], "id":1}`
 
+## 7.- Añadir nodos no validadores a la red
 
+Si queremos que un nuevo **no validador** se una a la red, hay que seguir los pasos descritos en [este documento](https://github.com/Tknika/Blockchain-FPEuskadi/tree/main/Hedapena/Add_non_validating_node.md).
 

@@ -69,8 +69,10 @@ static-nodes-file="/var/lib/besu/QBFT-Network/networkFiles/static-nodes.json"
 discovery-enabled=true
 permissions-nodes-config-file-enabled=true
 permissions-nodes-config-file="/var/lib/besu/QBFT-Network/networkFiles/nodes_permissions_config.toml"
-permissions-accounts-config-file-enabled=true
-permissions-accounts-config-file="/var/lib/besu/QBFT-Network/networkFiles/accounts_permissions_config.toml"
+
+# Tal vez sea demasiado restrictivo limitar el acceso a ciertas cuentas.
+#permissions-accounts-config-file-enabled=true
+#permissions-accounts-config-file="/var/lib/besu/QBFT-Network/networkFiles/accounts_permissions_config.toml"
 
 # Enables or disables random prioritization of incoming connections. Enable in small, stable networks to prevent closed groups of peers forming
 random-peer-priority-enabled=true

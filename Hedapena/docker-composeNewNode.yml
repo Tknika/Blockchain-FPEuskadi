@@ -1,0 +1,43 @@
+version: '3'
+services:
+  besu-node:
+    image: hyperledger/besu:24.10.0
+    hostname: besu_node
+    restart: always
+    volumes:
+      - .:/var/lib/besu/QBFT-Network
+    ports:
+      - 8545:8545 # RPC_HTTP_PORT:8545
+      - 8546:8546 # RPC_WS_PORT:8546
+      - 30303:30303 # P2P_PORT:30303
+      - 8547:8547 # HTTP_GRAPHQL_PORT:8547
+      - 8550:8550 # HTTP_ENGINE_JSON_RPC_PORT:8550
+      - 8551:8551 # WS_ENGINE_JSON_RPC_PORT:8551
+    command: --config-file=/var/lib/besu/QBFT-Network/configNodes/node-config.toml
+    environment:
+      - BESU_PRIVACY_URL=http://tessera-node:9102
+      - BESU_NODE_PRIVATE_KEY_FILE=/var/lib/besu/QBFT-Network/networkFiles/keys/keyNewNode
+      - BESU_PRIVACY_MARKER_TRANSACTION_SIGNING_KEY_FILE=/var/lib/besu/QBFT-Network/networkFiles/keys/keyNewNode
+    depends_on:
+      - tessera-node
+    networks:
+      - besu_network
+
+  tessera-node:
+    image: quorumengineering/tessera:24.4.2
+    hostname: tessera_node
+    restart: always
+    volumes:
+      - .:/var/lib/besu/QBFT-Network
+    ports:
+      - 9101:9101
+      - 9102:9102
+      - 9103:9103
+    command: --config-file /var/lib/besu/QBFT-Network/configNodes/tesseraNewNode.conf
+    networks:
+      - besu_network
+
+networks:
+  besu_network:
+    name: besu_network
+    driver: bridge
