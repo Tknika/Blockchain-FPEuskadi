@@ -13,13 +13,13 @@ Se puede saltar al apartado 3 si se quiere probar la configuración por defecto 
 ### 1.2.- Máquina principal (la que despliega)
 - Java:
 
-`sudo apt install openjdk-19-jdk-headless`
+`sudo apt install openjdk-21-jdk-headless`
 
 - Hyperledger Besu:
 
-`wget https://hyperledger.jfrog.io/artifactory/besu-binaries/besu/23.10.2/besu-23.10.2.tar.gz`
+`wget https://github.com/hyperledger/besu/releases/download/24.10.0/besu-24.10.0.tar.gz`
 
-`tar -xvzf ./besu-23.10.2.tar.gz`
+`tar -xvzf ./besu-24.10.0.tar.gz`
 
 - Node.js:
 
@@ -29,9 +29,9 @@ Se puede saltar al apartado 3 si se quiere probar la configuración por defecto 
 
 - Tessera:
 
-`wget https://s01.oss.sonatype.org/service/local/repositories/releases/content/net/consensys/quorum/tessera/tessera-dist/23.4.0/tessera-dist-23.4.0.tar`
+`wget https://s01.oss.sonatype.org/service/local/repositories/releases/content/net/consensys/quorum/tessera/tessera-dist/24.4.2/tessera-dist-24.4.2.tar`
 
-`tar -xvf ./tessera-dist-23.4.0.tar`
+`tar -xvf ./tessera-dist-24.4.2.tar`
 
 Añadir esto al fichero *.profile* del usuario Linux para que se incluyan los binarios en el PATH:
 
@@ -39,11 +39,11 @@ Añadir esto al fichero *.profile* del usuario Linux para que se incluyan los bi
 	if [ -d "$HOME/node-v20.10.0-linux-x64/bin" ] ; then
   		PATH="$PATH:$HOME/node-v20.10.0-linux-x64/bin"
 	fi
-	if [ -d "$HOME/besu-23.10.2/bin" ] ; then
-  		PATH="$PATH:$HOME/besu-23.10.2/bin"
+	if [ -d "$HOME/besu-24.10.0/bin" ] ; then
+  		PATH="$PATH:$HOME/besu-24.10.0/bin"
 	fi
-	if [ -d "$HOME/tessera-23.4.0/bin" ] ; then
-  		PATH="$PATH:$HOME/tessera-23.4.0/bin"
+	if [ -d "$HOME/tessera-24.4.2/bin" ] ; then
+  		PATH="$PATH:$HOME/tessera-24.4.2/bin"
 	fi
 
 
@@ -113,7 +113,11 @@ Una vez copiada la configuración a cada nodo basta con ejecutar:
 
 donde X es el número de nodo en el que nos encontramos. Tras ejecutarlo en todos los nodos el blockchain debería comenzar a crear bloques.
 
-### 3.2.- Monitorización / Chainlens
+### 3.2.- Nodos NO validadores
+
+Si queremos que un nuevo **no validador** se una a la red, hay que seguir los pasos descritos en [este documento](https://github.com/Tknika/Blockchain-FPEuskadi/tree/main/Hedapena/Add_non_validating_node.md).
+
+### 3.3.- Monitorización / Chainlens
 
 En el nodo donde queramos desplegar el servicio de monitorización bastará con ir a Services/config/chainlens-free/ y ejecutar:
 
@@ -162,7 +166,4 @@ Si la lista está vacía o queremos añadir nuevas cuentas:
 
 `{"jsonrpc":"2.0","method":"perm_addAccountsToAllowlist","params":[["0x867e3DCc2E546AB8d62aB8B25E6800C328ca2DD8","0x89b84B7FA93E429F2ce4632505074eED74E89351","0x92C83b4052230b836E100C42701cDc83d7baEb8a","0xC6261C951d52b563d6a91afB774Db1c2516CaAC4","0x432132E8561785c33Afe931762cf8EEb9c80E3aD","0xcB88953e60948E3A76FA658d65b7c2d5043c6409","0xDd76406B124f9E3AE9fBeb47e4d8Dc0ab143902D"]], "id":1}`
 
-## 7.- Añadir nodos no validadores a la red
-
-Si queremos que un nuevo **no validador** se una a la red, hay que seguir los pasos descritos en [este documento](https://github.com/Tknika/Blockchain-FPEuskadi/tree/main/Hedapena/Add_non_validating_node.md).
 
