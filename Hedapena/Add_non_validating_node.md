@@ -27,5 +27,3 @@ Si hay ido bien recibiremos un Success: *{"jsonrpc":"2.0","id":1,"result":"Succe
 Esto habrá que hacerlo para todos los nodos en los que permitiremos que se conecte el nuevo nodo.
 Para comprobar que se ha añadido correctamente, se puede ejecutar:
 `{"jsonrpc":"2.0","method":"perm_getNodesAllowlist","params":[], "id":1}`
-
-Otra posibilidad más sencilla para administrar la red es que cada nuevo integrante siga los pasos necesarios para configurar su nodo como prefiera y proporcione el e-node para añadirlo al fichero **nodes_permissions_config.toml** de cada nodo y ejecutar el comando PERM en cada nodo.
