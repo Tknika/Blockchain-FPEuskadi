@@ -32,13 +32,13 @@ mv ./tenantKeyNewNode.* ./networkFiles/TesseraKeys/
 
 #Generar clave privada RSA para el token JWT
 echo "Generando clave privada RSA para el token JWT..."
+rm -r ./networkFiles/JWTkeys/
+mkdir ./networkFiles/JWTkeys/
 openssl genrsa -out ./networkFiles/JWTkeys/privateRSAKeyOperator.pem 2048
 openssl rsa -pubout -in ./networkFiles/JWTkeys/privateRSAKeyOperator.pem -out ./networkFiles/JWTkeys/publicRSAKeyOperator.pem
 
 # Generar token JWT para el tenant, en princio con todos los permisos
 echo "Generando token JWT Tessera..."
-rm -r ./networkFiles/JWTkeys/
-mkdir ./networkFiles/JWTkeys/
 PRIVACY_PUBLIC_KEY=$(cat ./networkFiles/TesseraKeys/tenantKeyNewNode.pub | tr -d '\n')
 HEADER=$(echo -n '{"alg":"RS256","typ":"JWT"}' | openssl base64 -e -A | tr -d '=' | tr '/+' '_-')
 PAYLOAD=$(echo -n '{"permissions":["*:*"],"privacyPublicKey":"'${PRIVACY_PUBLIC_KEY}'","exp":1600899999002}' | openssl base64 -e -A | tr -d '=' | tr '/+' '_-')
