@@ -9,8 +9,6 @@ Se proporciona para el nodo Besu una clave pública y una privada, además de un
 El administrador del nuevo nodo tiene que:
 - Clonar el repositorio.
 - Ejecutar el script **configure_non_validating_node.sh** para generar las claves y configuraciones necesarias.
-- Generar nueva clave **networkFiles/JWTkeys/publicRSAKeyOperator.pem** y nuevos tokens JWT para operar con permisos el nuevo nodo si es que el fichero de configuración **configNodes/node-config.toml** se ha dejado como estaba y hay métodos API que lo requieran.
-- Si se quieren hacer transacciones privadas con otro nodo, indicarlo en el apartado **peer** del fichero **configNodes/tesseraNewNode.conf**. También tendrá que generar tokens JWT para ello si no ha modificado el fichero de configuración del nodo, *node-config.toml*.
 - Ejecutar `docker compose -f docker-composeNewNode.yml up`
 
 Si todo va bien, el nuevo nodo se conectará a la red y se sincronizará.
