@@ -1,9 +1,5 @@
 # Añadir nodos no validadores a la red
 
-Si un nodo quiere unirse a la red, debe utilizar las claves que le proporcionemos.
-
-Se proporciona para el nodo Besu una clave pública y una privada, además de una dirección Ethereum. Para Tessera se proporciona una clave pública y una privada.
-
 ## Administrador del nuevo nodo
 
 El administrador del nuevo nodo tiene que:
