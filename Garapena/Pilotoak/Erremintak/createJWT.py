@@ -13,12 +13,15 @@ With authentication enabled, to explicitly specify a user cannot access any meth
 '''
 import jwt
 
-with open('Hedapena/networkFiles/JWTkeys/privateRSAKeyOperator.pem', 'r') as key_file:
+with open('Hedapena/networkFiles/JWTkeys/privateRSAKeyOperator_1.pem', 'r') as key_file:
     private_key = key_file.read()
 # Define the payload and headers for the JWT
+with open('Hedapena/networkFiles/TesseraKeys/tenantKeyNewNode.pub', 'r') as pub_key_file:
+    privacy_public_key = pub_key_file.read().strip()
+
 payload = {
             "permissions": ["*:*"],
-            "privacyPublicKey": "7qHrtDo9MW4PtOIx+NBCYcjM3j7E3iM+aA1/m+6jsns=",
+            "privacyPublicKey": privacy_public_key,
             "exp": 1600899999002
           }
 headers = {"alg": "RS256", "typ": "JWT"}
