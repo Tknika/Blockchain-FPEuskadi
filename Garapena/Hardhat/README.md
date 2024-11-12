@@ -26,9 +26,9 @@ Las importaciones de Ziurtagiriak.sol ya no tienen que indicar esa versión porq
 
 Creamos/modificamos el fichero **secrets.json** para almacenar las claves privadas de los creadores de cada contrato.
 
-Revisamos el fichero **hardhat.config.js** por si hay que modificar la configuración.
+Revisamos el fichero **hardhat.config.js** por si hay que modificar la configuración. Por defecto utilizará el token JWT situado en **JWT_1** para autenticarse a la hora de desplegar los contratos.
 
-Compilamos:
+Compilamos (se van a compilar los contratos situados en la carpeta **contracts**):
 
 `npx hardhat compile`
 
