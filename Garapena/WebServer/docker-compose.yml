@@ -10,7 +10,8 @@ services:
     ports:
       - "5000:5000"
     depends_on:
-      - db
+      - db:
+          condition: service_healthy
     env_file:
       - ziurtagiriak.env
     networks:
@@ -27,7 +28,8 @@ services:
     env_file:
       - etiketa.env
     depends_on:
-      - db
+      - db:
+          condition: service_healthy
     networks:
       - server_network
 
@@ -52,6 +54,10 @@ services:
       #MYSQL_DATABASE: blockchain
       #MYSQL_USER: blockchain
       #MYSQL_PASSWORD: blockchain
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
     ports:
       - "3306:3306"
     networks:

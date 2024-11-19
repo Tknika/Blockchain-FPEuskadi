@@ -1,11 +1,32 @@
 from flask import Flask, render_template, request
 from web3 import Web3
-import os
+import os, time
 
 app = Flask(__name__, template_folder='www', static_url_path='/static')
 contract_addr = os.environ.get('DIRECCION_CONTRATO_ZIURTAGIRIAK')
+clave_privada = os.environ.get('CLAVE_PRIVADA_CREADOR_CONTRATO_ZIURTAGIRIAK')
 provider = os.environ.get('WEB3_PROVIDER')
+sender_email = os.environ.get('SMTP_EMAIL')
+sender_email_password = os.environ.get('SMTP_PASSWORD')
 #to-do: definir el provider dentro de las funciones seleccionando uno cada vez
+
+def get_db_connection():
+    max_retries = 5
+    retry_delay = 2  # seconds
+    import mysql.connector as con
+    for attempt in range(max_retries):
+        try:
+            return con.connect(
+                host='database', 
+                database='ziurtagiriak', 
+                user='ziurtagiriak', 
+                password='ziurtagiriak', 
+                autocommit=True
+            )
+        except con.Error as err:
+            if attempt == max_retries - 1:
+                raise
+            time.sleep(retry_delay)
 
 @app.route("/")
 def hello_world():
@@ -13,8 +34,7 @@ def hello_world():
 
 @app.get("/jardunaldia/")
 def get_jardunaldia():
-    import mysql.connector as con
-    bbdd = con.connect(host='database', database='ziurtagiriak', user='ziurtagiriak', password='ziurtagiriak', autocommit=True)
+    bbdd = get_db_connection()
     cursor = bbdd.cursor()
     query = "SELECT id, izena FROM erakundeak"
     cursor.execute(query)
@@ -25,13 +45,8 @@ def post_jardunaldia():
     import smtplib, ssl, string, random
     from email.mime.text import MIMEText
     from email.mime.multipart import MIMEMultipart
-    import mysql.connector as con
-
 
     port = 465  # For SSL
-    sender_email = "noreply.moodle@icjardin.com"
-    password = "L0rategiHiri@"
-
     # Create a secure SSL context
     context = ssl.create_default_context()    
     
@@ -43,7 +58,7 @@ def post_jardunaldia():
     csvFile = request.files['csv'].readlines()
     print(erakundea, emailea, formakuntza, lekua, data)
     #BBDD
-    bbdd = con.connect(host='database', database='ziurtagiriak', user='ziurtagiriak', password='ziurtagiriak', autocommit=True)
+    bbdd = get_db_connection()
     cursor = bbdd.cursor()
     query = "INSERT INTO jardunaldiak (iderakundea, emailea, formakuntza, data, lekua) VALUES (%s,%s,%s,%s,%s)"
     cursor.execute(query, (erakundea, emailea, formakuntza, data, lekua))
@@ -52,7 +67,7 @@ def post_jardunaldia():
     
     primera_linea = True
     with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
-        server.login(sender_email, password)
+        server.login(sender_email, sender_email_password)
         for row in csvFile:
             if primera_linea:
                 primera_linea = False
@@ -60,7 +75,7 @@ def post_jardunaldia():
                 linea = row.decode().split(";")
                 izena = linea[0]
                 receiver_email = linea[1]
-                receiver_email = "aiza@fpzornotza.com"
+                #receiver_email = "aiza@fpzornotza.com"
                 localizador = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
                 query = "INSERT INTO partaideak (izena, emaila, lokalizatzailea, id_jardunaldia) VALUES (%s,%s,%s,%s)"
                 cursor.execute(query, (izena, receiver_email, localizador, id_jar))
@@ -94,10 +109,9 @@ def post_jardunaldia():
     return render_template("jardunaldia.html")
 
 def loka(lokalizatzailea):
-    import mysql.connector as con
     lok = lokalizatzailea.split("-")
     if (len(lok) == 3):
-        bbdd = con.connect(host='database', database='ziurtagiriak', user='ziurtagiriak', password='ziurtagiriak', autocommit=True)
+        bbdd = get_db_connection()
         cursor = bbdd.cursor()
         query = """SELECT p.izena, p.emaila, e.izena, j.emailea, j.formakuntza, j.data, j.lekua, p.id
         FROM partaideak p, jardunaldiak j, erakundeak e
@@ -128,9 +142,8 @@ def loka(lokalizatzailea):
     
 
 def ezabatu_ziurtagiria(lokalizatzailea):
-    import mysql.connector as con
     lok = lokalizatzailea.split("-")
-    bbdd = con.connect(host='database', database='ziurtagiriak', user='ziurtagiriak', password='ziurtagiriak', autocommit=True)
+    bbdd = get_db_connection()
     cursor = bbdd.cursor()
     query = "DELETE FROM partaideak WHERE %s = lokalizatzailea AND %s = id%100"
     cursor.execute(query, (lok[1], int(lok[2])))
@@ -170,7 +183,6 @@ def post_lokalizatzailea():
 
 @app.route('/sortu_nft_baztertu/', methods=['GET', 'POST'])
 def post_sortu_nft_baztertu():
-    import mysql.connector as con
     from xml.dom import minidom
     import hashlib
     from web3.middleware import geth_poa_middleware
@@ -187,8 +199,7 @@ def post_sortu_nft_baztertu():
 
 	# Instantiate an Account object from your key:
 	# owner_addr = w3.eth.account.from_key(pk)
-        clave_privada = os.environ.get('CLAVE_PRIVADA_CREADOR_CONTRATO_ZIURTAGIRIAK')
-        
+                
         owner_addr = web3.eth.account.from_key(clave_privada)
         #Bukatu berria
 
@@ -196,7 +207,7 @@ def post_sortu_nft_baztertu():
         #path = "http://ziurtagiriak.localhost/static/nft/"
 
         lok = lokalizatzailea.split("-")
-        bbdd = con.connect(host='database', database='ziurtagiriak', user='ziurtagiriak', password='ziurtagiriak', autocommit=True)
+        bbdd = get_db_connection()
         cursor = bbdd.cursor()
         query = """SELECT p.izena, p.emaila, e.izena, j.emailea, j.formakuntza, j.data, j.lekua, p.id
         FROM partaideak p, jardunaldiak j, erakundeak e
