@@ -46,7 +46,7 @@ services:
       - ./nginx/5xx.html:/www/error_pages/5xx.html
 
   mariadb:
-    image: mariadb:latest
+    image: mariadb:10.6
     hostname: database
     restart: always
     environment:
@@ -55,7 +55,7 @@ services:
       #MYSQL_USER: blockchain
       #MYSQL_PASSWORD: blockchain
     healthcheck:
-      test: ["CMD", "mysql", "-h", "localhost", "-u", "root", "-pblockchain", "-e", "SELECT 1;"]
+      test: ["CMD", "/usr/bin/mysql", "-h", "localhost", "-u", "root", "-pblockchain", "-e", "SELECT 1;"]
       interval: 10s
       timeout: 5s
       retries: 5
