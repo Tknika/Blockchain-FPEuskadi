@@ -10,8 +10,8 @@ services:
     ports:
       - "5000:5000"
     depends_on:
-      - db:
-          condition: service_healthy
+      db:
+        condition: service_healthy
     env_file:
       - ziurtagiriak.env
     networks:
@@ -28,8 +28,8 @@ services:
     env_file:
       - etiketa.env
     depends_on:
-      - db:
-          condition: service_healthy
+      db:
+        condition: service_healthy
     networks:
       - server_network
 
