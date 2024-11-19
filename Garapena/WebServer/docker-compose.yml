@@ -10,7 +10,7 @@ services:
     ports:
       - "5000:5000"
     depends_on:
-      db:
+      mariadb:
         condition: service_healthy
     env_file:
       - ziurtagiriak.env
@@ -28,7 +28,7 @@ services:
     env_file:
       - etiketa.env
     depends_on:
-      db:
+      mariadb:
         condition: service_healthy
     networks:
       - server_network
@@ -45,7 +45,7 @@ services:
       - ./nginx/:/etc/nginx/
       - ./nginx/5xx.html:/www/error_pages/5xx.html
 
-  db:
+  mariadb:
     image: mariadb:latest
     hostname: database
     restart: always
@@ -55,7 +55,8 @@ services:
       #MYSQL_USER: blockchain
       #MYSQL_PASSWORD: blockchain
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pblockchain"]
+      test: ["CMD", "mysql", "-h", "localhost", "-u", "root", "-pblockchain", "-e", "SELECT 1;"]
+      interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
