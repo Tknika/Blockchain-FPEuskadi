@@ -57,7 +57,8 @@ services:
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 5s
-      retries: 10
+      retries: 5
+      start_period: 30s
     ports:
       - "3306:3306"
     networks:
