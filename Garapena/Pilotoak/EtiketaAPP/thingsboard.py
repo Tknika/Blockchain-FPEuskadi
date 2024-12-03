@@ -210,10 +210,18 @@ def get_data(JWT_token, device_token, device_name, device_key, start_ts, end_ts,
         "interval": interval_ts  # The interval over which to calculate the average
     }
 
-    # Fetch the telemetry data
-    response = requests.get(url, headers=headers, params=params)
-    data = response.json()
     number = ''
+    # Fetch the telemetry data
+    try:
+        response = requests.get(url, headers=headers, params=params)
+        if not response.content:
+            flash(f'Sin datos recibidos para {device_name} con la clave {device_key} en el rango temporal dado.')
+            return number
+        data = response.json()
+    except Exception as e:
+        flash(f'Error al obtener datos de {device_name} con la clave {device_key}: {str(e)}')
+        return number
+    
     # print(f"data: {data}", file=sys.stderr)
     #returned_ts = data[key][0]['ts'] PARECE QUE HAY UN DESVÍO DE 2 HORAS
     #print(f"returned_ts: {datetime.datetime.fromtimestamp(returned_ts / 1000.0).strftime('%Y-%m-%d %H:%M:%S')}", file=sys.stderr)
