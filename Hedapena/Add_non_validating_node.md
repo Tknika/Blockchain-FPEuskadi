@@ -5,7 +5,7 @@
 El administrador del nuevo nodo tiene que:
 - Clonar el repositorio.
 - Ejecutar el script **configure_non_validating_node.sh** para generar las claves y configuraciones necesarias.
-- Ejecutar `docker compose -f docker-composeNewNode.yml up`
+- Ejecutar `docker compose -f docker-composeNewNode.yml up` (o *docker-compose*) cuando se haya permitido que el nuevo nodo se conecte a la red. Si no se dispone de Docker puede instalarse con los paquetes *docker.io* y *docker-compose*.
 
 Si todo va bien, el nuevo nodo se conectará a la red y se sincronizará.
 
