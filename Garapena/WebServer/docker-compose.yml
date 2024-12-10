@@ -1,6 +1,17 @@
 version: '3'
 
 services:
+  ethstats:
+    build: ./ethstats-server
+    hostname: ethstats
+    restart: always
+    environment:
+      - WS_SECRET=asdf
+    ports:
+      - "3000:3000"
+    networks:
+      - server_network
+
   ziurtagiriak:
     build:
       context: ../Pilotoak/ZiurtagiriakAPP

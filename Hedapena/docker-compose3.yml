@@ -18,6 +18,7 @@ services:
       - BESU_PRIVACY_URL=http://tessera-node3:9102
       - BESU_NODE_PRIVATE_KEY_FILE=/var/lib/besu/QBFT-Network/networkFiles/keys/key3
       - BESU_PRIVACY_MARKER_TRANSACTION_SIGNING_KEY_FILE=/var/lib/besu/QBFT-Network/networkFiles/keys/key3
+      - BESU_ETHSTATS=besu_node3:asdf@192.168.100.5:3000
     depends_on:
       - tessera-node3
     networks:

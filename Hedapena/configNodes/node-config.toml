@@ -92,3 +92,6 @@ tx-pool-limit-by-account-percentage=0.15
 rpc-http-max-active-connections=300
 # Enables or disables limiting the number of Bonsai Trie logs that are retained. When enabled, this limit is set to the value of --bonsai-historical-block-limit. The default is true, unless --sync-mode=FULL is set, in which case this option is disallowed and must be set to false.
 bonsai-limit-trie-logs-enabled=false
+
+# Monitorización (se ha implementado en docker-composeX.yml, se van a comentar al web server)
+# ethstats="besu_node1:asdf@ethstats:3000"
