@@ -21,7 +21,6 @@ services:
       - BESU_ETHSTATS=besu_node1:asdf@192.168.100.5:3000
     depends_on:
       - tessera-node1
-      - ethstats
     networks:
       - besu_network
 
