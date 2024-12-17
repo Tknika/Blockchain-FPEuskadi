@@ -2,9 +2,30 @@ import websocket
 import json
 import time
 from datetime import datetime
+import configparser
+import os
 
+# Load configuration
+config = configparser.ConfigParser()
+config_path = os.path.join(os.path.dirname(__file__), 'ethstats.ini')
+config.read(config_path)
 
-OFFLINE_THRESHOLD = 20000  # 20 seconds
+# Get configuration values
+OFFLINE_THRESHOLD = config.getint('report', 'offline_threshold')
+RECONNECT_TIME = config.getint('websocket', 'reconnect_time')
+WS_URL = f"{config['websocket']['url']}:{config['websocket']['port']}/primus"
+
+# Define hello_message from config
+hello_message = {
+    "id": config['auth']['client_id'],
+    "secret": config['auth']['secret'],
+    "info": {
+        "name": config['auth']['client_name'],
+        "node": config['auth']['node_name'],
+        "port": config.getint('auth', 'node_port')
+    }
+}
+
 node_last_seen = {}
 nodes_data = []  # List to store node information
 
@@ -117,15 +138,6 @@ def send_alert(message):
 
 def on_open(ws):
     print("WebSocket connection opened")
-    hello_message = {
-        "id": "test-client",
-        "secret": "asdf",
-        "info": {
-            "name": "Test Client",
-            "node": "TestNode",
-            "port": 0
-        }
-    }
     ws.send(json.dumps({"emit": ["hello", hello_message]}))
 
 def test_connection(url, timeout=5):
@@ -135,17 +147,6 @@ def test_connection(url, timeout=5):
             url = url + '/api'
             
         ws = websocket.create_connection(url, timeout=timeout)
-        
-        # Send hello message with required data
-        hello_message = {
-            "id": "test-client",
-            "secret": "asdf",
-            "info": {
-                "name": "Test Client",
-                "node": "TestNode",
-                "port": 0
-            }
-        }
         
         ws.send(json.dumps({"emit": ["hello", hello_message]}))
         
@@ -165,15 +166,13 @@ def test_connection(url, timeout=5):
         return False
 
 if __name__ == "__main__":
-    ws_url = "ws://192.168.100.5:3000/primus"
-    
     while True:  # Reconnection loop
         try:
-            if not test_connection(ws_url):
+            if not test_connection(WS_URL):
                 print("Exiting due to connection failure")
                 exit(1)
             
-            ws = websocket.WebSocketApp(ws_url,
+            ws = websocket.WebSocketApp(WS_URL,
                                       on_message=on_message,
                                       on_open=on_open,
                                       on_error=on_error,
@@ -183,8 +182,8 @@ if __name__ == "__main__":
             ws.run_forever(ping_interval=30,  # Send ping every 30 seconds
                          ping_timeout=10)     # Wait 10 seconds for pong
             
-            print("Connection lost, reconnecting in 5 seconds...")
-            time.sleep(5)
+            print(f"Connection lost, reconnecting in {RECONNECT_TIME} seconds...")
+            time.sleep(RECONNECT_TIME)
         except Exception as e:
             print(f"Error occurred: {e}")
-            time.sleep(5)  # Wait before reconnecting
+            time.sleep(RECONNECT_TIME)  # Wait before reconnecting
