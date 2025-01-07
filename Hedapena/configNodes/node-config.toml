@@ -2,9 +2,10 @@
 # en el siguiente enlace:
 # https://besu.hyperledger.org/public-networks/reference/cli/options
 
+# Modo debug para los logs de Besu
+logging="DEBUG"
 # Node 1 configuration
 min-gas-price=0
-
 # Hecho por mi para la tabla [Node]
 data-storage-format="FOREST" # Necesario para privacidad (en posteriores versiones por defecto es "BONSAI")
 data-path="/var/lib/besu/QBFT-Network/Node/data" #The path to the Besu data directory. 
