@@ -14,6 +14,7 @@ from thingsboard import get_devices_data
 
 app = Flask(__name__)
 app.config.from_object(Config)
+app.config['APPLICATION_ROOT'] = '/etiketa'
 
 db.init_app(app)
 bcrypt = Bcrypt(app)

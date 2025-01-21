@@ -12,6 +12,8 @@ sender_email = os.environ.get('SMTP_EMAIL')
 sender_email_password = os.environ.get('SMTP_PASSWORD')
 #to-do: definir el provider dentro de las funciones seleccionando uno cada vez
 
+app.config['APPLICATION_ROOT'] = '/ziurtagiriak'
+
 @contextmanager
 def get_db_connection():
     """Context manager for database connections to ensure proper cleanup"""
