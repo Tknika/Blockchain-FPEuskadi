@@ -18,8 +18,8 @@ services:
       dockerfile: Dockerfile
     hostname: ziurtagiriak
     restart: always
-    ports:
-      - "5000:5000"
+    #ports:
+    #  - "5000:5000"
     depends_on:
       mariadb:
         condition: service_healthy
@@ -34,8 +34,8 @@ services:
       dockerfile: Dockerfile
     hostname: etiketa
     restart: always
-    ports:
-      - "5001:5001"
+    #ports:
+    #  - "5001:5001"
     env_file:
       - etiketa.env
     depends_on:
@@ -50,18 +50,21 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
     networks:
       - server_network
     volumes:
       - ./nginx/:/etc/nginx/
       - ./nginx/5xx.html:/www/error_pages/5xx.html
+      - /etc/letsencrypt:/etc/letsencrypt:ro  # Mount SSL certs (Read Only)
+      - /var/www/certbot:/var/www/certbot  # Mount the webroot for Certbot challenges
 
   mariadb:
     image: mariadb:10.6
     hostname: database
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: blockchain
+      MYSQL_ROOT_PASSWORD: blockchain # CHANGE IT / ALDATU
       #MYSQL_DATABASE: blockchain
       #MYSQL_USER: blockchain
       #MYSQL_PASSWORD: blockchain
