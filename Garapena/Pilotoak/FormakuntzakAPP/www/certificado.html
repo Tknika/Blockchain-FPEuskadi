@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include 'includes/head.html' %}
+    <title>Formaciones App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
+</head>
+<body>
+    {% include 'includes/menu_nologin.html' %}
+    <div class="content">
+        <div class="container mt-5">
+            <h3 class="mb-5">Bertaratze ziurtagiria / Certificado asistencia</h3>
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <p class="mb-0">Nombre</p>
+                    <p class="fs-4"><strong>{{ info["izena"] }}</strong></p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <p class="mb-0">Nombre de la formación</p>
+                    <p class="fs-4"><strong>{{ info["formakuntza"] }}</strong></p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <p class="mb-0">Fecha</p>
+                    <p class="fs-4"><strong>{{ info["data"] }}</strong></p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <p class="mb-0">Centro</p>
+                    <p class="fs-4"><strong>{{ info["ikastetxea"] }}</strong></p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <p class="mb-0">Familia Formativa</p>
+                    <p class="fs-4"><strong>{{ info["familia"] }}</strong></p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <p class="mb-0">Ciclo Formativo</p>
+                    <p class="fs-4"><strong>{{ info["zikloa"] }}</strong></p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <p class="mb-0">Módulo</p>
+                    <p class="fs-4"><strong>{{ info["modulua"] }}</strong></p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <p class="mb-0">Irakaslea / Profesor</p>
+                    <p class="fs-4"><strong>{{ info["irakaslea"] }}</strong></p>
+                </div>
+            </div>
+           
+            <div class="d-grid gap-2">
+                <a href="{{ info['uri'] }}"  class="btn btn-info fs-4" type="button" download><i class="bi bi-filetype-pdf"></i> Ziurtagiria jaitsi / Descargar el certificado</a>
+              </div>
+        </div>
+    </div>
+
+    {% include 'includes/footer.html' %}
+    <script src="/static/js/pasahitza_aldatu.js"></script>
+</body>
+</html>

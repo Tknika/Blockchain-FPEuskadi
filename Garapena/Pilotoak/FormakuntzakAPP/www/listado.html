@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include 'includes/head.html' %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
+    <title>Formaciones App</title>
+</head>
+<body>
+    {% include 'includes/menu.html' %}
+
+    <div class="content">
+        <div class="container-fluid mt-5 px-5">
+            <h3>Mis Formaciones</h3>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Nombre de la Formación</th>
+                        <th>Módulo</th>
+                        <th>Ciclo formativo</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for form in formakuntzak %}
+                    <tr>
+                        <td>{{ form[0] }}</td>
+                        <td>{{ form[1] }}</td>
+                        <td>{{ form[2] }}</td>
+                        <td>{{ form[3] }}</td>
+                        {% if form[5] == 0 %}
+                        <td>
+                            <a role="button" class="btn btn-success btn-sm" href="/formakuntza_aldatu/{{ form[4] }}" title="Formakuntza aldatu / Editar formación"><i class="bi bi-pencil"></i></a>
+                            <a role="button" class=" btn btn-danger btn-sm" href="/formakuntza_ezabatu/{{ form[4] }}" title="Rormakutnza ezabatu / Eliminar formación"><i class="bi bi-x-octagon"></i></a>
+                            <a role="button" class=" btn btn-warning btn-sm ms-5" href="/sortu_zihurtagiriak/{{ form[4] }}" title="Agiriak Blockchainean gorde/ Guardar certificados en la Blockchain"><i class="bi bi-archive"></i></a>
+                        </td>
+                        {% else %}
+                        <td>
+                            <a role="button" class="btn btn-primary btn-sm" href="/formakuntza_ikusi/{{ form[4] }}" title="Formakuntza ikusi / Ver formación"><i class="bi bi-eye"></i></a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <button class="btn btn-primary" onclick="window.location.href='/formakuntza_berria/'">Crear Nueva Formación</button>
+        </div>
+    </div>
+    {% include 'includes/footer.html' %}
+    <script src="/static/js/pasahitza_aldatu.js"></script>
+<!--    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Crear la ventana modal dinámicamente
+            var modalHtml = `
+                <div class="modal" id="pasahitzaModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Cambiar Contraseña</h5>
+                                <button type="button" class="border border-0 btn btn-lg" data-dismiss="modal" aria-label="Close" onclick="closeModal()">
+                                    <i class="bi bi-x-square"></i>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="cambiarContrasenaForm">
+                                    <div class="form-group">
+                                        <label for="current_password">Contraseña Actual</label>
+                                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="new_password">Nueva Contraseña</label>
+                                        <input type="password" class="form-control" id="new_password" name="new_password" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="confirm_password">Confirmar Nueva Contraseña</label>
+                                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                    </div>
+                                    <div class="text-center mt-4">
+                                        <button type="submit" class="btn btn-primary">Cambiar Contraseña</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            // Manejar el envío del formulario de cambio de contraseña
+            document.getElementById('cambiarContrasenaForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                var formData = new FormData(this);
+                fetch('/pasahitza_aldatu', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('Contraseña actualizada correctamente');
+                        closeModal();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+
+            // Función para abrir la ventana modal
+            window.pasahitzaAldatu = function() {
+                document.getElementById('pasahitzaModal').style.display = 'block';
+            };
+
+            // Función para cerrar la ventana modal
+            window.closeModal = function() {
+                document.getElementById('pasahitzaModal').style.display = 'none';
+            };
+        });
+    </script>-->
+</body>
+</html>

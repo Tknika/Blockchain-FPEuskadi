@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include 'includes/head.html' %}
+    <title>Formaciones App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
+</head>
+<body>
+    {% include 'includes/menu.html' %}
+    <div class="content">
+        <div class="container mt-5">
+            <h3 class="mb-5">Formakuntza / Formación</h3>
+                <div class="row">
+                    <div class="col-md-9 mb-3">
+                        <p class="mb-0">Nombre de la formación</p>
+                        <p class="fs-4"><strong>{{ formakuntza[1] }}</strong></p>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <p class="mb-0">Fecha</p>
+                        <p class="fs-4"><strong>{{ formakuntza[3] }}</strong></p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-0">Centro</p>
+                        <p class="fs-4"><strong>{{ ikas_fam_zik[2] }}</strong></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-0">Familia Formativa</p>
+                        <p class="fs-4"><strong>{{ ikas_fam_zik[1] }}</strong></p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-0">Ciclo Formativo</p>
+                        <p class="fs-4"><strong>{{ ikas_fam_zik[0] }}</strong></p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <p class="mb-0">Módulo</p>
+                        <p class="fs-4"><strong>{{ formakuntza[2] }}</strong></p>
+                    </div>
+                </div>
+                
+            <h4 class="mt-5">Listado de Alumnos</h4>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for ika in ikasleak %}
+                    <tr>
+                        <td><p>{{ika[1]}}</p>
+                        <td><p>{{ika[2]}}</p>
+                        <td>
+                            <!--<a role="button" class="btn btn-secondary btn-lg" href="{{nfts[ika[0]][1]}}" title="Ikaslearen zihurtagiria ikusi / Ver el certificado del/de la  participante" target="_blank"><i class="bi bi-filetype-pdf"></i></a>-->
+                            <a role="button" class="btn btn-secondary btn-lg" href="/ikusi_nft_info/{{ika[4]}}" title="Ikaslearen zihurtagiria ikusi / Ver el certificado del/de la  participante"><i class="bi bi-file-earmark"></i></a>
+                            <a role="button" class="btn btn-secondary btn-lg" href="/bidali_emaila/{{ika[4]}}/{{idfor}}" title="Ikasleari emaila berbidali / Reenviar el email al participante"><i class="bi bi-envelope"></i></a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <div>
+                <a role="button" class=" btn btn-primary btn-sm fs-5" href="/zerrenda/" title="Bueltatu / Volver">Volver</a>
+            </div>
+        </div>
+    </div>
+
+    {% include 'includes/footer.html' %}
+    <script src="/static/js/pasahitza_aldatu.js"></script>
+</body>
+</html>

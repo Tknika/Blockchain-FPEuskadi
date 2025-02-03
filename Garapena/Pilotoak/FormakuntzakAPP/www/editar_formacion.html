@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include 'includes/head.html' %}
+    <title>Formaciones App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
+</head>
+<body>
+    {% include 'includes/menu.html' %}
+
+    <!-- Formation Detail Page -->
+     <div class="content">
+        <div class="container mt-5">
+            <h3>Detalle de la Formación</h3>
+            <form>
+                <div class="mb-3">
+                    <label for="centerDetail" class="form-label">Centro</label>
+                    <select class="form-select" id="centerDetail" required>
+                        <!-- Opciones de centros -->
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="familyDetail" class="form-label">Familia Formativa</label>
+                    <select class="form-select" id="familyDetail" required>
+                        <!-- Opciones de familias formativas -->
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="cycleDetail" class="form-label">Ciclo Formativo</label>
+                    <select class="form-select" id="cycleDetail" required>
+                        <!-- Opciones de ciclos formativos -->
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="moduleDetail" class="form-label">Módulo</label>
+                    <select class="form-select" id="moduleDetail" required>
+                        <!-- Opciones de módulos -->
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="teacherNameDetail" class="form-label">Nombre del Docente</label>
+                    <input type="text" class="form-control" id="teacherNameDetail" required>
+                </div>
+                <div class="mb-3">
+                    <label for="dateDetail" class="form-label">Fecha</label>
+                    <input type="date" class="form-control" id="dateDetail" required>
+                </div>
+                <div class="mb-3">
+                    <label for="studentsFileDetail" class="form-label">Listado de Alumnos</label>
+                    <input type="file" class="form-control" id="studentsFileDetail" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            </form>
+            <h4 class="mt-5">Listado de Alumnos</h4>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Apellidos</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <form>
+                            <td><input type="text" class="form-control" value="Juan"></td>
+                            <td><input type="text" class="form-control" value="Pérez"></td>
+                            <td><input type="email" class="form-control" value="juan.perez@example.com"></td>
+                            <td>
+                                <button class="btn btn-success btn-sm"><i class="bi bi-save"></i></button>
+                                <button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </form>
+                    </tr>
+                    <tr>
+                        <form>
+                            <td><input type="text" class="form-control" value="María"></td>
+                            <td><input type="text" class="form-control" value="García"></td>
+                            <td><input type="email" class="form-control" value="maria.garcia@example.com"></td>
+                            <td>
+                                <button class="btn btn-success btn-sm"><i class="bi bi-save"></i></button>
+                                <button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </form>
+                    </tr>
+                    <tr>
+                        <form>
+                            <td><input type="text" class="form-control" value="Carlos"></td>
+                            <td><input type="text" class="form-control" value="López"></td>
+                            <td><input type="email" class="form-control" value="carlos.lopez@example.com"></td>
+                            <td>
+                                <button class="btn btn-success btn-sm"><i class="bi bi-save"></i></button>
+                                <button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </form>
+                    </tr>
+                    <tr>
+                        <form>
+                            <td><input type="text" class="form-control" value="Ana"></td>
+                            <td><input type="text" class="form-control" value="Martínez"></td>
+                            <td><input type="email" class="form-control" value="ana.martinez@example.com"></td>
+                            <td>
+                                <button class="btn btn-success btn-sm"><i class="bi bi-save"></i></button>
+                                <button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </form>
+                    </tr>
+                    <tr>
+                        <form>
+                            <td><input type="text" class="form-control" value="Luis"></td>
+                            <td><input type="text" class="form-control" value="Fernández"></td>
+                            <td><input type="email" class="form-control" value="luis.fernandez@example.com"></td>
+                            <td>
+                                <button class="btn btn-success btn-sm"><i class="bi bi-save"></i></button>
+                                <button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </form>
+                    </tr>
+                    <tr>
+                        <form>
+                            <td><input type="text" class="form-control" placeholder="Nombre"></td>
+                            <td><input type="text" class="form-control" placeholder="Apellidos"></td>
+                            <td><input type="email" class="form-control" placeholder="Email"></td>
+                            <td>
+                                <button class="btn btn-primary btn-sm"><i class="bi bi-plus"></i></button>
+                            </td>
+                        </form>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% include 'includes/footer.html' %}
+</body>
+</html>

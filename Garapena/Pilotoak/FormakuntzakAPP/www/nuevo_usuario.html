@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include 'includes/head.html' %}
+    <title>Alta de Usuario</title>
+</head>
+<body>
+    {% include 'includes/menu.html' %}
+    
+    <div class="content">
+        <div class="container mt-5">
+            <h3>Información de la Formación</h3>
+            <div class="mb-3">
+                <p><strong>Nombre de la Formación:</strong> Nombre de la Formación</p>
+            </div>
+            <div class="mb-3">
+                <p><strong>Fecha:</strong> 2023-10-01</p>
+            </div>
+            <div class="mb-3">
+                <p><strong>Impartidor:</strong> Nombre del Docente</p>
+            </div>
+
+            <h3 class="mt-5">Alta de Usuario</h3>
+            <form>
+                <div class="mb-3">
+                    <label for="userName" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="userName" required>
+                </div>
+                <div class="mb-3">
+                    <label for="userSurname" class="form-label">Apellidos</label>
+                    <input type="text" class="form-control" id="userSurname" required>
+                </div>
+                <div class="mb-3">
+                    <label for="userDNI" class="form-label">DNI</label>
+                    <input type="text" class="form-control" id="userDNI" required>
+                </div>
+                <div class="mb-3">
+                    <label for="userEmail" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="userEmail" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Registrar Usuario</button>
+            </form>
+        </div>
+    </div>
+
+    {% include 'includes/footer.html' %}
+</body>
+</html>

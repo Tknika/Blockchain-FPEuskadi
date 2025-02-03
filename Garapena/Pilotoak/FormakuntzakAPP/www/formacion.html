@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include 'includes/head.html' %}
+    <title>Formaciones App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
+</head>
+<body>
+    {% include 'includes/menu.html' %}
+    <div class="content">
+        <div class="container mt-5">
+            
+            {% if formakuntza %}
+            <h3 class="mb-5">Formakuntza aldatu / Editar Formación</h3>
+            {% else %}
+            <h3 class="mb-5">Formakuntza Berria / Nueva Formación</h3>
+            {% endif %}
+            <form action="/formakuntza/" method="post" enctype="multipart/form-data">
+                <div class="row">
+                    <div class="form-floating mb-3 col-md-12">
+                        <input type="text" class="form-control" id="izena" name="izena" value="{{ formakuntza[1] }}" placeholder="{{ formakuntza[1] }}" required>
+                        <label for="izena">Nombre de la formación</label>
+                        <!--<label for="izena" class="form-label">Nombre de la formación</label>
+                        <input type="text" class="form-control" id="izena" name="izena" value="{{ formakuntza[1] }}" placeholder="{{ formakuntza[1] }}" required>-->
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="date" class="form-label">Fecha</label>
+                        <input type="date" class="form-control" id="date" name="data" value="{{ formakuntza[3] }}" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="center" class="form-label">Centro</label>
+                        <!--<select name="ikastetxea" class="form-select" id="center" required>
+                            <option value=""></option>
+                        {% for ikas in ikastetxeak %}
+                            <option value="{{ ikas[0] }}">{{ ikas[1] }}</option>
+                        {% endfor %}
+                        </select>-->
+                        {% if formakuntza %}
+                        <input list="ikas-zerrenda" name="ikastetxea" placeholder="Bilatu / Buscar ..." class="form-control" id="center" value="{{ formakuntza[8] }} - {{ formakuntza[9] }}" required>
+                        {% else %}
+                        <input list="ikas-zerrenda" name="ikastetxea" placeholder="Bilatu / Buscar ..." class="form-control" id="center" value="" required>
+                        {% endif %}
+                        
+                        <datalist id="ikas-zerrenda">
+                        {% for ikas in ikastetxeak %}
+                            <option value="{{ ikas[0] }}-{{ ikas[1] }}"></option>
+                        {% endfor %}
+                        </datalist>
+                    </div>
+                    
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="family" class="form-label">Familia Formativa</label>
+                        <select name="familia" class="form-select" id="family" required>
+                            <option value="{{ formakuntza[4] }}">{{ formakuntza[5] }}</option>
+                        {% for fam in familiak %}
+                            <option value="{{ fam[0] }}">{{ fam[1] }}</option>
+                        {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="cycle" class="form-label">Ciclo Formativo</label>
+                        <select class="form-select" id="cycle" name="zikloa" required>
+                            <option value="{{ formakuntza[6] }}">{{ formakuntza[7] }}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="modulua" class="form-label">Módulo</label>
+                        <input type="text" class="form-control" id="modulua" name="modulua" value="{{ formakuntza[2] }}" required>
+                    </div>
+                {% if not formakuntza %}
+                    <div class="col-md-6 mb-3">
+                        <label for="studentsFile" class="form-label">Listado de Alumnos (<a
+                            href="{{ url_for('static', filename = 'csveredua.csv') }}" download>Eredua
+                            jaitsi / Descargar modelo</a>)</label>
+                        <input type="file" name="fitxategia" class="form-control" id="studentsFile" accept=".csv, .xls, .xlsx">
+                    </div>
+                {% endif %}
+                </div>
+                {% if formakuntza %}
+                    <input type="hidden" name="fid" value="{{ formakuntza[0] }}">
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                {% else %}
+                <button type="submit" class="btn btn-primary">Crear Formación</button>
+                {% endif %}
+            </form>
+            {% if formakuntza %}
+            <h4 class="mt-5">Listado de Alumnos</h4>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nombre Apellidos</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for ika in ikasleak %}
+                    <tr>
+                        <form class="ikasle-form">
+                            <input type="hidden" name="id" value="{{ika[0]}}">
+                            <td><input type="text" class="form-control" name="izena" value="{{ika[1]}}"></td>
+                            <td><input type="email" class="form-control" name="emaila" value="{{ika[2]}}"></td>
+                            <td>
+                                <button class="btn btn-success btn-sm" type="submit" title="Ikaslea aldatu/ Modificar participante"><i class="bi bi-check2-circle"></i></button>
+                                <!--<button class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button>-->
+                                <a role="button" class=" btn btn-danger btn-sm" href="/ikaslea_ezabatu/{{ formakuntza[0] }}/{{ ika[0] }}/" title="Ikaslea ezabatu/ Eliminar participante"><i class="bi bi-x-octagon"></i></a>
+                            </td>
+                        </form>
+                    </tr>
+                {% endfor %}
+                    <tr>
+                        <form action="/ikaslea_sortu/" method="post">
+                            <input type="hidden" name="idfor" value="{{formakuntza[0]}}">
+                            <td><input type="text" class="form-control" placeholder="Izen Abizenak / Nombre Apellidos" name="izena"></td>
+                            <td><input type="email" class="form-control" placeholder="Email" name="emaila"></td>
+                            <td>
+                                <button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-plus"></i></button>
+                            </td>
+                        </form>
+                    </tr>
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+    </div>
+
+    {% include 'includes/footer.html' %}
+    <script src="/static/js/pasahitza_aldatu.js"></script>
+    <script src="/static/js/formakuntza.js"></script>
+</body>
+</html>

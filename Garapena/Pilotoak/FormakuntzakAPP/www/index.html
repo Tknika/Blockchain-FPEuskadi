@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% include 'includes/head.html' %}
+    <title>Formaciones App</title>
+</head>
+<body>
+
+    {% include 'includes/menu.html' %}
+    <div class="content">
+        <div class="row flex-lg-row-reverse align-items-center g-5 py-2 px-5">
+            <h1 class="display-5 fw-bold lh-1 mb-3">Certificaciones para la formación básica sobre Blockchain</h1>
+            <div class="col-lg-4">
+              <img src="/static/img/blockchainfpeuskadi-logotransp_big-1024x328.png" class="d-block mx-auto img-fluid" alt="Blockchain FP Euskadi" loading="lazy">
+            </div>
+            <div class="col-lg-8 text-start">
+              <p class="lead">En este sitio web podrás crear certificados de asistencia, para tu alumnado, a la formación básica sobre la tecnología Blockchain desarrollado por el equipo Blockchain FP Euskadi de Tknika.</p>
+              <p class="lead">Si has impartido la formación y todavía no tienes un usuario de acceso a esta herramienta, por favor, enviadnos un correo electrónico a la dirección xxxx[@]xxxx[.]xxx y te haremos llegar uno.</p>
+              <p class="lead">Una vez dentro solamente tendrás que definir los detalles de la formación que has impartido e incluir un listado con el alumnado presente, ¡es muy sencillo!. Desde la herramienta podrás generar certificados que quedarán registrados en la Blockchain de FP Euskadi. Los datos de los certificados se almacenarán de forma inalterable y ls consulta de estos registros será pública.</p>
+              <!--<p class="lead">Desde FP Euskadi estamos comprometidos con la educación y el desarrollo profesional de la sociedad vasca y esperamos que esta nueva plataforma de certificación contribuya a mejorar el reconocimiento y la calidad de la educación en la FP Euskadi. ¡Explora nuestro sitio web y descubre las ventajas de la certificación mediante Blockchain!</p>-->
+            </div>
+          </div>
+    </div>  
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginModalLabel">Iniciar Sesión</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="/login/" method="post">
+                        <div class="mb-3">
+                            <label for="loginEmail" class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" id="loginEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="loginPassword" class="form-label">Contraseña</label>
+                            <input type="password" name="password" class="form-control" id="loginPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+  
+    <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="registerModalLabel">Quiero darme de alta en la aplicación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="registerName" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="registerName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerSurname" class="form-label">Apellidos</label>
+                            <input type="text" class="form-control" id="registerSurname" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="registerEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerCentro" class="form-label">Centro Formativo</label>
+                            <input type="text" class="form-control" id="registerCentro" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Registrarse</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'includes/footer.html' %}
+</body>
+</html>

@@ -1,0 +1,11 @@
+Kaixo {izena},
+
+Email honen bidez egin duzun <b>"{{formakuntza}}"</b> jardunaldiaren informazioa bidaltzen dizugu. Ziurtagiria atxikituta daukazu eta jardunaldiaren informazio osoa ikusteko hurrengo esteka erabili.
+-----------
+Mediante este email te enviamos la información sobre la formación <b>"{{formakuntza}}"</b> que has hecho. El certificado está adjunto y para ver toda la información pulsa sobre el siguiente enlace.
+
+{bk_base_uri}ikusi_nft_info/{{email_lok}}
+
+Agurra,
+
+Blockchain FP Euskadi - Tknika - Zamalbide Auzoa z/g - 20100 Errenteria (Gipuzkoa)
