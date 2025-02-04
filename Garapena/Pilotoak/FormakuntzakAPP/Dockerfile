@@ -15,8 +15,8 @@ COPY . /app
 # ADD --no-cache-dir
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Make port 5001 available to the world outside this container
-#EXPOSE 5001
+# Make port 5002 available to the world outside this container
+#EXPOSE 5002
 
 # Run etiketa app using gunicorn when the container launches
 CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5002", "server:app"]
