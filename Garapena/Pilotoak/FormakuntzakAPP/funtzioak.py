@@ -5,7 +5,7 @@ from web3.middleware import ExtraDataToPOAMiddleware
 import mysql.connector as con
 import pandas as pd
 import random, string, hashlib, io, json, ast, os, smtplib, ssl
-from reportlab.lib.pagesizes import landscape, letter
+from reportlab.lib.pagesizes import landscape, A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfbase.ttfonts import TTFont
@@ -21,9 +21,9 @@ DB_DATABASE = os.environ.get('DB_DATABASE')
 DB_USER = os.environ.get('DB_USER')
 DB_PASSWORD = os.environ.get('DB_PASSWORD')
 
-BK_PROVIDER = os.environ.get('BK_PROVIDER')
+BK_PROVIDER = list(os.environ.get('BK_PROVIDER').split(","))
 BK_PROVIDER_PORT = os.environ.get('BK_PROVIDER_PORT')
-BK_CHAIN_ID = os.environ.get('BK_CHAIN_ID')
+BK_CHAIN_ID = int(os.environ.get('BK_CHAIN_ID'))
 BK_CONTRACT_ADDRESS = os.environ.get('BK_CONTRACT_ADDRESS')
 BK_ABI_PATH = os.environ.get('BK_ABI_PATH')
 BK_OWNER_ADDRESS = os.environ.get('BK_OWNER_ADDRESS')
