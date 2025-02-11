@@ -271,7 +271,7 @@ def pdf_orria_sortu(p, bg_image, width, height, partaidea, formakuntza):
     fizena = f"{formakuntza}"
     text_width = p.stringWidth(fizena, 'CustomFont', 24)
     x_for = (width - text_width) / 2
-    y_for = height - 410
+    y_for = height - 400
     p.drawString(x_for, y_for, fizena)
     p.showPage()
 
