@@ -150,7 +150,7 @@ def sortu_zihurtagiriak(idfor):
     query = 'UPDATE formakuntzak SET blockchain = 1 WHERE id = %s'
     cursor.execute(query, (idfor,))
 
-    width, height = landscape(letter)
+    width, height = landscape(A4)
 
     # Cargar la imagen de fondo
     bg_image_eus = ImageReader('static/img/CertificadoBlockchain_eus.png')
@@ -160,7 +160,7 @@ def sortu_zihurtagiriak(idfor):
 
     for par in partaideak:
         buffer = io.BytesIO()
-        p = canvas.Canvas(buffer, pagesize=landscape(letter))
+        p = canvas.Canvas(buffer, pagesize=landscape(A4))
         ############## EUSKERAZ ################
         pdf_orria_sortu(p, bg_image_eus, width, height, par[0]+"-(r)i", fizena)
         ############## CASTELLANO ################
