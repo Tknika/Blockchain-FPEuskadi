@@ -20,8 +20,8 @@ COPY ./alertak/ethstats.py /app/alertak/
 COPY ./alertak/ethstats.ini /app/alertak/
 COPY ./alertak/node_names.json /app/alertak/
 
-# Install Python dependencies
-RUN pip3 install websocket-client
+# Install Python dependencies using apk
+RUN apk add --no-cache py3-websocket-client
 
 USER node
 EXPOSE 3000
