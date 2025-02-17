@@ -23,11 +23,11 @@ COPY ./alertak/node_names.json /app/alertak/
 # Install Python dependencies using apk
 RUN apk add --no-cache py3-websocket-client
 
-USER node
-EXPOSE 3000
-
 # Create a start script
 COPY start.sh /app/
 RUN chmod +x /app/start.sh
+
+USER node
+EXPOSE 3000
 
 CMD ["/app/start.sh"]
