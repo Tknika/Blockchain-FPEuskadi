@@ -7,14 +7,26 @@ import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import logging
+
+# Configure logging
+log_dir = '/app/alertak/logs'
+os.makedirs(log_dir, exist_ok=True)  # Create logs directory if it doesn't exist
+log_file = os.path.join(log_dir, 'ethstats.log')
+logging.basicConfig(
+    filename=log_file,
+    level=logging.INFO,
+    format='%(asctime)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 # Load configuration
 config = configparser.ConfigParser()
-config_path = os.path.join(os.path.dirname(__file__), 'ethstats.ini')
+config_path = os.path.join('/app/alertak', 'ethstats.ini')
 config.read(config_path)
 
 # Load node names mapping
-node_names_path = os.path.join(os.path.dirname(__file__), 'node_names.json')
+node_names_path = os.path.join('/app/alertak', 'node_names.json')
 with open(node_names_path) as f:
     node_names = json.load(f)
 
@@ -141,7 +153,8 @@ def on_message(ws, message):
                     previous_nodes_data.extend([node.copy() for node in nodes_data])
                     
                 # Compare current data with previous data and send email if there are changes
-                if len(previous_nodes_data) != len(nodes_data) or any(prev['peers'] != curr['peers'] or prev['status'] != curr['status'] 
+                #or any(prev['peers'] != curr['peers'] or -> quitamos que mande correo si cambia el numero de peers
+                if len(previous_nodes_data) != len(nodes_data) or any(prev['status'] != curr['status'] 
                       for prev, curr in zip(previous_nodes_data, nodes_data)):
                     send_email(f"Ha cambiado el estado de los nodos:\nEstado anterior:\n {previous_nodes_data}\nEstado nuevo:\n {nodes_data}")
                 
@@ -163,13 +176,13 @@ def on_message(ws, message):
                 #print(f"- Mining: {node_stats.get('mining', False)}")
 
 def on_error(ws, error):
-    print(f"WebSocket error: {error}")
+    logging.info(f"WebSocket error: {error}")
 
 def on_close(ws, close_status_code, close_msg):
-    print(f"WebSocket connection closed: {close_status_code} - {close_msg}")
+    logging.info(f"WebSocket connection closed: {close_status_code} - {close_msg}")
 
 def send_alert(message):
-    print(message)
+    logging.info(message)
 
 def send_email(message):
     # Email configuration
@@ -195,12 +208,12 @@ def send_email(message):
         # Send email
         server.send_message(msg)
         server.quit()
-        print("Alerta de estado de nodos enviada correctamente por email")
+        logging.info("Alerta de estado de nodos enviada correctamente por email")
     except Exception as e:
-        print(f"Error al enviar la alerta de estado de nodos por email: {str(e)}")
+        logging.info(f"Error al enviar la alerta de estado de nodos por email: {str(e)}")
 
 def on_open(ws):
-    print("Conexión WebSocket abierta")
+    logging.info("Conexión WebSocket abierta")
     ws.send(json.dumps({"emit": ["hello", hello_message]}))
 
 def test_connection(url, timeout=5):
@@ -218,21 +231,21 @@ def test_connection(url, timeout=5):
         # print(f"Respuesta del servidor: {result}")
         
         ws.close()
-        print(f"✓ Conexión WebSocket establecida correctamente con {url}")
+        logging.info(f"✓ Conexión WebSocket establecida correctamente con {url}")
         return True
         
     except (websocket.WebSocketTimeoutException,
             websocket.WebSocketBadStatusException,
             websocket.WebSocketAddressException) as e:
-        print(f"✗ Conexión WebSocket fallida con {url}")
-        print(f"Error: {str(e)}")
+        logging.info(f"✗ Conexión WebSocket fallida con {url}")
+        logging.info(f"Error: {str(e)}")
         return False
 
 if __name__ == "__main__":
     while True:  # Reconnection loop
         try:
             if not test_connection(WS_URL):
-                print("Saliendo debido a fallo de conexión")
+                logging.info("Saliendo debido a fallo de conexión")
                 exit(1)
             
             ws = websocket.WebSocketApp(WS_URL,
@@ -245,8 +258,8 @@ if __name__ == "__main__":
             ws.run_forever(ping_interval=30,  # Send ping every 30 seconds
                          ping_timeout=10)     # Wait 10 seconds for pong
             
-            print(f"Conexión perdida, reconectando en {RECONNECT_TIME} segundos...")
+            logging.info(f"Conexión perdida, reconectando en {RECONNECT_TIME} segundos...")
             time.sleep(RECONNECT_TIME)
         except Exception as e:
-            print(f"Error: {e}")
+            logging.info(f"Error: {e}")
             time.sleep(RECONNECT_TIME)  # Wait before reconnecting

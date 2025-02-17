@@ -11,6 +11,8 @@ services:
       - "3000:3000"
     networks:
       - server_network
+    volumes:
+      - ethstats_logs:/app/alertak/logs
 
   ziurtagiriak:
     build:
@@ -108,3 +110,4 @@ networks:
 
 volumes:
   db_data:
+  ethstats_logs:
