@@ -248,15 +248,21 @@ if __name__ == "__main__":
                 logging.info("Saliendo debido a fallo de conexión")
                 exit(1)
             
+            # Enable trace for debugging websocket
+            #websocket.enableTrace(True)
+            
             ws = websocket.WebSocketApp(WS_URL,
                                       on_message=on_message,
                                       on_open=on_open,
                                       on_error=on_error,
                                       on_close=on_close)
             
-            # Pass ping parameters to run_forever instead
-            ws.run_forever(ping_interval=30,  # Send ping every 30 seconds
-                         ping_timeout=10)     # Wait 10 seconds for pong
+            # Reduced ping interval and increased timeout
+            ws.run_forever(ping_interval=10,      # Send ping every 10 seconds
+                         ping_timeout=5,          # Wait 5 seconds for pong
+                         ping_payload="ping",     # Custom ping message
+                         dispatcher=None,
+                         skip_utf8_validation=True)  # Performance optimization
             
             logging.info(f"Conexión perdida, reconectando en {RECONNECT_TIME} segundos...")
             time.sleep(RECONNECT_TIME)
