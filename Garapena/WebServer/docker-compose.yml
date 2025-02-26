@@ -92,8 +92,8 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
-    ports:
-      - "3306:3306"
+    #ports:
+      #- "3306:3306"
     networks:
       - server_network
     volumes:
@@ -101,7 +101,7 @@ services:
       - ../Pilotoak/EtiketaAPP/init_db.sql:/docker-entrypoint-initdb.d/etiketa.sql
       - ../Pilotoak/FormakuntzakAPP/init_db.sql:/docker-entrypoint-initdb.d/formakuntzakapp_dump.sql
       - db_data:/var/lib/mysql
-      #Nuevos scripts con: docker exec -i mariadb-container mysql -u root -p "your_password" < script.sql
+      #Nuevos scripts con: docker exec -i mariadb-container mysql -u root -p"your_password" < script.sql
 
 networks:
   server_network:
