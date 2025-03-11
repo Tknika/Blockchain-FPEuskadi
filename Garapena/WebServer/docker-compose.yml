@@ -59,6 +59,8 @@ services:
     depends_on:
       mariadb:
         condition: service_healthy
+    volumes:
+      - formakuntza_ziurtagiriak:/app/static/certs
     networks:
       - server_network
     
@@ -111,3 +113,4 @@ networks:
 volumes:
   db_data:
   ethstats_logs:
+  formakuntza_ziurtagiriak:
