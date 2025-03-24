@@ -17,6 +17,7 @@ Ejecutamos:
 ## Los servicios que se despliegan
 
 - **ethstats**: el servidor de Ethereum Stats, situado en ../Pilotoak/Erremintak/ethstats. Estará accesible en el servidor accediendo al puerto definido en el fichero *docker-compose.yml*.
+- **mailserver**: el servidor de correo electrónico. Estará accesible en el servidor accediendo a los puertos definidos en el fichero *docker-compose.yml*.
 - **ziurtagiriak**: la aplicación Ziurtagiriak, situada en ../Pilotoak/ZiurtagiriakAPP. Estará accesible en el servidor accediendo con los nombres configurados en los ficheros de la carpeta *nginx/conf.d/*.
 - **etiketa**: la aplicación Etiqueta Inteligente, situada en ../Pilotoak/EtiketaAPP. Estará accesible en el servidor accediendo con los nombres configurados en los ficheros de la carpeta *nginx/conf.d/*.
 - **formakuntza**: la aplicación Formakuntza, situada en ../Pilotoak/FormakuntzakAPP. Estará accesible en el servidor accediendo con los nombres configurados en los ficheros de la carpeta *nginx/conf.d/*.
