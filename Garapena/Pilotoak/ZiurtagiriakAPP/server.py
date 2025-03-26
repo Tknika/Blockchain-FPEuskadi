@@ -9,6 +9,7 @@ app = Flask(__name__, template_folder='www', static_url_path='/static')
 contract_addr = os.environ.get('DIRECCION_CONTRATO_ZIURTAGIRIAK')
 clave_privada = os.environ.get('CLAVE_PRIVADA_CREADOR_CONTRATO_ZIURTAGIRIAK')
 provider = os.environ.get('WEB3_PROVIDER')
+SERVER_URL = os.environ.get('SERVER_URL')
 sender_email = os.environ.get('SMTP_EMAIL')
 sender_email_password = os.environ.get('SMTP_PASSWORD')
 SMTP_SERVER = os.environ.get('SMTP_SERVER')
@@ -219,7 +220,7 @@ def post_sortu_nft_baztertu():
         owner_addr = web3.eth.account.from_key(clave_privada)
         #Bukatu berria
 
-        path = "http://localhost:5000/static/nft/"
+        path = SERVER_URL + "/static/nft/"
         #path = "http://ziurtagiriak.localhost/static/nft/"
 
         lok = lokalizatzailea.split("-")
@@ -337,9 +338,9 @@ def post_bilatzailea():
             abi = f.read()
         web3 = Web3(Web3.HTTPProvider(provider))
 
-        path = "http://localhost:5000/static/nft/"
-        lok = ""
-        uri = path+lok+".xml"
+        #path = "http://localhost:5000/static/nft/"
+        #lok = ""
+        #uri = path+lok+".xml"
 
         if web3.is_connected():
             contract_object = web3.eth.contract(abi=abi, address=contract_addr)
