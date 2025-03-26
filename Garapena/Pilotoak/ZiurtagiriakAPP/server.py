@@ -3,6 +3,7 @@ from web3 import Web3
 import os, time
 from contextlib import contextmanager
 import mysql.connector
+from email.utils import formatdate
 
 app = Flask(__name__, template_folder='www', static_url_path='/static')
 contract_addr = os.environ.get('DIRECCION_CONTRATO_ZIURTAGIRIAK')
@@ -10,6 +11,13 @@ clave_privada = os.environ.get('CLAVE_PRIVADA_CREADOR_CONTRATO_ZIURTAGIRIAK')
 provider = os.environ.get('WEB3_PROVIDER')
 sender_email = os.environ.get('SMTP_EMAIL')
 sender_email_password = os.environ.get('SMTP_PASSWORD')
+SMTP_SERVER = os.environ.get('SMTP_SERVER')
+SMTP_PORT = os.environ.get('SMTP_PORT')
+DB_HOSTNAME = os.environ.get('DB_HOSTNAME')
+DB_NAME = os.environ.get('DB_NAME')
+DB_USERNAME = os.environ.get('DB_USERNAME')
+DB_PASSWORD = os.environ.get('DB_PASSWORD')
+
 #to-do: definir el provider dentro de las funciones seleccionando uno cada vez
 
 #app.config['APPLICATION_ROOT'] = '/ziurtagiriak'
@@ -24,10 +32,10 @@ def get_db_connection():
     for attempt in range(max_retries):
         try:
             connection = mysql.connector.connect(
-                host='database',
-                database='ziurtagiriak',
-                user='ziurtagiriak',
-                password='ziurtagiriak',
+                host=DB_HOSTNAME,
+                database=DB_NAME,
+                user=DB_USERNAME,
+                password=DB_PASSWORD,
                 autocommit=True,
                 # Add these connection parameters
                 connection_timeout=30,
@@ -89,7 +97,7 @@ def post_jardunaldia():
             newline = '\n'
             
             primera_linea = True
-            with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
+            with smtplib.SMTP_SSL(host=SMTP_SERVER, port=SMTP_PORT, context=context) as server:
                 server.login(sender_email, sender_email_password)
                 for row in csvFile:
                     if primera_linea:
@@ -111,6 +119,7 @@ def post_jardunaldia():
                         message["Subject"] = formakuntza + " - Ziurtagiri froga"
                         message["From"] = sender_email
                         message["To"] = receiver_email
+                        message["Date"] = formatdate(localtime=True)
                         with open("static/email.html", "r") as f:
                             mail_html = f.read().replace("{{izena}}", izena).replace("{{email_lok}}", email_lok).replace("{{formakuntza}}", formakuntza)
                         with open("static/email.txt", "r") as f:
