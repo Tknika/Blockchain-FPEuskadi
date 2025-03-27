@@ -13,6 +13,7 @@ from reportlab.pdfbase import pdfmetrics
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
+from email.utils import formatdate
 from typing import Optional, List
 
 ########### VARIABLES GLOBALES ###########
@@ -221,6 +222,7 @@ def bidali_emaila(nori, izena, lokalizatzailea, formakuntza, cert):
         message["Subject"] = formakuntza + " - Ziurtagiria / Certificado"
         message["From"] = EM_SENDER
         message["To"] = nori
+        message['Date'] = formatdate(localtime=True)
         with open("static/mail/email.html", "r") as f:
             mail_html = f.read().replace("{{izena}}", izena).replace("{{email_lok}}", lokalizatzailea).replace("{{formakuntza}}", formakuntza).replace("{{BK_BASE_URI}}", BK_BASE_URI)
         with open("static/mail/email.txt", "r") as f:
