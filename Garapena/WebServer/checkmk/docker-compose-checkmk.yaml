@@ -1,0 +1,62 @@
+---
+version: '3'
+services:
+   checkmk:
+     hostname: checkmk
+     image: checkmk/check-mk-raw:2.4.0-2025.02.18
+     ports:
+       - "162:162/udp"
+       - "514:514/udp"
+       - "514:514/tcp"
+       - "6557:6557/tcp"
+       - "8080:5000/tcp"
+     environment:
+       - TZ=Europe/Madrid
+       - MAIL_RELAY_HOST=mailserver
+       - MAIL_RELAY_PORT=465
+       - MAIL_RELAY_OPTION_SMTP_PORT=465
+       - MAIL_RELAY_OPTION_SMTP_FALLBACK_RELAY=
+       - MAIL_RELAY_USE_TLS=off  # Using TLS for secure connection to mailserver
+       - MAIL_RELAY_USE_SSL=on  # Enable SSL for port 465
+       - MAIL_RELAY_AUTH=on     # Authentication is typically required for TLS/SSL
+       - MAIL_RELAY_USER=admin@blockchain.tkn.eus  # Replace with your actual mail user
+       - MAIL_RELAY_PASSWORD=**************      # Replace with your actual password
+       - MAIL_RELAY_FROM=admin@blockchain.tkn.eus
+       - CMK_SITE_ID=cmknew
+       - CMK_PASSWORD=**************
+       - CMK_LIVESTATUS_TCP=on
+     volumes:
+       - /etc/localtime:/etc/localtime:ro
+       - cmknew:/omd/sites
+     restart: unless-stopped
+     cap_add:
+       - NET_ADMIN  # Necesario para recibir SNMP Traps en 162/udp
+     networks:
+       - server_network
+volumes:
+  cmknew:
+
+networks:
+  server_network:
+    external: true
+
+
+# --hostname 'mymonitoring.mydomain.com'.
+
+#capabilities fuer tmpfs
+
+
+
+# volumes aus folders mit git drunter
+# local/share/check_mk oder local/share generell
+
+# volumes aus folders mit git drunter (o.ae.)
+# etc/check_mk/conf.d
+# achtung credentials
+
+
+# wichtigst: main config, apache parameter
+
+# overlay ueber normalen container:
+#deflate und expiry settings etc. alles nach $OMD_SITE/etc/apache...
+# logging 3x pruefen, dass keine lookups gemacht werden
