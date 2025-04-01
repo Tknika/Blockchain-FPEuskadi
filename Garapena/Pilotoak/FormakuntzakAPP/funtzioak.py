@@ -190,7 +190,8 @@ def nft_sortu(uri, text_info):
     })
     # Firmar y enviar la transacción
     signed_txn = web3.eth.account.sign_transaction(txn, private_key=BK_OWNER_PRIVATE)
-    web3.eth.send_raw_transaction(signed_txn.raw_transaction)
+    txt_hash = web3.eth.send_raw_transaction(signed_txn.raw_transaction)
+    web3.eth.wait_for_transaction_receipt(txt_hash)
 
     return tokenId
 
