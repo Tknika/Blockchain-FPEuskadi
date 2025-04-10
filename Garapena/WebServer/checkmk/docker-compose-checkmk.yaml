@@ -9,7 +9,7 @@ services:
        - "514:514/udp"
        - "514:514/tcp"
        - "6557:6557/tcp"
-       - "8080:5000/tcp"
+       #- "8080:5000/tcp" #se accederá mediante el proxy de nginx
      environment:
        - TZ=Europe/Madrid
        - MAIL_RELAY_HOST=mailserver
