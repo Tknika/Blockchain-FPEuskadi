@@ -35,7 +35,7 @@ EM_PORT = os.environ.get('EM_PORT')
 EM_SERVER = os.environ.get('EM_SERVER')
 EM_SENDER = os.environ.get('EM_SENDER')
 EM_SENDER_PASSWORD = os.environ.get('EM_SENDER_PASSWORD')
-"""
+
 ####################### DATABASE #######################
 def get_db_con():
     bbdd = con.connect(host=DB_HOST, database=DB_DATABASE, user=DB_USER, password=DB_PASSWORD, autocommit=True)
