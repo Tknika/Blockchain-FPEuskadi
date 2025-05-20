@@ -28,7 +28,7 @@ BK_CHAIN_ID = int(os.environ.get('BK_CHAIN_ID'))
 BK_CONTRACT_ADDRESS = os.environ.get('BK_CONTRACT_ADDRESS')
 BK_ABI_PATH = os.environ.get('BK_ABI_PATH')
 BK_OWNER_ADDRESS = os.environ.get('BK_OWNER_ADDRESS')
-BK_OWNER_PRIVATE = os.environ.get('BK_OWNER_PRIVATE')ç
+BK_OWNER_PRIVATE = os.environ.get('BK_OWNER_PRIVATE')
 BK_BASE_URI = os.environ.get('BK_BASE_URI')
 
 EM_PORT = os.environ.get('EM_PORT')
@@ -223,7 +223,7 @@ def bidali_emaila(nori, izena, lokalizatzailea, formakuntza, cert):
         message["Subject"] = formakuntza + " - Ziurtagiria / Certificado"
         message["From"] = EM_SENDER
         message["To"] = nori
-        message['Date'] = formatdate(localtime=True)
+        message["Date"] = formatdate(localtime=True)
         with open("static/mail/email.html", "r") as f:
             mail_html = f.read().replace("{{izena}}", izena).replace("{{email_lok}}", lokalizatzailea).replace("{{formakuntza}}", formakuntza).replace("{{BK_BASE_URI}}", BK_BASE_URI)
         with open("static/mail/email.txt", "r") as f:
