@@ -15,13 +15,36 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 from email.utils import formatdate
 from typing import Optional, List
+import qrcode
 
 ########### VARIABLES GLOBALES ###########
+"""
+DB_HOST='localhost'
+DB_DATABASE='formakuntzak'
+DB_USER='formakuntzak'
+DB_PASSWORD='formakuntzak'
+"""
 DB_HOST = os.environ.get('DB_HOST')
 DB_DATABASE = os.environ.get('DB_DATABASE')
 DB_USER = os.environ.get('DB_USER')
 DB_PASSWORD = os.environ.get('DB_PASSWORD')
 
+"""
+BK_PROVIDER = ["http://217.127.110.210", "http://195.53.127.242", "http://212.81.197.60","http://212.81.153.88","http://150.241.33.98","http://2.139.183.156","http://212.8.116.208","http://62.99.74.188"]
+BK_PROVIDER = ["http://217.127.110.210",]
+#BK_PROVIDER = ["http://127.0.0.1", "http://127.0.0.2"]
+BK_PROVIDER_PORT = "8545"
+#BK_PROVIDER = "http://127.0.0.1" #Hay que quitar
+BK_CHAIN_ID = 1337
+#BK_CONTRACT_ADDRESS = '0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6'
+BK_CONTRACT_ADDRESS = '0xe8BcF98571A253ba5FFe3fd6e04F4a72d13f3038' #PRODUCCION
+BK_ABI_PATH = "static/abi/Formakuntza.abi"
+BK_OWNER_ADDRESS = "0x28634F107337EcEBD432915bf7d2bC048AB8Adff" #PRODUCCION
+#BK_OWNER_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
+BK_OWNER_PRIVATE = "0x199676dbca43e8cf96fa2192eff7a4249939582b416d3a4dbb7595034896b698" #PRODUCCION
+#BK_OWNER_PRIVATE = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
+BK_BASE_URI = "http://formakuntzak.localhost/"
+"""
 BK_PROVIDER = list(os.environ.get('BK_PROVIDER').split(","))
 BK_PROVIDER_PORT = os.environ.get('BK_PROVIDER_PORT')
 BK_CHAIN_ID = int(os.environ.get('BK_CHAIN_ID'))
@@ -31,6 +54,12 @@ BK_OWNER_ADDRESS = os.environ.get('BK_OWNER_ADDRESS')
 BK_OWNER_PRIVATE = os.environ.get('BK_OWNER_PRIVATE')
 BK_BASE_URI = os.environ.get('BK_BASE_URI')
 
+"""
+EM_PORT = 465  # For SSL
+EM_SERVER = "smtp.gmail.com" 
+EM_SENDER = "ander.lo@icjardin.com" 
+EM_SENDER_PASSWORD = "pebg ojqw dyka sbmz"
+"""
 EM_PORT = os.environ.get('EM_PORT')
 EM_SERVER = os.environ.get('EM_SERVER')
 EM_SENDER = os.environ.get('EM_SENDER')
@@ -150,6 +179,7 @@ def update_pasahitza(id, pasahitza):
 
 ####################### BLOCKCHAIN #######################
 def get_contract():
+    print(type(BK_PROVIDER), flush=True)
     random.shuffle(BK_PROVIDER)
     for i in range(len(BK_PROVIDER)):
         provider = BK_PROVIDER[i]+":"+BK_PROVIDER_PORT
@@ -262,7 +292,43 @@ def sha1_hash_sortu(password):
     sha1.update(password.encode('utf-8'))
     return sha1.hexdigest()
 
-def pdf_orria_sortu(p, bg_image, width, height, partaidea, formakuntza):
+def crear_codigo_qr(url):
+    """
+    Crea un código QR a partir de una URL y lo devuelve como un objeto BytesIO.
+    
+    Args:
+        url (str): URL para codificar en el QR
+    
+    Returns:
+        tuple: (BytesIO con la imagen del QR, ancho de la imagen, alto de la imagen)
+    """
+    # Crear objeto QR
+    qr = qrcode.QRCode(
+        version=4,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    
+    # Agregar datos (URL) al código QR
+    qr.add_data(url)
+    qr.make(fit=True)
+    
+    # Crear imagen
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Convertir la imagen a BytesIO (en memoria) en lugar de guardarla
+    img_bytes = io.BytesIO()
+    img.save(img_bytes, format='PNG')
+    img_bytes.seek(0)  # Volver al inicio del stream
+    
+    # Obtener dimensiones
+    width, height = img.size
+    
+    return img_bytes, width, height
+
+def pdf_orria_sortu(p, bg_image, width, height, partaidea, formakuntza, lok):
+    
     p.drawImage(bg_image, 0, 0, width=width, height=height)
     p.setFont('CustomFont', 28)
     text = f"{partaidea}"
@@ -276,6 +342,12 @@ def pdf_orria_sortu(p, bg_image, width, height, partaidea, formakuntza):
     x_for = (width - text_width) / 2
     y_for = height - 400
     p.drawString(x_for, y_for, fizena)
+    qr_url = BK_BASE_URI+"ikusi_nft_info/"+lok
+    qr_img_bytes, qr_width, qr_height = crear_codigo_qr(qr_url)
+    qr_image = ImageReader(qr_img_bytes)
+    # Posición del código QR en la parte inferior izquierda con 10 píxeles de margen
+    qr_x = 10  # 10 píxeles desde el borde izquierdo
+    qr_y = 10  # 10 píxeles desde el borde inferior
+    # Asegurarse de que el código QR sea visible
+    p.drawImage(qr_image, qr_x, qr_y, width=100, height=100)  # Tamaño fijo para mejor visibilidad
     p.showPage()
-
-
