@@ -18,33 +18,11 @@ from typing import Optional, List
 import qrcode
 
 ########### VARIABLES GLOBALES ###########
-"""
-DB_HOST='localhost'
-DB_DATABASE='formakuntzak'
-DB_USER='formakuntzak'
-DB_PASSWORD='formakuntzak'
-"""
 DB_HOST = os.environ.get('DB_HOST')
 DB_DATABASE = os.environ.get('DB_DATABASE')
 DB_USER = os.environ.get('DB_USER')
 DB_PASSWORD = os.environ.get('DB_PASSWORD')
 
-"""
-BK_PROVIDER = ["http://217.127.110.210", "http://195.53.127.242", "http://212.81.197.60","http://212.81.153.88","http://150.241.33.98","http://2.139.183.156","http://212.8.116.208","http://62.99.74.188"]
-BK_PROVIDER = ["http://217.127.110.210",]
-#BK_PROVIDER = ["http://127.0.0.1", "http://127.0.0.2"]
-BK_PROVIDER_PORT = "8545"
-#BK_PROVIDER = "http://127.0.0.1" #Hay que quitar
-BK_CHAIN_ID = 1337
-#BK_CONTRACT_ADDRESS = '0x2279b7a0a67db372996a5fab50d91eaa73d2ebe6'
-BK_CONTRACT_ADDRESS = '0xe8BcF98571A253ba5FFe3fd6e04F4a72d13f3038' #PRODUCCION
-BK_ABI_PATH = "static/abi/Formakuntza.abi"
-BK_OWNER_ADDRESS = "0x28634F107337EcEBD432915bf7d2bC048AB8Adff" #PRODUCCION
-#BK_OWNER_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
-BK_OWNER_PRIVATE = "0x199676dbca43e8cf96fa2192eff7a4249939582b416d3a4dbb7595034896b698" #PRODUCCION
-#BK_OWNER_PRIVATE = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
-BK_BASE_URI = "http://formakuntzak.localhost/"
-"""
 BK_PROVIDER = list(os.environ.get('BK_PROVIDER').split(","))
 BK_PROVIDER_PORT = os.environ.get('BK_PROVIDER_PORT')
 BK_CHAIN_ID = int(os.environ.get('BK_CHAIN_ID'))
@@ -54,12 +32,6 @@ BK_OWNER_ADDRESS = os.environ.get('BK_OWNER_ADDRESS')
 BK_OWNER_PRIVATE = os.environ.get('BK_OWNER_PRIVATE')
 BK_BASE_URI = os.environ.get('BK_BASE_URI')
 
-"""
-EM_PORT = 465  # For SSL
-EM_SERVER = "smtp.gmail.com" 
-EM_SENDER = "ander.lo@icjardin.com" 
-EM_SENDER_PASSWORD = "pebg ojqw dyka sbmz"
-"""
 EM_PORT = os.environ.get('EM_PORT')
 EM_SERVER = os.environ.get('EM_SERVER')
 EM_SENDER = os.environ.get('EM_SENDER')
