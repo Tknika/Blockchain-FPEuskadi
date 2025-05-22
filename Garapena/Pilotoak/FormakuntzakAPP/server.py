@@ -162,9 +162,9 @@ def sortu_zihurtagiriak(idfor):
         buffer = io.BytesIO()
         p = canvas.Canvas(buffer, pagesize=landscape(A4))
         ############## EUSKERAZ ################
-        pdf_orria_sortu(p, bg_image_eus, width, height, par[0]+"-(r)i", fizena)
+        pdf_orria_sortu(p, bg_image_eus, width, height, par[0]+"-(r)i", fizena, par[3])
         ############## CASTELLANO ################
-        pdf_orria_sortu(p, bg_image_es, width, height, par[0], fizena)
+        pdf_orria_sortu(p, bg_image_es, width, height, par[0], fizena , par[3])
         p.save()
         buffer.seek(0)
         ########## PDFa eta URI-a sortu ##########
@@ -213,6 +213,7 @@ def bidali_emaila_partaideari(lok, idfor):
     info = contract.functions.tokenTextInfo(int(tokenId)).call()
     info = info.encode().decode('unicode-escape')
     info = ast.literal_eval(info)
+    print(info, flush=True)
     cert = contract.functions.tokenURI(int(tokenId)).call().split('/')[-1]
     bidali_emaila(emaila, info['izena'], lok, info['formakuntza'], cert)
     return redirect("/formakuntza_ikusi/"+idfor)
