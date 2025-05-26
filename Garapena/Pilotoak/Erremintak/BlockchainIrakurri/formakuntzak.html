@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="eu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formakuntza Bilatzailea</title>
+    <script src="ethers_5.7.2.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .loading {
+            display: none;
+            margin-top: 10px;
+        }
+        .nft-image {
+            max-width: 100%;
+            height: auto;
+            margin-top: 15px;
+            border-radius: 8px;
+        }
+        .status-connected {
+            color: green;
+            font-weight: bold;
+        }
+        .status-disconnected {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Formakuntza Bilatzailea</h1>
+        
+        <div id="network-section">
+            <h2>Blockchain-era konektatzen...</h2>
+            <p>Konexio egoera: <span id="connectionStatus" class="status-disconnected">Nodoak probatzen...</span></p>
+            <div id="connectionProgress" style="margin-top: 10px;"></div>
+        </div>
+
+        <div id="search-section" style="display: none;">
+            <div class="form-group">
+                <label for="tokenId">Sartu Formakuntzaren Token ID-a:</label>
+                <input type="number" id="tokenId" min="0" placeholder="Adibidez: 0">
+            </div>
+            <button id="searchToken">Bilatu</button>
+            <div id="loading" class="loading">Kargatzen...</div>
+            <p id="errorMessage" class="error"></p>
+        </div>
+
+        <div id="result">
+            <h2>Formakuntzaren Datuak</h2>
+            <div id="tokenData">
+                <p><strong>Token ID:</strong> <span id="displayTokenId"></span></p>
+                <p><strong>Jabea:</strong> <span id="owner"></span></p>
+                <p><strong>Token URI:</strong> <span id="tokenURI"></span></p>
+                <div><strong>Testu Informazioa:</strong></div>
+                <div id="textInfo" style="margin-left: 20px; white-space: pre-line;"></div>
+                <div id="imageContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Contract ABI - Only the functions we need
+        const contractABI = [
+            {
+                "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
+                "name": "tokenURI",
+                "outputs": [{"internalType": "string", "name": "", "type": "string"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
+                "name": "tokenTextInfo",
+                "outputs": [{"internalType": "string", "name": "", "type": "string"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
+                "name": "ownerOf",
+                "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        // Contract address - Replace with your actual deployed contract address
+        const contractAddress = "0xe8BcF98571A253ba5FFe3fd6e04F4a72d13f3038";
+
+        let provider;
+        let contract;
+
+        // Search token button
+        document.getElementById('searchToken').addEventListener('click', searchToken);
+
+        // Start connection automatically when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            connectToNode();
+        });
+
+        // Connect to Besu node - try each one until successful
+        async function connectToNode() {
+            // Check if ethers library is loaded
+            if (typeof ethers === 'undefined') {
+                document.getElementById('connectionStatus').textContent = 'ethers.js liburutegia ez da kargatu';
+                document.getElementById('connectionStatus').className = 'status-disconnected';
+                return;
+            }
+            
+            const rpcUrls = [
+                "http://217.127.110.210:8545",
+                "http://212.81.197.60:8545", 
+                "http://195.53.127.242:8545",
+                "http://212.81.153.88:8545",
+                "http://150.241.33.98:8545",
+                "http://2.139.183.156:8545",
+                "http://212.8.116.208:8545",
+                "http://62.99.74.188:8545",
+                "http://212.81.178.126:8545",
+                "http://90.160.13.213:8545"
+            ];
+            
+            const progressDiv = document.getElementById('connectionProgress');
+            
+            for (let i = 0; i < rpcUrls.length; i++) {
+                const rpcUrl = rpcUrls[i];
+                
+                try {
+                    // Update progress
+                    progressDiv.innerHTML = `Probatzen ${i + 1}/${rpcUrls.length}: ${rpcUrl}`;
+                    document.getElementById('connectionStatus').textContent = `Probatzen nodoa ${i + 1}...`;
+                    
+                    // Create provider
+                    provider = new ethers.providers.JsonRpcProvider(rpcUrl);
+                    
+                    // Test connection by getting network (with timeout)
+                    const network = await Promise.race([
+                        provider.getNetwork(),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+                    ]);
+                    
+                    // Create contract instance
+                    contract = new ethers.Contract(contractAddress, contractABI, provider);
+                    
+                    // Update UI to show connected state
+                    document.getElementById('connectionStatus').textContent = `Konektatuta arrakastaz!`;
+                    document.getElementById('connectionStatus').className = 'status-connected';
+                    progressDiv.innerHTML = `Konektatuta: ${rpcUrl} (${network.name}, Chain ID: ${network.chainId})`;
+                    
+                    // Hide network section and show search section
+                    document.getElementById('network-section').style.display = 'none';
+                    document.getElementById('search-section').style.display = 'block';
+                    
+                    return; // Success - exit function
+                    
+                } catch (error) {
+                    console.log(`Failed to connect to ${rpcUrl}:`, error.message);
+                    // Continue to next node
+                }
+            }
+            
+            // If we get here, all nodes failed
+            document.getElementById('connectionStatus').textContent = 'Ezin izan da inolako nodora konektatu';
+            document.getElementById('connectionStatus').className = 'status-disconnected';
+            progressDiv.innerHTML = `<span style="color: red;">Errorea: Nodo guztiak huts egin dute. Saiatu geroago berriro.</span>`;
+        }
+
+        // Search for token data
+        async function searchToken() {
+            // Hide previous results and errors
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('errorMessage').innerText = '';
+            
+            const tokenId = document.getElementById('tokenId').value;
+            
+            if (!tokenId) {
+                document.getElementById('errorMessage').innerText = 'Mesedez, sartu token ID bat.';
+                return;
+            }
+            
+            if (!contract) {
+                document.getElementById('errorMessage').innerText = 'Nodo-ra konektatu behar duzu lehenengo.';
+                return;
+            }
+            
+            // Show loading indicator
+            document.getElementById('loading').style.display = 'block';
+            
+            try {
+                // Get token data
+                const [owner, uri, textInfo] = await Promise.all([
+                    contract.ownerOf(tokenId),
+                    contract.tokenURI(tokenId),
+                    contract.tokenTextInfo(tokenId)
+                ]);
+                
+                // Display the data
+                document.getElementById('displayTokenId').innerText = tokenId;
+                document.getElementById('owner').innerText = owner;
+                document.getElementById('tokenURI').innerText = uri;
+                
+                // Parse and format textInfo JSON
+                try {
+                    const textInfoData = JSON.parse(textInfo);
+                    let formattedText = '';
+                    
+                    for (const [key, value] of Object.entries(textInfoData)) {
+                        formattedText += `<strong>${key}:</strong> ${value}<br>`;
+                    }
+                    
+                    document.getElementById('textInfo').innerHTML = formattedText;
+                } catch (error) {
+                    // If it's not valid JSON, display as is
+                    console.log('textInfo is not valid JSON, displaying as text:', error);
+                    document.getElementById('textInfo').innerText = textInfo;
+                }
+                
+                // Try to fetch and display image if URI is accessible
+                const imageContainer = document.getElementById('imageContainer');
+                imageContainer.innerHTML = '';
+                
+                try {
+                    // If it's an IPFS URI, convert it to a gateway URL
+                    let fetchUrl = uri;
+                    if (uri.startsWith('ipfs://')) {
+                        fetchUrl = uri.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                    }
+                    
+                    // Try to fetch the metadata
+                    const response = await fetch(fetchUrl);
+                    if (response.ok) {
+                        const metadata = await response.json();
+                        if (metadata.image) {
+                            let imageUrl = metadata.image;
+                            if (imageUrl.startsWith('ipfs://')) {
+                                imageUrl = imageUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
+                            }
+                            
+                            const imgElement = document.createElement('img');
+                            imgElement.src = imageUrl;
+                            imgElement.className = 'nft-image';
+                            imgElement.alt = 'NFT Irudia';
+                            imageContainer.appendChild(imgElement);
+                        }
+                    }
+                } catch (imageError) {
+                    console.log('Failed to load image:', imageError);
+                }
+                
+                // Show results
+                document.getElementById('result').style.display = 'block';
+            } catch (error) {
+                console.error("Error fetching token data:", error);
+                
+                // Check for specific errors
+                if (error.message.includes("nonexistent token")) {
+                    document.getElementById('errorMessage').innerText = `ID-a duen tokena ez da existitzen: ${tokenId}`;
+                } else {
+                    document.getElementById('errorMessage').innerText = 'Errorea token datuak eskuratzean. Ziurtatu ID zuzena duen tokena existitzen dela.';
+                }
+            } finally {
+                // Hide loading indicator
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
