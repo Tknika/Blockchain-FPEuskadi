@@ -168,7 +168,7 @@ def sortu_zihurtagiriak(idfor):
         p.save()
         buffer.seek(0)
         ########## PDFa eta URI-a sortu ##########
-        cert = par[0].replace(' ', '_')+"_zihurtagiria_"+idfor+".pdf"
+        cert = par[0].replace(' ', '_')+"_ziurtagiria_"+idfor+".pdf"
         cert_path = f"static/certs/"+cert
         with open(cert_path, 'wb') as f:
             f.write(buffer.getbuffer())
