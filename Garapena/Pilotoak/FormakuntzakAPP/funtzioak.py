@@ -216,6 +216,26 @@ def get_nft_info(idfor):
     bbdd.close()
     return nfts
 
+"""
+Batch NFT Creation Functions:
+
+1. batch_nft_sortu(nft_data_list)
+   - Simple batch processing
+   - Best for small batches (5-20 NFTs)
+
+2. batch_nft_sortu_parallel(nft_data_list, max_workers=5)
+   - Parallel batch processing
+   - Best for medium batches (20-100 NFTs)
+
+3. optimized_nft_sortu(nft_data_list, batch_size=10)
+   - Optimized batch processing
+   - Best for large batches (100+ NFTs)
+   - Features:
+     * Processes in smaller sub-batches
+     * Uses parallel processing within batches
+     * Adds delays between batches to prevent network overload
+     * Combines results from all batches into a single list
+"""
 def batch_nft_sortu(nft_data_list):
     """
     Create multiple NFTs in batch without waiting for each transaction
