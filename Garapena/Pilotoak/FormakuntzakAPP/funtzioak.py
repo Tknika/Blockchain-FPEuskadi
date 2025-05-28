@@ -418,7 +418,7 @@ def bidali_emaila(nori, izena, lokalizatzailea, formakuntza, cert):
         ########## EMAILA BIDALI ##########
         message = MIMEMultipart("alternative")
         message["Subject"] = formakuntza + " - Ziurtagiria / Certificado"
-        message["From"] = EM_SENDER
+        message["From"] = f"LH Blockchain FP Euskadi <{EM_SENDER}>"
         message["To"] = nori
         message["Date"] = formatdate(localtime=True)
         with open("static/mail/email.html", "r") as f:
