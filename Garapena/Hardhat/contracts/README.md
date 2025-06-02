@@ -2,3 +2,4 @@
 
 Ziurtagiriak.sol
 Etiketa.sol
+Formakuntza.sol

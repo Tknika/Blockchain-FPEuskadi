@@ -16,10 +16,8 @@ Instalamos dependencias de Hardhat:
 
 Instalamos otras dependencias que necesitemos, en este caso dependencias de OpenZeppelin para el contrato Ziurtagiriak.sol y Formakuntza.sol:
 
-`npm install --save-dev @openzeppelin/contracts@4.9.3`
-`mv node_modules/@openzeppelin/ node_modules/@openzeppelin4.9.3/` 
-`npm install --save-dev @openzeppelin/contracts@5.3.0`
-`mv node_modules/@openzeppelin/ node_modules/@openzeppelin5.3.0/`
+`npm install --save-dev openzeppelin-v4.9.3@npm:@openzeppelin/contracts@4.9.3` 
+`npm install --save-dev openzeppelin-v5.3.0@npm:@openzeppelin/contracts@5.3.0`
 
 Es importante indicarle la versión a descargar porque los contrato están diseñados para distintan versiones.
 

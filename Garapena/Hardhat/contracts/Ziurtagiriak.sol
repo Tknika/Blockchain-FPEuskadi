@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "@openzeppelin4.9.3/contracts/utils/introspection/IERC165.sol";
-import "@openzeppelin4.9.3/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin4.9.3/contracts/token/ERC721/IERC721Receiver.sol";
-import "@openzeppelin4.9.3/contracts/token/ERC721/extensions/IERC721Metadata.sol";
-import "@openzeppelin4.9.3/contracts/utils/Address.sol";
-import "@openzeppelin4.9.3/contracts/utils/Context.sol";
-import "@openzeppelin4.9.3/contracts/utils/math/Math.sol";
-import "@openzeppelin4.9.3/contracts/utils/math/SignedMath.sol";
-import "@openzeppelin4.9.3/contracts/utils/Strings.sol";
-import "@openzeppelin4.9.3/contracts/utils/introspection/ERC165.sol";
-import "@openzeppelin4.9.3/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin4.9.3/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin4.9.3/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin4.9.3/contracts/security/Pausable.sol";
-import "@openzeppelin4.9.3/contracts/access/AccessControl.sol";
-import "@openzeppelin4.9.3/contracts/token/ERC721/extensions/ERC721Burnable.sol";
-import "@openzeppelin4.9.3/contracts/utils/Counters.sol";
+import "openzeppelin-v4.9.3/utils/introspection/IERC165.sol";
+import "openzeppelin-v4.9.3/token/ERC721/IERC721.sol";
+import "openzeppelin-v4.9.3/token/ERC721/IERC721Receiver.sol";
+import "openzeppelin-v4.9.3/token/ERC721/extensions/IERC721Metadata.sol";
+import "openzeppelin-v4.9.3/utils/Address.sol";
+import "openzeppelin-v4.9.3/utils/Context.sol";
+import "openzeppelin-v4.9.3/utils/math/Math.sol";
+import "openzeppelin-v4.9.3/utils/math/SignedMath.sol";
+import "openzeppelin-v4.9.3/utils/Strings.sol";
+import "openzeppelin-v4.9.3/utils/introspection/ERC165.sol";
+import "openzeppelin-v4.9.3/token/ERC721/ERC721.sol";
+import "openzeppelin-v4.9.3/token/ERC721/extensions/ERC721Enumerable.sol";
+import "openzeppelin-v4.9.3/token/ERC721/extensions/ERC721URIStorage.sol";
+import "openzeppelin-v4.9.3/security/Pausable.sol";
+import "openzeppelin-v4.9.3/access/AccessControl.sol";
+import "openzeppelin-v4.9.3/token/ERC721/extensions/ERC721Burnable.sol";
+import "openzeppelin-v4.9.3/utils/Counters.sol";
 
 /// @custom:security-contact ander.lo@icjardin.com
 contract Ziurtagiriak is ERC721, ERC721Enumerable, ERC721URIStorage, Pausable, AccessControl, ERC721Burnable {
