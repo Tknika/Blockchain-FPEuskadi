@@ -33,7 +33,7 @@ module.exports = {
       accounts: [
       	ziurtagiriakPK, // Ziurtagiriak contract deployer private key
         etiketaPK, // Etiketa contract deployer private key
-        formakuntzaPK, // Formakuntza contract deployer private key
+        formakuntzakPK, // Formakuntza contract deployer private key
         // Additional private keys can be added here if needed
       ],
       httpHeaders: {
