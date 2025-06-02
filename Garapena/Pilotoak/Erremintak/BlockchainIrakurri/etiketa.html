@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Etiketa Bilatzailea</title>
+    <title>Etiketa Bilatzailea / Buscador de Etiquetas</title>
     <script src="ethers_5.7.2.umd.min.js"></script>
     <style>
         body {
@@ -132,28 +132,28 @@
 </head>
 <body>
     <div class="container">
-        <h1>🏷️ Etiketa Bilatzailea</h1>
+        <h1>🏷️ Etiketa Bilatzailea / Buscador de Etiquetas</h1>
         
         <div id="network-section">
-            <h2>Blockchain-era konektatzen...</h2>
-            <p>Konexio egoera: <span id="connectionStatus" class="status-disconnected">Nodoak probatzen...</span></p>
+            <h2>Blockchain-era konektatzen... / Conectando a Blockchain...</h2>
+            <p>Konexio egoera / Estado de conexión: <span id="connectionStatus" class="status-disconnected">Nodoak probatzen... / Probando nodos...</span></p>
             <div id="connectionProgress" style="margin-top: 10px;"></div>
         </div>
 
         <div id="search-section" style="display: none;">
             <div class="form-group">
-                <label for="loteId">Sartu Lote zenbakia:</label>
-                <input type="number" id="loteId" min="0" placeholder="Adibidez: 12345">
+                <label for="loteId">Sartu Lote zenbakia / Introduzca número de Lote:</label>
+                <input type="number" id="loteId" min="0" placeholder="Adibidez / Ejemplo: 12345">
             </div>
-            <button id="searchLote">Bilatu Etiketa</button>
+            <button id="searchLote">Bilatu Etiketa / Buscar Etiqueta</button>
             <div id="loading" class="loading">
-                <p>⏳ Kargatzen...</p>
+                <p>⏳ Kargatzen... / Cargando...</p>
             </div>
             <p id="errorMessage" class="error"></p>
         </div>
 
         <div id="result">
-            <h2>🍯 Produktuaren Informazioa</h2>
+            <h2>🍯 Produktuaren Informazioa / Información del Producto</h2>
             <div id="loteData">
                 <div class="product-info" id="productInfo">
                     <!-- Product information will be populated here -->
@@ -205,32 +205,31 @@
         ];
 
         // Contract address - This should match the deployed Etiketa contract
-        // Updated with the correct Etiketa contract address from etiketa.env
         const contractAddress = "0x1646B0ACbCDf7ceb2aeFa70162e35b3afbd56996";
 
         let provider;
         let contract;
 
-        // Field labels in Basque
+        // Field labels in Basque and Spanish
         const fieldLabels = {
-            'nombre_producto': 'Produktuaren izena',
-            'lote': 'Lote zenbakia',
-            'fecha_elaboracion': 'Elaborazio data',
-            'nombre_elaborador': 'Elaboratzailearen izena',
-            'obrador_elaborador': 'Elaborazio obradorea',
-            'registro_sanitario': 'Erregistro sanitarioa',
-            'modo_produccion': 'Ekoizpen modua',
-            'modo_elaboracion': 'Elaborazio modua',
-            'ingredientes': 'Osagaiak',
-            'aditivos': 'Gehigarriak',
-            'conservantes': 'Kontserbatzaileak',
-            'tratamiento_conservacion': 'Kontserbazio tratamendua',
-            'formato': 'Formatua',
-            'apto_celiaco': 'Zeliakoentzat egokia',
-            'producto_vegano': 'Produktu veganoa',
-            'tipo_envase': 'Ontzi mota',
-            'fecha_caducidad': 'Iraungitze data',
-            'user_id': 'Erabiltzaile IDa'
+            'nombre_producto': 'Produktuaren izena / Nombre del producto',
+            'lote': 'Lote zenbakia / Número de lote',
+            'fecha_elaboracion': 'Elaborazio data / Fecha de elaboración',
+            'nombre_elaborador': 'Elaboratzailearen izena / Nombre del elaborador',
+            'obrador_elaborador': 'Elaborazio obradorea / Obrador de elaboración',
+            'registro_sanitario': 'Erregistro sanitarioa / Registro sanitario',
+            'modo_produccion': 'Ekoizpen modua / Modo de producción',
+            'modo_elaboracion': 'Elaborazio modua / Modo de elaboración',
+            'ingredientes': 'Osagaiak / Ingredientes',
+            'aditivos': 'Gehigarriak / Aditivos',
+            'conservantes': 'Kontserbatzaileak / Conservantes',
+            'tratamiento_conservacion': 'Kontserbazio tratamendua / Tratamiento de conservación',
+            'formato': 'Formatua / Formato',
+            'apto_celiaco': 'Zeliakoentzat egokia / Apto para celíacos',
+            'producto_vegano': 'Produktu veganoa / Producto vegano',
+            'tipo_envase': 'Ontzi mota / Tipo de envase',
+            'fecha_caducidad': 'Iraungitze data / Fecha de caducidad',
+            'user_id': 'Erabiltzaile IDa / ID de usuario'
         };
 
         // Search lote button
