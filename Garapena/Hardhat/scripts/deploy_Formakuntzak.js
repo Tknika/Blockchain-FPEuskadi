@@ -3,7 +3,7 @@ const hre = require("hardhat");
 async function main() {
   //const [deployer] = await hre.ethers.getSigners();
   const accounts = await hre.ethers.getSigners();
-  const deployer = accounts[0];
+  const deployer = accounts[2];
   console.log("Deploying contracts with the account:", deployer.address);
 
   const FormakuntzaBFPE = await hre.ethers.getContractFactory("FormakuntzaBFPE");

@@ -11,6 +11,9 @@ module.exports = {
   solidity: {
     compilers: [
       {
+        version: "0.8.22"
+      },
+      {
         version: "0.8.9"
       },
       {
@@ -30,6 +33,7 @@ module.exports = {
       accounts: [
       	ziurtagiriakPK, // Ziurtagiriak contract deployer private key
         etiketaPK, // Etiketa contract deployer private key
+        formakuntzaPK, // Formakuntza contract deployer private key
         // Additional private keys can be added here if needed
       ],
       httpHeaders: {
