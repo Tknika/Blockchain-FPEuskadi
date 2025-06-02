@@ -14,13 +14,14 @@ Instalamos dependencias de Hardhat:
 
 `npm install --save-dev @nomicfoundation/hardhat-toolbox`
 
-Instalamos otras dependencias que necesitemos, en este caso dependencias de OpenZeppelin para el contrato Ziurtagiriak.sol:
+Instalamos otras dependencias que necesitemos, en este caso dependencias de OpenZeppelin para el contrato Ziurtagiriak.sol y Formakuntza.sol:
 
 `npm install --save-dev @openzeppelin/contracts@4.9.3`
+`mv node_modules/@openzeppelin/ node_modules/@openzeppelin4.9.3/` 
+`npm install --save-dev @openzeppelin/contracts@5.3.0`
+`mv node_modules/@openzeppelin/ node_modules/@openzeppelin5.3.0/`
 
-Es importante indicarle la versión a descargar porque el contrato está diseñado para Solidity 0.8.9
-
-Las importaciones de Ziurtagiriak.sol ya no tienen que indicar esa versión porque al descargar se han guardado en una carpeta sin indicar la versión.
+Es importante indicarle la versión a descargar porque los contrato están diseñados para distintan versiones.
 
 ## Compilar contrato
 

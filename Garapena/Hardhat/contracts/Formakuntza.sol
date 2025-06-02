@@ -2,10 +2,10 @@
 // Compatible with OpenZeppelin Contracts ^5.0.0
 pragma solidity ^0.8.22;
 
-import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import {ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import {ERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ERC721} from "@openzeppelin5.3.0/contracts/token/ERC721/ERC721.sol";
+import {ERC721URIStorage} from "@openzeppelin5.3.0/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import {ERC721Enumerable} from "@openzeppelin5.3.0/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import {Ownable} from "@openzeppelin5.3.0/contracts/access/Ownable.sol";
 
 contract FormakuntzaBFPE is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
     uint256 private _nextTokenId;
