@@ -19,14 +19,14 @@
 -- Current Database: `*********`
 --
 
-CREATE DATABASE /*!32312 IF NOT EXISTS*/ `********` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
+CREATE DATABASE /*!32312 IF NOT EXISTS*/ formakuntzak /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
 
-USE `**********`;
+USE formakuntzak;
 
 -- Check if the '*********' database exists, if not, create it and then use it for the following operations
-CREATE USER IF NOT EXISTS '*********'@'%' IDENTIFIED BY '*********';
+CREATE USER IF NOT EXISTS 'formakuntzak'@'%' IDENTIFIED BY 'formakuntzak';
 
-GRANT ALL PRIVILEGES ON **********.* TO '***********'@'%';
+GRANT ALL PRIVILEGES ON formakuntzak.* TO 'formakuntzak'@'%';
 FLUSH PRIVILEGES;
 --
 -- Table structure for table `familiak`
