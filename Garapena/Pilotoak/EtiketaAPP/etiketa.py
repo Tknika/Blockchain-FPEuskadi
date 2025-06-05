@@ -27,11 +27,27 @@ login_manager.login_view = 'login'
 etiketa_address = os.environ.get('DIRECCION_CONTRATO_ETIKETA')
 etiketaPK = os.environ.get('CLAVE_PRIVADA_CREADOR_CONTRATO_ETIKETA')
 url_etiketa = os.environ.get('URL_ETIKETA')
-provider = os.environ.get('WEB3_PROVIDER')
+providers_list = os.environ.get('WEB3_PROVIDER')
 chainId = int(os.environ.get('WEB3_CHAIN_ID'))
 
+def initialize_web3(providers_string):
+    """Initialize Web3 connection using the first available provider from a comma-separated list"""
+    providers = [p.strip() for p in providers_string.split(',')]
+    
+    for provider_url in providers:
+        try:
+            web3_instance = Web3(Web3.HTTPProvider(provider_url))
+            if web3_instance.is_connected():
+                print(f"Connected to Web3 provider: {provider_url}")
+                return web3_instance
+        except Exception as e:
+            print(f"Failed to connect to {provider_url}: {str(e)}")
+            continue
+    
+    raise Exception("Could not connect to any Web3 provider")
+
 # Setup Web3 connection
-web3 = Web3(Web3.HTTPProvider(provider))  # Change to your Ethereum node URL
+web3 = initialize_web3(providers_list)
 owner_addr = web3.eth.account.from_key(etiketaPK)
 
 # Load contract

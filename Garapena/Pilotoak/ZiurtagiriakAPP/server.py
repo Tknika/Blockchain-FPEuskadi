@@ -8,7 +8,7 @@ from email.utils import formatdate
 app = Flask(__name__, template_folder='www', static_url_path='/static')
 contract_addr = os.environ.get('DIRECCION_CONTRATO_ZIURTAGIRIAK')
 clave_privada = os.environ.get('CLAVE_PRIVADA_CREADOR_CONTRATO_ZIURTAGIRIAK')
-provider = os.environ.get('WEB3_PROVIDER')
+providers_list = os.environ.get('WEB3_PROVIDER')
 SERVER_URL = os.environ.get('SERVER_URL')
 sender_email = os.environ.get('SMTP_EMAIL')
 sender_email_password = os.environ.get('SMTP_PASSWORD')
@@ -19,7 +19,21 @@ DB_NAME = os.environ.get('DB_NAME')
 DB_USERNAME = os.environ.get('DB_USERNAME')
 DB_PASSWORD = os.environ.get('DB_PASSWORD')
 
-#to-do: definir el provider dentro de las funciones seleccionando uno cada vez
+def initialize_web3(providers_string):
+    """Initialize Web3 connection using the first available provider from a comma-separated list"""
+    providers = [p.strip() for p in providers_string.split(',')]
+    
+    for provider_url in providers:
+        try:
+            web3_instance = Web3(Web3.HTTPProvider(provider_url))
+            if web3_instance.is_connected():
+                print(f"Connected to Web3 provider: {provider_url}")
+                return web3_instance
+        except Exception as e:
+            print(f"Failed to connect to {provider_url}: {str(e)}")
+            continue
+    
+    raise Exception("Could not connect to any Web3 provider")
 
 #app.config['APPLICATION_ROOT'] = '/ziurtagiriak'
 
@@ -208,7 +222,7 @@ def post_sortu_nft_baztertu():
     if addr:
         with open("static/abi/ziurtagiriak.abi", "r") as f:
             abi = f.read()
-        web3 = Web3(Web3.HTTPProvider(provider))
+        web3 = initialize_web3(providers_list)
         #Berria 10/11/2023
         web3.middleware_onion.inject(geth_poa_middleware, layer=0)
         # Note: Never commit your key in your code! Use env variables instead:
@@ -336,7 +350,7 @@ def post_bilatzailea():
     if addr:
         with open("static/abi/ziurtagiriak.abi", "r") as f:
             abi = f.read()
-        web3 = Web3(Web3.HTTPProvider(provider))
+        web3 = initialize_web3(providers_list)
 
         #path = "http://localhost:5000/static/nft/"
         #lok = ""
