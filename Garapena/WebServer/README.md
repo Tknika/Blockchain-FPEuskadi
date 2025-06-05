@@ -12,7 +12,7 @@ Ejecutamos:
 
 - Revisar los script de creación de las bases de datos de cada aplicación web por si se quieren modificar los usuarios o contraseñas iniciales.
 
-- Revisar las URL de los ficheros de configuración del nginx (carpeta *conf.d*) por si se quieren modificar. En principio, *default.conf* y los ficheros *\*_SSL.conf* están configurados para utilizar certificados y acceder de manera segura en un entorno de producción. Para desarrollo utilizar las configuraciones de la carpeta *nginx/conf.d/garapena* (basta con modificar la ruta en el fichero *nginx.conf*).
+- Revisar las URL de los ficheros de configuración del nginx (carpeta *conf.d*) por si se quieren modificar. Para producción utilizar las configuraciones de la carpeta *nginx/conf.d/produkzioa* (basta con modificar la ruta en el fichero *nginx.conf*).
 
 ## Los servicios que se despliegan
 
