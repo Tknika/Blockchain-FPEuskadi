@@ -28,6 +28,8 @@ contract Ekozir {
         string encryptedContent; // Encrypted message content (encrypted with symmetric key)
         mapping(address => string) encryptedKeys; // Symmetric key encrypted for each member
         address[] keyRecipients; // Addresses for whom keys are encrypted
+        mapping(address => bool) confirmations; // Track if each recipient confirmed receiving the message
+        mapping(address => uint256) confirmationTimestamps; // When each recipient confirmed
         uint256 timestamp;
         bytes32 messageHash; // Hash for integrity verification
     }
@@ -47,6 +49,7 @@ contract Ekozir {
     event MemberAdded(uint256 indexed groupId, address indexed member, address indexed addedBy);
     event MemberRemoved(uint256 indexed groupId, address indexed member, address indexed removedBy);
     event MessageSent(uint256 indexed messageId, uint256 indexed groupId, address indexed sender, uint256 timestamp);
+    event MessageConfirmed(uint256 indexed messageId, uint256 indexed groupId, address indexed recipient, uint256 timestamp);
     event PublicKeyUpdated(address indexed user, string publicKey);
     
     // Modifiers
@@ -354,6 +357,23 @@ contract Ekozir {
     }
     
     /**
+     * @dev Confirm reception of a message (only for intended recipients)
+     * @param _messageId The ID of the message to confirm
+     */
+    function confirmMessageReception(uint256 _messageId) external {
+        require(_messageId > 0 && _messageId <= _messageCounter, "Message does not exist");
+        Message storage message = messages[_messageId];
+        require(groups[message.groupId].isMember[msg.sender], "Not a group member");
+        require(bytes(message.encryptedKeys[msg.sender]).length > 0, "You are not a recipient of this message");
+        require(!message.confirmations[msg.sender], "Message already confirmed");
+        
+        message.confirmations[msg.sender] = true;
+        message.confirmationTimestamps[msg.sender] = block.timestamp;
+        
+        emit MessageConfirmed(_messageId, message.groupId, msg.sender, block.timestamp);
+    }
+    
+    /**
      * @dev Get groups that a user is a member of
      * @param _user Address of the user
      * @return groupIds Array of group IDs
@@ -386,5 +406,104 @@ contract Ekozir {
      */
     function getTotalMessages() external view returns (uint256) {
         return _messageCounter;
+    }
+    
+    /**
+     * @dev Check if a specific recipient has confirmed a message
+     * @param _messageId The ID of the message
+     * @param _recipient The address of the recipient to check
+     * @return confirmed True if the recipient has confirmed the message
+     * @return timestamp When the confirmation was made (0 if not confirmed)
+     */
+    function getMessageConfirmation(uint256 _messageId, address _recipient) external view returns (bool confirmed, uint256 timestamp) {
+        require(_messageId > 0 && _messageId <= _messageCounter, "Message does not exist");
+        Message storage message = messages[_messageId];
+        
+        // Only allow group members to check confirmations
+        require(groups[message.groupId].isMember[msg.sender], "Not a group member");
+        
+        return (
+            message.confirmations[_recipient],
+            message.confirmationTimestamps[_recipient]
+        );
+    }
+    
+    /**
+     * @dev Get confirmation status for all recipients of a message
+     * @param _messageId The ID of the message
+     * @return recipients Array of recipient addresses
+     * @return confirmations Array of confirmation statuses
+     * @return timestamps Array of confirmation timestamps
+     */
+    function getAllMessageConfirmations(uint256 _messageId) external view returns (
+        address[] memory recipients,
+        bool[] memory confirmations,
+        uint256[] memory timestamps
+    ) {
+        require(_messageId > 0 && _messageId <= _messageCounter, "Message does not exist");
+        Message storage message = messages[_messageId];
+        
+        // Only allow group members to check confirmations
+        require(groups[message.groupId].isMember[msg.sender], "Not a group member");
+        
+        recipients = message.keyRecipients;
+        confirmations = new bool[](recipients.length);
+        timestamps = new uint256[](recipients.length);
+        
+        for (uint256 i = 0; i < recipients.length; i++) {
+            confirmations[i] = message.confirmations[recipients[i]];
+            timestamps[i] = message.confirmationTimestamps[recipients[i]];
+        }
+        
+        return (recipients, confirmations, timestamps);
+    }
+    
+    /**
+     * @dev Check if the caller has confirmed a specific message
+     * @param _messageId The ID of the message
+     * @return confirmed True if the caller has confirmed the message
+     * @return timestamp When the confirmation was made (0 if not confirmed)
+     */
+    function getMyConfirmation(uint256 _messageId) external view returns (bool confirmed, uint256 timestamp) {
+        require(_messageId > 0 && _messageId <= _messageCounter, "Message does not exist");
+        Message storage message = messages[_messageId];
+        require(groups[message.groupId].isMember[msg.sender], "Not a group member");
+        
+        return (
+            message.confirmations[msg.sender],
+            message.confirmationTimestamps[msg.sender]
+        );
+    }
+    
+    /**
+     * @dev Get confirmation statistics for a message (sender only)
+     * @param _messageId The ID of the message
+     * @return totalRecipients Total number of recipients
+     * @return confirmedCount Number of recipients who confirmed
+     * @return pendingCount Number of recipients who haven't confirmed
+     */
+    function getMessageConfirmationStats(uint256 _messageId) external view returns (
+        uint256 totalRecipients,
+        uint256 confirmedCount,
+        uint256 pendingCount
+    ) {
+        require(_messageId > 0 && _messageId <= _messageCounter, "Message does not exist");
+        Message storage message = messages[_messageId];
+        
+        // Only allow the sender to check detailed stats
+        require(message.sender == msg.sender, "Only message sender can view confirmation stats");
+        
+        totalRecipients = message.keyRecipients.length;
+        confirmedCount = 0;
+        
+        for (uint256 i = 0; i < totalRecipients; i++) {
+            if (message.confirmations[message.keyRecipients[i]]) {
+                confirmedCount++;
+            }
+        }
+        
+        pendingCount = totalRecipients - confirmedCount;
+        
+        return (totalRecipients, confirmedCount, pendingCount);
     }
 }
