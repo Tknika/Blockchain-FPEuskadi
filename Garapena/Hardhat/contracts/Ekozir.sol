@@ -191,8 +191,9 @@ contract Ekozir {
      * @dev Send an encrypted message to a group
      * @param _groupId The ID of the group
      * @param _encryptedContent The encrypted message content (encrypted with symmetric key)
-     * @param _recipients Array of recipient addresses
+     * @param _recipients Array of recipient addresses (sender will be automatically included)
      * @param _encryptedKeys Array of symmetric keys encrypted for each recipient
+     * @param _senderEncryptedKey The symmetric key encrypted for the sender
      * @param _messageHash Hash of the original message for integrity
      */
     function sendMessage(
@@ -200,17 +201,20 @@ contract Ekozir {
         string memory _encryptedContent,
         address[] memory _recipients,
         string[] memory _encryptedKeys,
+        string memory _senderEncryptedKey,
         bytes32 _messageHash
     ) external groupExists(_groupId) onlyGroupMember(_groupId) {
         require(bytes(_encryptedContent).length > 0, "Message content cannot be empty");
         require(_recipients.length == _encryptedKeys.length, "Recipients and keys arrays must have same length");
         require(_recipients.length > 0, "Must have at least one recipient");
+        require(bytes(_senderEncryptedKey).length > 0, "Sender encrypted key cannot be empty");
         
-        // Verify all recipients are group members
+        // Verify all recipients are group members and sender is not in recipients list
         Group storage group = groups[_groupId];
         for (uint256 i = 0; i < _recipients.length; i++) {
             require(group.isMember[_recipients[i]], "All recipients must be group members");
             require(bytes(_encryptedKeys[i]).length > 0, "Encrypted key cannot be empty");
+            require(_recipients[i] != msg.sender, "Sender should not be included in recipients array");
         }
         
         _messageCounter++;
@@ -223,6 +227,10 @@ contract Ekozir {
         newMessage.encryptedContent = _encryptedContent;
         newMessage.timestamp = block.timestamp;
         newMessage.messageHash = _messageHash;
+        
+        // Store sender's encrypted key first
+        newMessage.encryptedKeys[msg.sender] = _senderEncryptedKey;
+        newMessage.keyRecipients.push(msg.sender);
         
         // Store encrypted keys for each recipient
         for (uint256 i = 0; i < _recipients.length; i++) {
@@ -357,13 +365,14 @@ contract Ekozir {
     }
     
     /**
-     * @dev Confirm reception of a message (only for intended recipients)
+     * @dev Confirm reception of a message (only for intended recipients, not the sender)
      * @param _messageId The ID of the message to confirm
      */
     function confirmMessageReception(uint256 _messageId) external {
         require(_messageId > 0 && _messageId <= _messageCounter, "Message does not exist");
         Message storage message = messages[_messageId];
         require(groups[message.groupId].isMember[msg.sender], "Not a group member");
+        require(message.sender != msg.sender, "Senders cannot confirm their own messages");
         require(bytes(message.encryptedKeys[msg.sender]).length > 0, "You are not a recipient of this message");
         require(!message.confirmations[msg.sender], "Message already confirmed");
         
