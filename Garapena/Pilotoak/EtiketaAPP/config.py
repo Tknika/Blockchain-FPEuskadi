@@ -7,3 +7,8 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'mysql+pymysql://etiketa:etiketa@db:3306/etiketa'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Internationalization configuration
+    LANGUAGES = ['es', 'eu']  # Spanish and Basque
+    BABEL_DEFAULT_LOCALE = 'es'
+    BABEL_DEFAULT_TIMEZONE = 'UTC'

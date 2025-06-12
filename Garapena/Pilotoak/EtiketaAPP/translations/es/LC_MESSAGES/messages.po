@@ -1,0 +1,39 @@
+# Spanish translations for EtiketaAPP.
+# Copyright (C) 2025 ORGANIZATION
+# This file is distributed under the same license as the EtiketaAPP project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: EtiketaAPP 1.0\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-01-11 17:30+0100\n"
+"PO-Revision-Date: 2025-01-11 17:30+0100\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.14.0\n"
+
+#: forms.py:13
+msgid "Usuario"
+msgstr "Usuario"
+
+#: forms.py:14
+msgid "Contraseña"
+msgstr "Contraseña"
+
+#: forms.py:15
+msgid "Enviar"
+msgstr "Enviar"
+
+#: templates/login.html:6 templates/login.html:19
+msgid "Iniciar sesión"
+msgstr "Iniciar sesión"
+
+#: forms.py:7
+msgid "La fecha de elaboración debe ser anterior o igual a la fecha actual"
+msgstr "La fecha de elaboración debe ser anterior o igual a la fecha actual" 

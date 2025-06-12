@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_bcrypt import Bcrypt
+from flask_babel import Babel, gettext, ngettext, get_locale
 from models import db, User, Form
 from forms import LoginForm, FormForm
 from config import Config
@@ -18,6 +19,16 @@ app.config.from_object(Config)
 
 db.init_app(app)
 bcrypt = Bcrypt(app)
+
+# Initialize Babel for internationalization
+def get_locale():
+    # 1. Check if user manually selected a language (could be stored in session)
+    # 2. Check browser's Accept-Language header
+    # 3. Default to Spanish
+    return request.accept_languages.best_match(app.config['LANGUAGES']) or app.config['BABEL_DEFAULT_LOCALE']
+
+babel = Babel()
+babel.init_app(app, locale_selector=get_locale)
 
 login_manager = LoginManager()
 login_manager.init_app(app)

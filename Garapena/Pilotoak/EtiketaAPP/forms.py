@@ -2,19 +2,20 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, SubmitField, DateField, PasswordField
 from wtforms.validators import DataRequired, NumberRange, ValidationError
 from datetime import date
+from flask_babel import lazy_gettext as _l
 
 def validate_fecha_elaboracion(form, field):
     if field.data > date.today():
-        raise ValidationError("La fecha de elaboración debe ser anterior o igual a la fecha actual")
+        raise ValidationError(_l("La fecha de elaboración debe ser anterior o igual a la fecha actual"))
 
 def validate_fecha_almacenamiento_mp(form, field):
     if field.data >= form.fecha_elaboracion.data:
         raise ValidationError("La fecha de almacenamiento de la materia prima debe ser anterior a la fecha de elaboración")
 
 class LoginForm(FlaskForm):
-    username = StringField('Usuario', validators=[DataRequired()])
-    password = PasswordField('Contraseña', validators=[DataRequired()])
-    submit = SubmitField('Enviar')
+    username = StringField(_l('Usuario'), validators=[DataRequired()])
+    password = PasswordField(_l('Contraseña'), validators=[DataRequired()])
+    submit = SubmitField(_l('Enviar'))
 
 class FormForm(FlaskForm):
     nombre_producto = StringField('Nombre del producto', validators=[DataRequired()])
