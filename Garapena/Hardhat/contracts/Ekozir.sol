@@ -44,6 +44,15 @@ contract Ekozir {
     mapping(address => uint256[]) public userGroups; // user => groupIds[]
     mapping(address => string) public userPublicKeys; // user => publicKey
     
+    // Mapping from group ID to user address to their sent messages in that group
+    mapping(uint256 => mapping(address => uint256[])) private groupUserSentMessages;
+    
+    // Mapping from group ID to user address to their received messages in that group
+    mapping(uint256 => mapping(address => uint256[])) private groupUserReceivedMessages;
+    
+    // Mapping to track sender-recipient message pairs within a group
+    mapping(uint256 => mapping(address => mapping(address => uint256[]))) private groupSenderRecipientMessages;
+    
     // Events
     event GroupCreated(uint256 indexed groupId, string name, address indexed creator, uint256 timestamp);
     event MemberAdded(uint256 indexed groupId, address indexed member, address indexed addedBy);
@@ -51,6 +60,13 @@ contract Ekozir {
     event MessageSent(uint256 indexed messageId, uint256 indexed groupId, address indexed sender, uint256 timestamp);
     event MessageConfirmed(uint256 indexed messageId, uint256 indexed groupId, address indexed recipient, uint256 timestamp);
     event PublicKeyUpdated(address indexed user, string publicKey);
+    event MessageTraced(
+        uint256 indexed groupId,
+        address indexed sender,
+        address indexed recipient,
+        uint256 messageId,
+        uint256 timestamp
+    );
     
     // Modifiers
     modifier groupExists(uint256 _groupId) {
@@ -232,11 +248,21 @@ contract Ekozir {
         newMessage.encryptedKeys[msg.sender] = _senderEncryptedKey;
         newMessage.keyRecipients.push(msg.sender);
         
-        // Store encrypted keys for each recipient
+        // Store encrypted keys for each recipient and update message tracking
         for (uint256 i = 0; i < _recipients.length; i++) {
             newMessage.encryptedKeys[_recipients[i]] = _encryptedKeys[i];
             newMessage.keyRecipients.push(_recipients[i]);
+            
+            // Update group-specific message tracking for this recipient
+            groupUserReceivedMessages[_groupId][_recipients[i]].push(newMessageId);
+            groupSenderRecipientMessages[_groupId][msg.sender][_recipients[i]].push(newMessageId);
+            
+            // Emit trace event for each recipient with optimized parameter order
+            emit MessageTraced(_groupId, msg.sender, _recipients[i], newMessageId, block.timestamp);
         }
+        
+        // Update sender's group-specific message tracking
+        groupUserSentMessages[_groupId][msg.sender].push(newMessageId);
         
         // Add to group messages
         groupMessages[_groupId].push(newMessageId);
@@ -514,5 +540,39 @@ contract Ekozir {
         pendingCount = totalRecipients - confirmedCount;
         
         return (totalRecipients, confirmedCount, pendingCount);
+    }
+    
+    /**
+     * @dev Get all messages sent by a specific user in a group
+     * @param _groupId The ID of the group
+     * @param _sender Address of the sender
+     * @return messageIds Array of message IDs sent by the user in the group
+     */
+    function getGroupMessagesSentBy(uint256 _groupId, address _sender) external view 
+        groupExists(_groupId) onlyGroupMember(_groupId) returns (uint256[] memory) {
+        return groupUserSentMessages[_groupId][_sender];
+    }
+    
+    /**
+     * @dev Get all messages received by a specific user in a group
+     * @param _groupId The ID of the group
+     * @param _recipient Address of the recipient
+     * @return messageIds Array of message IDs received by the user in the group
+     */
+    function getGroupMessagesReceivedBy(uint256 _groupId, address _recipient) external view 
+        groupExists(_groupId) onlyGroupMember(_groupId) returns (uint256[] memory) {
+        return groupUserReceivedMessages[_groupId][_recipient];
+    }
+    
+    /**
+     * @dev Get all messages sent by a specific user to a specific recipient in a group
+     * @param _groupId The ID of the group
+     * @param _sender Address of the sender
+     * @param _recipient Address of the recipient
+     * @return messageIds Array of message IDs
+     */
+    function getGroupMessagesBetween(uint256 _groupId, address _sender, address _recipient) external view 
+        groupExists(_groupId) onlyGroupMember(_groupId) returns (uint256[] memory) {
+        return groupSenderRecipientMessages[_groupId][_sender][_recipient];
     }
 }
