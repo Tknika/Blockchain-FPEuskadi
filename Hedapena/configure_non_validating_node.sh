@@ -56,7 +56,6 @@ SIGNATURE=$(echo -n "${HEADER}.${PAYLOAD}" | openssl dgst -sha256 -sign ./networ
 TOKEN="${HEADER}.${PAYLOAD}.${SIGNATURE}"
 echo ${TOKEN} > ./networkFiles/JWTkeys/JWT_NewNode
 
-echo -e "\n"
 # Generar una contraseña aleatoria y guardarla en un archivo
 echo "Generando contraseña aleatoria..."
 echo -e "\n"
@@ -69,19 +68,21 @@ echo -e "\n"
 rm -r ./besu-24.10.0
 rm -r ./tessera-24.4.2
 
-# Mensaje con la clave pública del nuevo nodo
-#echo "Clave pública del nuevo nodo:"
-
 #ADDRESS_KEY=$(cat ./networkFiles/keys/addressNewNode | tr -d '\n')
 cat ./networkFiles/keys/addressNewNode > ./informacion_importante.txt
+echo -e "\n" >> ./informacion_importante.txt
 #PUBLIC_KEY=$(cat ./networkFiles/keys/keyNewNode.pub | tr -d '\n')
 cat ./networkFiles/keys/keyNewNode.pub >> ./informacion_importante.txt
 
+# Mensaje con la clave pública del nuevo nodo
+echo "Clave pública del nuevo nodo:"
+echo -e "\n"
 cat ./networkFiles/keys/keyNewNode.pub
 echo -e "\n"
 echo "Hay que proporcionar el fichero 'informacion_importante.txt' con junto con la IP pública del nodo a los administradores de la red blockchain para que puedan agregar el nodo."
 echo -e "\n"
 echo "Ejecuta el siguiente comando para arrancar el nodo:"
+echo -e "\n"
 echo "docker compose -f docker-composeNewNode.yml up"
-
+echo -e "\n"
 
