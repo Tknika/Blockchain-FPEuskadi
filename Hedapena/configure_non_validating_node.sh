@@ -73,6 +73,7 @@ cat ./networkFiles/keys/addressNewNode > ./informacion_importante.txt
 echo -e "\n" >> ./informacion_importante.txt
 #PUBLIC_KEY=$(cat ./networkFiles/keys/keyNewNode.pub | tr -d '\n')
 cat ./networkFiles/keys/keyNewNode.pub >> ./informacion_importante.txt
+echo -e "\n" >> ./informacion_importante.txt
 
 # Mensaje con la clave pública del nuevo nodo
 echo "Clave pública del nuevo nodo:"
