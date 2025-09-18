@@ -1,4 +1,5 @@
 FROM node:lts-alpine AS builder
+ENV TZ=Europe/Madrid
 ARG GRUNT_TASK=default
 WORKDIR /ethstats-server
 COPY ["package.json", "package-lock.json*", "./"]
