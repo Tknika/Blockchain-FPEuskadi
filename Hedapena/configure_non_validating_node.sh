@@ -8,6 +8,10 @@ echo -e "\n"
 echo "Instalando Java..."
 sudo apt install openjdk-21-jdk-headless
 
+#Instalar SNMP
+echo "Instalando SNMP..."
+sudo apt install snmp snmpd snmptrapd -y
+
 # Instalar ejecutables Besu
 echo -e "\n"
 echo "Instalando ejecutables Besu..."
