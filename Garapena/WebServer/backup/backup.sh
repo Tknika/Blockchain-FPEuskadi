@@ -195,6 +195,71 @@ set_file_ownership() {
     fi
 }
 
+# Clean up old backup files (older than 1 month)
+cleanup_old_backups() {
+    log "Cleaning up old backup files (older than 1 month)..."
+    
+    # Use find to remove files older than 30 days
+    find "$BACKUP_DIR" -name "blockchain_backup_*.tar.gz*" -type f -mtime +30 -delete 2>/dev/null || true
+    
+    log "✓ Old backup files cleaned up"
+}
+
+# Copy backup to remote servers
+copy_to_remote_servers() {
+    local backup_file="$1"
+    
+    # Check if remote servers configuration exists
+    if [ ! -f "$SCRIPT_DIR/remote_servers.txt" ]; then
+        log "No remote servers configuration found, skipping remote copy"
+        return
+    fi
+    
+    # Check if TARGET_USER is defined
+    if [ -z "$TARGET_USER" ] || [ "$TARGET_USER" = "root" ]; then
+        warning "TARGET_USER not defined or is root, skipping remote copy"
+        return
+    fi
+    
+    log "Copying backup to remote servers..."
+    
+    # Read remote servers configuration (IP:PORT format)
+    while IFS= read -r server_line; do
+        # Skip empty lines and comments
+        [[ -z "$server_line" || "$server_line" =~ ^[[:space:]]*# ]] && continue
+        
+        # Remove any whitespace
+        server_line=$(echo "$server_line" | tr -d '[:space:]')
+        
+        # Parse IP:PORT format
+        if [[ "$server_line" =~ ^([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}):([0-9]+)$ ]]; then
+            server_ip="${BASH_REMATCH[1]}"
+            server_port="${BASH_REMATCH[2]}"
+            
+            log "Copying to $TARGET_USER@$server_ip:$server_port"
+            
+            # Use the target user for scp with specified port
+            if [ "$RUNNING_AS_ROOT" = true ]; then
+                # Run scp as the target user
+                sudo -u "$TARGET_USER" scp -P "$server_port" -o StrictHostKeyChecking=no "$backup_file" "$TARGET_USER@$server_ip:~/"
+            else
+                # Run scp as current user
+                scp -P "$server_port" -o StrictHostKeyChecking=no "$backup_file" "$TARGET_USER@$server_ip:~/"
+            fi
+            
+            if [ $? -eq 0 ]; then
+                log "✓ Successfully copied to $server_ip:$server_port"
+            else
+                warning "Failed to copy to $server_ip:$server_port"
+            fi
+        else
+            warning "Invalid server format: $server_line (expected: IP:PORT)"
+        fi
+    done < "$SCRIPT_DIR/remote_servers.txt"
+    
+    log "✓ Remote copy process completed"
+}
+
 # Create compressed and encrypted archive
 create_compressed_archive() {
     log "Creating compressed archive..."
@@ -249,6 +314,12 @@ create_compressed_archive() {
             log "✓ Final backup file ownership set to $TARGET_USER"
         fi
     fi
+    
+    # Clean up old backup files
+    cleanup_old_backups
+    
+    # Copy to remote servers
+    copy_to_remote_servers "$FINAL_BACKUP_FILE"
     
     echo ""
     echo "=========================================="
