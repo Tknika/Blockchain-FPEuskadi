@@ -16,19 +16,10 @@ The backup system includes:
 
 - `backup.sh` - Linux backup script
 - `restore.sh` - Standalone restore script for new servers
-- `setup_backup.sh` - Setup script to prepare the backup environment
 - `test_backup.sh` - Test script to validate backup functionality
 - `backup_file_password.txt` - Password file for backup encryption
 
 ## Quick Start
-
-### Initial Setup
-
-```bash
-cd Garapena/WebServer/backup
-chmod +x *.sh
-./setup_backup.sh
-```
 
 ### Testing the Backup System
 

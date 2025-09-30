@@ -58,13 +58,13 @@ backup_docker_volumes() {
     
     # List of volumes to backup
     declare -A volumes=(
-        ["db_data"]="blockchain-fpeuskadi_db_data"
-        ["mail_data"]="blockchain-fpeuskadi_mail_data"
-        ["mail_state"]="blockchain-fpeuskadi_mail_state"
-        ["mail_logs"]="blockchain-fpeuskadi_mail_logs"
-        ["mail_config"]="blockchain-fpeuskadi_mail_config"
-        ["ethstats_logs"]="blockchain-fpeuskadi_ethstats_logs"
-        ["formakuntza_ziurtagiriak"]="blockchain-fpeuskadi_formakuntza_ziurtagiriak"
+        ["db_data"]="webserver_db_data"
+        ["mail_data"]="webserver_mail_data"
+        ["mail_state"]="webserver_mail_state"
+        ["mail_logs"]="webserver_mail_logs"
+        ["mail_config"]="webserver_mail_config"
+        ["ethstats_logs"]="webserver_ethstats_logs"
+        ["formakuntza_ziurtagiriak"]="webserver_formakuntza_ziurtagiriak"
         ["cmknew"]="checkmk_cmknew"
     )
     
@@ -143,153 +143,6 @@ backup_application_code() {
     log "✓ WebServer directory backed up"
 }
 
-# Create restore script
-create_restore_script() {
-    log "Creating restore script..."
-    
-    cat > "$BACKUP_PATH/restore.sh" << 'EOF'
-#!/bin/bash
-
-# Blockchain FPEuskadi Restore Script
-# This script restores all backed up data to a new server
-
-set -e  # Exit on any error
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# Logging function
-log() {
-    echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $1"
-}
-
-error() {
-    echo -e "${RED}[ERROR]${NC} $1" >&2
-}
-
-warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-log "Starting restore process..."
-
-# Check if Docker is running
-if ! docker info >/dev/null 2>&1; then
-    error "Docker is not running. Please start Docker first."
-    exit 1
-fi
-
-# 1. Restore Docker volumes
-log "Restoring Docker volumes..."
-
-declare -A volumes=(
-    ["db_data"]="blockchain-fpeuskadi_db_data"
-    ["mail_data"]="blockchain-fpeuskadi_mail_data"
-    ["mail_state"]="blockchain-fpeuskadi_mail_state"
-    ["mail_logs"]="blockchain-fpeuskadi_mail_logs"
-    ["mail_config"]="blockchain-fpeuskadi_mail_config"
-    ["ethstats_logs"]="blockchain-fpeuskadi_ethstats_logs"
-    ["formakuntza_ziurtagiriak"]="blockchain-fpeuskadi_formakuntza_ziurtagiriak"
-    ["cmknew"]="checkmk_cmknew"
-)
-
-for volume_name in "${!volumes[@]}"; do
-    docker_volume="${volumes[$volume_name]}"
-    if [ -f "${volume_name}.tar.gz" ]; then
-        log "Restoring volume: $volume_name"
-        
-        # Create volume if it doesn't exist
-        if ! docker volume inspect "$docker_volume" >/dev/null 2>&1; then
-            docker volume create "$docker_volume"
-        fi
-        
-        # Restore volume data
-        docker run --rm \
-            -v "$docker_volume":/data \
-            -v "$(pwd)":/backup \
-            alpine:latest \
-            sh -c "cd /data && tar xzf /backup/${volume_name}.tar.gz"
-        log "✓ Volume $volume_name restored successfully"
-    else
-        warning "Backup file for volume $volume_name not found, skipping..."
-    fi
-done
-
-# 2. Restore configuration files
-log "Restoring configuration files..."
-
-# Restore nginx configuration
-if [ -d "nginx" ]; then
-    cp -r nginx ../WebServer/
-    log "✓ Nginx configuration restored"
-fi
-
-# Restore environment files
-for env_file in *.env; do
-    if [ -f "$env_file" ]; then
-        cp "$env_file" ../WebServer/
-        log "✓ Environment file $env_file restored"
-    fi
-done
-
-# Restore CheckMK configuration
-if [ -d "checkmk" ]; then
-    mkdir -p ../WebServer/checkmk
-    cp -r checkmk/* ../WebServer/checkmk/
-    log "✓ CheckMK configuration restored"
-fi
-
-# 3. Restore SSL certificates
-if [ -d "letsencrypt" ]; then
-    log "Restoring SSL certificates..."
-    sudo cp -r letsencrypt /etc/
-    log "✓ SSL certificates restored"
-fi
-
-# 4. Restore application code
-log "Restoring application code..."
-
-# Restore Pilotoak directory
-if [ -d "Pilotoak" ]; then
-    cp -r Pilotoak ../
-    log "✓ Pilotoak directory restored"
-fi
-
-# Restore WebServer directory
-if [ -d "WebServer" ]; then
-    cp -r WebServer/* ../WebServer/
-    log "✓ WebServer directory restored"
-fi
-
-# 5. Create network if it doesn't exist
-log "Creating Docker network..."
-if ! docker network inspect server_network >/dev/null 2>&1; then
-    docker network create server_network
-    log "✓ Docker network 'server_network' created"
-else
-    log "✓ Docker network 'server_network' already exists"
-fi
-
-log "Restore completed successfully!"
-echo ""
-echo "Next steps:"
-echo "1. Review and update environment files if needed"
-echo "2. Update passwords in configuration files"
-echo "3. Update DNS records to point to this server"
-echo "4. Run: cd ../WebServer && docker compose up -d"
-echo "5. If using CheckMK, run: cd ../WebServer/checkmk && docker compose -f docker-compose-checkmk.yaml up -d"
-echo "6. Database will be automatically restored from the db_data volume"
-echo ""
-echo "Backup restored from: $(pwd)"
-EOF
-
-    chmod +x "$BACKUP_PATH/restore.sh"
-    log "✓ Restore script created"
-}
-
 # Create backup metadata
 create_backup_metadata() {
     log "Creating backup metadata..."
@@ -310,12 +163,13 @@ Included Components:
 - Configuration: nginx, environment files, CheckMK config
 - SSL Certificates: /etc/letsencrypt
 - Application Code: Pilotoak, WebServer
-- Database: Complete MariaDB volume backup
+
 
 Restore Instructions:
-1. Extract this backup on the target server
-2. Run: ./restore.sh
-3. Follow the instructions provided by the restore script
+1. Copy the restore.sh script to the target server
+2. Extract this backup on the target server
+3. Run: ./restore.sh <backup_file> <target_directory>
+4. Follow the instructions provided by the restore script
 EOF
 }
 
@@ -401,16 +255,16 @@ create_compressed_archive() {
     echo ""
     if [[ "$FINAL_BACKUP_FILE" == *.gpg ]]; then
         echo "To restore on a new server:"
-        echo "1. Copy the backup file to the new server"
+        echo "1. Copy the backup file and restore.sh script to the new server"
         echo "2. Decrypt: gpg --decrypt ${FINAL_BACKUP_FILE} | tar xzf -"
-        echo "3. Run: cd $BACKUP_NAME && ./restore.sh"
+        echo "3. Run: ./restore.sh ${FINAL_BACKUP_FILE} <target_directory>"
         echo ""
         echo "Note: You'll need the password from backup_file_password.txt to decrypt"
     else
         echo "To restore on a new server:"
-        echo "1. Copy the backup file to the new server"
+        echo "1. Copy the backup file and restore.sh script to the new server"
         echo "2. Extract: tar xzf $FINAL_BACKUP_FILE"
-        echo "3. Run: cd $BACKUP_NAME && ./restore.sh"
+        echo "3. Run: ./restore.sh $FINAL_BACKUP_FILE <target_directory>"
     fi
     echo "=========================================="
 }
@@ -429,7 +283,6 @@ main() {
     backup_config_files
     backup_ssl_certificates
     backup_application_code
-    create_restore_script
     create_backup_metadata
     set_file_ownership
     create_compressed_archive
