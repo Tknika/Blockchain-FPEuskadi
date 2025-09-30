@@ -154,13 +154,13 @@ else
     log "Restoring Docker volumes..."
     
     declare -A volumes=(
-        ["db_data"]="blockchain-fpeuskadi_db_data"
-        ["mail_data"]="blockchain-fpeuskadi_mail_data"
-        ["mail_state"]="blockchain-fpeuskadi_mail_state"
-        ["mail_logs"]="blockchain-fpeuskadi_mail_logs"
-        ["mail_config"]="blockchain-fpeuskadi_mail_config"
-        ["ethstats_logs"]="blockchain-fpeuskadi_ethstats_logs"
-        ["formakuntza_ziurtagiriak"]="blockchain-fpeuskadi_formakuntza_ziurtagiriak"
+        ["db_data"]="webserver_db_data"
+        ["mail_data"]="webserver_mail_data"
+        ["mail_state"]="webserver_mail_state"
+        ["mail_logs"]="webserver_mail_logs"
+        ["mail_config"]="webserver_mail_config"
+        ["ethstats_logs"]="webserver_ethstats_logs"
+        ["formakuntza_ziurtagiriak"]="webserver_formakuntza_ziurtagiriak"
         ["cmknew"]="checkmk_cmknew"
     )
     

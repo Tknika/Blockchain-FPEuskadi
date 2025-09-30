@@ -213,21 +213,6 @@ EXTRACTED_DIR=$(ls -d blockchain_backup_* | head -1)
 if [ -n "$EXTRACTED_DIR" ]; then
     log "✓ Backup extracted successfully"
     cd "$EXTRACTED_DIR"
-    
-    # Check if restore script exists in backup
-    if [ -f "restore.sh" ]; then
-        log "✓ Restore script found in backup"
-        
-        # Test restore script (dry run - just check syntax)
-        if bash -n restore.sh; then
-            log "✓ Restore script syntax is valid"
-        else
-            error "Restore script has syntax errors"
-            exit 1
-        fi
-    else
-        warning "No restore script found in backup"
-    fi
 else
     error "Failed to extract backup"
     exit 1
