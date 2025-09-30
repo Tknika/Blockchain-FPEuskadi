@@ -1,3 +1,4 @@
+import math
 from flask import Flask, render_template, request, session, jsonify, redirect, send_file
 from web3 import Web3
 #from web3.middleware import geth_poa_middleware
@@ -16,8 +17,6 @@ from email.mime.application import MIMEApplication
 from email.utils import formatdate
 from typing import Optional, List
 import qrcode
-import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 ########### VARIABLES GLOBALES ###########
 DB_HOST = os.environ.get('DB_HOST')
@@ -178,13 +177,27 @@ def get_contract():
     contract = web3.eth.contract(address=contract_address, abi=contract_abi)
     return contract, web3
 
+def get_next_token_id():
+    contract, web3 = get_contract()
+    # Consultamos el nº de tokenId que se le va a asignar al nuevo NFT
+    tokenId = contract.functions.getNextTokenId().call()
+    print("Next TokenId: "+str(tokenId), flush=True)
+    return tokenId
+
 def nft_sortu(uri, text_info):
     contract, web3 = get_contract()
 
     # Consultamos el nº de tokenId que se le va a asignar al nuevo NFT
     tokenId = contract.functions.getNextTokenId().call()
     # Construir la transacción
-    nonce = web3.eth.get_transaction_count(BK_OWNER_ADDRESS)
+    #nonce = web3.eth.get_transaction_count(BK_OWNER_ADDRESS)
+    
+    #nonce = web3.eth.get_transaction_count(BK_OWNER_ADDRESS, 'pending') + i_nonce;
+    nonce = web3.manager.request_blocking(
+            "eth_getTransactionCount", 
+            [BK_OWNER_ADDRESS, "pending"]
+        )
+    print("Nonce: "+str(nonce), flush=True)
     txn = contract.functions.safeMint(BK_OWNER_ADDRESS, uri, text_info).build_transaction({
         'chainId': BK_CHAIN_ID,  # ID de la red
         'from': BK_OWNER_ADDRESS,
@@ -196,8 +209,54 @@ def nft_sortu(uri, text_info):
     signed_txn = web3.eth.account.sign_transaction(txn, private_key=BK_OWNER_PRIVATE)
     txt_hash = web3.eth.send_raw_transaction(signed_txn.raw_transaction)
     web3.eth.wait_for_transaction_receipt(txt_hash)
-
+    print("Transakzioa bidali da: "+str(txt_hash.hex()), flush=True)
+    
     return tokenId
+
+def nft_sortu_batch(uris, texts, batch_size=50):
+    """Mina NFTs en lotes y devuelve una lista con los tokenIds asignados"""
+    assert len(uris) == len(texts), "Las listas uris y texts deben tener la misma longitud"
+    all_token_ids = []
+
+    contract, web3 = get_contract()
+    #nonce = w3.eth.get_transaction_count(owner)
+    nonce = web3.manager.request_blocking(
+            "eth_getTransactionCount", 
+            [BK_OWNER_ADDRESS, "pending"]
+        )
+    print("Nonce: "+str(nonce), flush=True)
+    num_batches = math.ceil(len(uris) / batch_size)
+    print(f"Mina {len(uris)} NFTs en {num_batches} lotes de hasta {batch_size} NFTs cada uno.", flush=True)
+    for i in range(num_batches):
+        start = i * batch_size
+        end = min((i + 1) * batch_size, len(uris))
+        batch_uris = uris[start:end]
+        batch_texts = texts[start:end]
+
+        tx = contract.functions.batchSafeMint(BK_OWNER_ADDRESS, batch_uris, batch_texts).build_transaction({
+            'chainId': BK_CHAIN_ID,  # ID de la red
+            'from': BK_OWNER_ADDRESS,
+            'nonce': nonce,
+            'maxFeePerGas': 0,
+            'maxPriorityFeePerGas': 0,
+        })
+        nonce = hex(int(nonce, 16)+1)
+        #nonce += 1
+        #nonce = hex(nonce)
+        print("Nonce: "+str(nonce), flush=True)
+
+        signed_tx = web3.eth.account.sign_transaction(tx, private_key=BK_OWNER_PRIVATE)
+        tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
+        receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+
+        print(f"Lote {i+1}/{num_batches} minado en bloque {receipt.blockNumber}")
+
+        # Buscar en los logs del receipt los tokenIds acuñados
+        events = contract.events.Transfer().process_receipt(receipt)
+        token_ids = [e["args"]["tokenId"] for e in events]
+        all_token_ids.extend(token_ids)
+    print(f"Total de {len(all_token_ids)} NFTs minados.", flush=True)
+    return all_token_ids
 
 def get_nft_info(idfor):
     bbdd = get_db_con()
@@ -215,219 +274,6 @@ def get_nft_info(idfor):
         nfts[par[0]] = [par[1], uri] 
     bbdd.close()
     return nfts
-
-"""
-Batch NFT Creation Functions:
-
-1. batch_nft_sortu(nft_data_list)
-   - Simple batch processing
-   - Best for small batches (5-20 NFTs)
-
-2. batch_nft_sortu_parallel(nft_data_list, max_workers=5)
-   - Parallel batch processing
-   - Best for medium batches (20-100 NFTs)
-
-3. optimized_nft_sortu(nft_data_list, batch_size=10)
-   - Optimized batch processing
-   - Best for large batches (100+ NFTs)
-   - Features:
-     * Processes in smaller sub-batches
-     * Uses parallel processing within batches
-     * Adds delays between batches to prevent network overload
-     * Combines results from all batches into a single list
-"""
-def batch_nft_sortu(nft_data_list):
-    """
-    Create multiple NFTs in batch without waiting for each transaction
-    
-    Args:
-        nft_data_list: List of tuples [(uri1, text_info1), (uri2, text_info2), ...]
-    
-    Returns:
-        List of tokenIds for the created NFTs
-    """
-    contract, web3 = get_contract()
-    
-    # Get starting nonce and tokenId
-    base_nonce = web3.eth.get_transaction_count(BK_OWNER_ADDRESS)
-    base_token_id = contract.functions.getNextTokenId().call()
-    
-    transaction_hashes = []
-    token_ids = []
-    
-    # Step 1: Send all transactions quickly without waiting
-    print(f"Sending {len(nft_data_list)} transactions...", flush=True)
-    for i, (uri, text_info) in enumerate(nft_data_list):
-        try:
-            # Calculate nonce and tokenId for this transaction
-            nonce = base_nonce + i
-            token_id = base_token_id + i
-            token_ids.append(token_id)
-            
-            # Build transaction
-            txn = contract.functions.safeMint(BK_OWNER_ADDRESS, uri, text_info).build_transaction({
-                'chainId': BK_CHAIN_ID,
-                'from': BK_OWNER_ADDRESS,
-                'nonce': nonce,
-                'maxFeePerGas': 0,
-                'maxPriorityFeePerGas': 0,
-            })
-            
-            # Sign and send transaction
-            signed_txn = web3.eth.account.sign_transaction(txn, private_key=BK_OWNER_PRIVATE)
-            tx_hash = web3.eth.send_raw_transaction(signed_txn.raw_transaction)
-            transaction_hashes.append(tx_hash)
-            
-            print(f"Transaction {i+1}/{len(nft_data_list)} sent: {tx_hash.hex()}", flush=True)
-            
-        except Exception as e:
-            print(f"Error sending transaction {i+1}: {e}", flush=True)
-            transaction_hashes.append(None)
-            token_ids[-1] = None  # Mark this token as failed
-    
-    # Step 2: Wait for all transactions to be confirmed
-    print(f"Waiting for {len(transaction_hashes)} transactions to be confirmed...", flush=True)
-    successful_tokens = []
-    
-    for i, tx_hash in enumerate(transaction_hashes):
-        if tx_hash is None:
-            continue
-            
-        try:
-            receipt = web3.eth.wait_for_transaction_receipt(tx_hash, timeout=300)  # 5 min timeout
-            if receipt.status == 1:
-                print(f"Transaction {i+1} confirmed in block {receipt.blockNumber}", flush=True)
-                successful_tokens.append(token_ids[i])
-            else:
-                print(f"Transaction {i+1} failed: {tx_hash.hex()}", flush=True)
-        except Exception as e:
-            print(f"Error waiting for transaction {i+1}: {e}", flush=True)
-    
-    print(f"Batch complete: {len(successful_tokens)}/{len(nft_data_list)} transactions successful", flush=True)
-    return successful_tokens
-
-def batch_nft_sortu_parallel(nft_data_list, max_workers=5):
-    """
-    Create multiple NFTs with parallel confirmation waiting
-    
-    Args:
-        nft_data_list: List of tuples [(uri1, text_info1), (uri2, text_info2), ...]
-        max_workers: Number of parallel threads for waiting confirmations
-    
-    Returns:
-        List of tokenIds for the created NFTs
-    """
-    contract, web3 = get_contract()
-    
-    # Get starting nonce and tokenId
-    base_nonce = web3.eth.get_transaction_count(BK_OWNER_ADDRESS)
-    base_token_id = contract.functions.getNextTokenId().call()
-    
-    # Step 1: Send all transactions
-    transactions_info = []
-    
-    print(f"Sending {len(nft_data_list)} transactions...", flush=True)
-    for i, (uri, text_info) in enumerate(nft_data_list):
-        try:
-            nonce = base_nonce + i
-            token_id = base_token_id + i
-            
-            txn = contract.functions.safeMint(BK_OWNER_ADDRESS, uri, text_info).build_transaction({
-                'chainId': BK_CHAIN_ID,
-                'from': BK_OWNER_ADDRESS,
-                'nonce': nonce,
-                'maxFeePerGas': 0,
-                'maxPriorityFeePerGas': 0,
-            })
-            
-            signed_txn = web3.eth.account.sign_transaction(txn, private_key=BK_OWNER_PRIVATE)
-            tx_hash = web3.eth.send_raw_transaction(signed_txn.raw_transaction)
-            
-            transactions_info.append({
-                'hash': tx_hash,
-                'token_id': token_id,
-                'index': i
-            })
-            
-            print(f"Transaction {i+1}/{len(nft_data_list)} sent: {tx_hash.hex()}", flush=True)
-            
-        except Exception as e:
-            print(f"Error sending transaction {i+1}: {e}", flush=True)
-    
-    # Step 2: Wait for confirmations in parallel
-    def wait_for_confirmation(tx_info):
-        try:
-            receipt = web3.eth.wait_for_transaction_receipt(tx_info['hash'], timeout=300)
-            if receipt.status == 1:
-                return {
-                    'success': True,
-                    'token_id': tx_info['token_id'],
-                    'index': tx_info['index'],
-                    'block': receipt.blockNumber
-                }
-            else:
-                return {
-                    'success': False,
-                    'token_id': None,
-                    'index': tx_info['index'],
-                    'error': 'Transaction failed'
-                }
-        except Exception as e:
-            return {
-                'success': False,
-                'token_id': None,
-                'index': tx_info['index'],
-                'error': str(e)
-            }
-    
-    print(f"Waiting for {len(transactions_info)} confirmations in parallel...", flush=True)
-    successful_tokens = []
-    
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        # Submit all waiting tasks
-        future_to_tx = {executor.submit(wait_for_confirmation, tx_info): tx_info 
-                       for tx_info in transactions_info}
-        
-        # Process completed transactions
-        for future in as_completed(future_to_tx):
-            result = future.result()
-            if result['success']:
-                print(f"Transaction {result['index']+1} confirmed in block {result['block']}", flush=True)
-                successful_tokens.append(result['token_id'])
-            else:
-                print(f"Transaction {result['index']+1} failed: {result['error']}", flush=True)
-    
-    # Sort tokens by their original order
-    successful_tokens.sort()
-    print(f"Batch complete: {len(successful_tokens)}/{len(nft_data_list)} transactions successful", flush=True)
-    return successful_tokens
-
-def optimized_nft_sortu(nft_data_list, batch_size=10):
-    """
-    Create NFTs in optimized batches
-    
-    Args:
-        nft_data_list: List of tuples [(uri1, text_info1), (uri2, text_info2), ...]
-        batch_size: Number of transactions to send in each batch
-    
-    Returns:
-        List of all successful tokenIds
-    """
-    all_tokens = []
-    
-    # Process in batches
-    for i in range(0, len(nft_data_list), batch_size):
-        batch = nft_data_list[i:i + batch_size]
-        print(f"Processing batch {i//batch_size + 1} ({len(batch)} transactions)", flush=True)
-        
-        batch_tokens = batch_nft_sortu_parallel(batch)
-        all_tokens.extend(batch_tokens)
-        
-        # Small delay between batches to avoid overwhelming the network
-        if i + batch_size < len(nft_data_list):
-            time.sleep(1)
-    
-    return all_tokens
 
 ####################### EMAILAK #######################
 def bidali_emaila(nori, izena, lokalizatzailea, formakuntza, cert):
@@ -536,5 +382,7 @@ def pdf_orria_sortu(p, bg_image, width, height, partaidea, formakuntza, lok):
     qr_x = 10  # 10 píxeles desde el borde izquierdo
     qr_y = 10  # 10 píxeles desde el borde inferior
     # Asegurarse de que el código QR sea visible
+    p.drawImage(qr_image, qr_x, qr_y, width=100, height=100)  # Tamaño fijo para mejor visibilidad
+    p.showPage()
     p.drawImage(qr_image, qr_x, qr_y, width=100, height=100)  # Tamaño fijo para mejor visibilidad
     p.showPage()
