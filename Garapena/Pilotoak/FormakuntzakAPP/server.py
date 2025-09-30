@@ -1,4 +1,5 @@
 from funtzioak import *
+import threading
 
 app = Flask(__name__, template_folder='www', static_url_path='/static')
 
@@ -80,7 +81,8 @@ def post_formakuntza():
         cursor.execute(query, (session["id"], izena, ikastetxea, zikloa, modulua, data))
         idfor = cursor.lastrowid
 
-    if not fid:
+    if not fid and csvFile and csvFile.filename and csvFile.filename != '':
+        # Solo procesar el archivo si existe y tiene un nombre válido
         data = pd.read_csv(csvFile, delimiter=";", header=0)
         sql = "INSERT INTO partaideak (izena, emaila, idformakuntza, lokalizatzailea) VALUES (%s, %s, %s, %s)"
         partaideak = []
@@ -133,66 +135,100 @@ def ikaslea_ezabatu(idfor, idika):
     bbdd.close()
     return redirect("/formakuntza_aldatu/"+ idfor)
 
+def process_sortu_zihurtagiriak(idfor: str):
+    # Ejecuta el trabajo pesado fuera del request, dentro del app context
+    with app.app_context():
+        bbdd = get_db_con()
+        cursor = bbdd.cursor()
+        query = 'SELECT izena, id, emaila, lokalizatzailea FROM partaideak WHERE idformakuntza = %s'
+        cursor.execute(query, (idfor,))
+        partaideak = cursor.fetchall()
+        query = 'SELECT izena FROM formakuntzak WHERE id = %s'
+        cursor.execute(query, (idfor,))
+        formakuntza = cursor.fetchone()
+        fizena = formakuntza[0]
+
+        print(f"Contract address: {BK_CONTRACT_ADDRESS}", flush=True)
+
+        width, height = landscape(A4)
+
+        # Cargar la imagen de fondo
+        bg_image_eus = ImageReader('static/img/CertificadoBlockchain_eus.png')
+        bg_image_es = ImageReader('static/img/CertificadoBlockchain_es.png')
+        # Registrar una fuente personalizada
+        pdfmetrics.registerFont(TTFont('CustomFont', 'static/fonts/GothamMedium.ttf'))
+        
+        ids = []
+        uris = []
+        txt_infos = []
+        certs = []
+        for par in partaideak:
+            ids.append(par[1])
+
+            ######################## Crear PDF ########################
+            buffer = io.BytesIO()
+            p = canvas.Canvas(buffer, pagesize=landscape(A4))
+            ############## EUSKERAZ ################
+            pdf_orria_sortu(p, bg_image_eus, width, height, par[0]+"-(r)i", fizena, par[3])
+            ############## CASTELLANO ################
+            pdf_orria_sortu(p, bg_image_es, width, height, par[0], fizena , par[3])
+            p.save()
+            buffer.seek(0)
+            ########## Fitxategia eta URI-a sortu ##########
+            cert = par[0].replace(' ', '_')+"_ziurtagiria_"+idfor+".pdf"
+            certs.append(cert)
+            cert_path = f"static/certs/"+cert
+            with open(cert_path, 'wb') as f:
+                f.write(buffer.getbuffer())
+            uri = BK_BASE_URI+cert_path
+            uris.append(uri)
+            ######################## FIN Crear PDF ########################
+
+            ########## NFT-aren txt_infoa sortu ##########
+            cur_dict = bbdd.cursor(dictionary=True)
+            query = 'SELECT f.izena formakuntza, TO_CHAR(f.data,"dd/mm/yyyy") data, i.izena ikastetxea, fa.izena familia, z.izena zikloa, f.modulua modulua, ir.izena irakaslea FROM formakuntzak f, zikloak z, familiak fa, ikastetxeak i, irakasleak ir where i.kodea = f.idikastetxea AND f.idzikloa = z.id AND fa.id = z.idfam and f.idirakaslea = ir.id and f.id = %s'
+            cur_dict.execute(query, (idfor,))
+            formakuntza = cur_dict.fetchone()
+            formakuntza["izena"] = par[0]
+            formakuntza = {k: f"{v}" for k,v in formakuntza.items()}
+            txt_info = json.dumps(formakuntza)
+            txt_infos.append(txt_info)
+
+        ########## NFT-a sortu blockchainean ##########
+        #tokenId = nft_sortu(uri, txt_info)
+        tokenIds = nft_sortu_batch(uris, txt_infos)
+
+        for i, par in enumerate(partaideak):
+            query = 'UPDATE partaideak SET tokenId = %s WHERE id = %s'
+            cursor.execute(query, (tokenIds[i], ids[i]))
+            ########## EMAILA BIDALI ##########
+            bidali_emaila(par[2], par[0], par[3], formakuntza['formakuntza'],certs[i])
+
+        # El estado blockchain ya se actualizó en el endpoint principal
+        cursor.close()
+        bbdd.close()
+
+
 @app.get('/sortu_zihurtagiriak/<idfor>')
 def sortu_zihurtagiriak(idfor):
     if not session_check():
         return redirect("/")
-
+    
+    # Actualizar inmediatamente el estado blockchain a 1 para deshabilitar botones
     bbdd = get_db_con()
     cursor = bbdd.cursor()
-    query = 'SELECT izena, id, emaila, lokalizatzailea FROM partaideak WHERE idformakuntza = %s'
-    cursor.execute(query, (idfor,))
-    partaideak = cursor.fetchall()
-    query = 'SELECT izena FROM formakuntzak WHERE id = %s'
-    cursor.execute(query, (idfor,))
-    formakuntza = cursor.fetchone()
-    fizena = formakuntza[0]
     query = 'UPDATE formakuntzak SET blockchain = 1 WHERE id = %s'
     cursor.execute(query, (idfor,))
-
-    width, height = landscape(A4)
-
-    # Cargar la imagen de fondo
-    bg_image_eus = ImageReader('static/img/CertificadoBlockchain_eus.png')
-    bg_image_es = ImageReader('static/img/CertificadoBlockchain_es.png')
-    # Registrar una fuente personalizada
-    pdfmetrics.registerFont(TTFont('CustomFont', 'static/fonts/GothamMedium.ttf'))
-
-    for par in partaideak:
-        buffer = io.BytesIO()
-        p = canvas.Canvas(buffer, pagesize=landscape(A4))
-        ############## EUSKERAZ ################
-        pdf_orria_sortu(p, bg_image_eus, width, height, par[0]+"-(r)i", fizena, par[3])
-        ############## CASTELLANO ################
-        pdf_orria_sortu(p, bg_image_es, width, height, par[0], fizena , par[3])
-        p.save()
-        buffer.seek(0)
-        ########## PDFa eta URI-a sortu ##########
-        cert = par[0].replace(' ', '_')+"_ziurtagiria_"+idfor+".pdf"
-        cert_path = f"static/certs/"+cert
-        with open(cert_path, 'wb') as f:
-            f.write(buffer.getbuffer())
-        uri = BK_BASE_URI+cert_path
-
-        ########## NFT-aren txt_infoa sortu ##########
-        cur_dict = bbdd.cursor(dictionary=True)
-        query = 'SELECT f.izena formakuntza, TO_CHAR(f.data,"dd/mm/yyyy") data, i.izena ikastetxea, fa.izena familia, z.izena zikloa, f.modulua modulua, ir.izena irakaslea FROM formakuntzak f, zikloak z, familiak fa, ikastetxeak i, irakasleak ir where i.kodea = f.idikastetxea AND f.idzikloa = z.id AND fa.id = z.idfam and f.idirakaslea = ir.id and f.id = %s'
-        cur_dict.execute(query, (idfor,))
-        formakuntza = cur_dict.fetchone()
-        formakuntza["izena"] = par[0]
-        formakuntza = {k: f"{v}" for k,v in formakuntza.items()}
-        txt_info = json.dumps(formakuntza)
-        
-        ########## NFT-a sortu blockchainean ##########
-        tokenId = nft_sortu(uri, txt_info)
-        query = 'UPDATE partaideak SET tokenId = %s WHERE id = %s'
-        cursor.execute(query, (tokenId,par[1]))
-
-        ########## EMAILA BIDALI ##########
-        bidali_emaila(par[2], par[0], par[3], formakuntza['formakuntza'],cert)
-    
+    cursor.close()
     bbdd.close()
-
+    
+    # Lanzar el proceso en background y responder de inmediato
+    threading.Thread(target=process_sortu_zihurtagiriak, args=(idfor,), daemon=True).start()
+    
+    # Si es una petición AJAX, devolver respuesta JSON
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'status': 'success', 'message': 'Proceso iniciado correctamente'})
+    
     return redirect("/zerrenda/")
 
 @app.route('/ikusi_nft_info/<lok>')
@@ -200,7 +236,9 @@ def ikusi_nft_info(lok):
     contract = get_contract()[0]
     tokenId = get_TokenId(lok)
     info = contract.functions.tokenTextInfo(int(tokenId)).call()
+    print("Info: "+info, flush=True)
     info = info.encode().decode('unicode-escape')
+    print("Info: "+info, flush=True)
     info = ast.literal_eval(info)
     info["uri"] = contract.functions.tokenURI(int(tokenId)).call()
     return render_template("certificado.html", info=info)
@@ -257,4 +295,4 @@ def cambiar_contrasena():
     return jsonify({'status': 'success', 'message': 'Contraseña actualizada correctamente'})
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0', debug=True, threaded=True, use_reloader=False)
