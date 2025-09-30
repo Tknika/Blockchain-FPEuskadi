@@ -126,21 +126,28 @@ backup_ssl_certificates() {
 # Backup application code
 backup_application_code() {
     log "Backing up application code..."
-    
+
+    # Determine the parent directory containing both Pilotoak and WebServer
+    PARENT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
+
     # Backup Pilotoak directory
-    if [ -d "$PROJECT_ROOT/Pilotoak" ]; then
-        cp -r "$PROJECT_ROOT/Pilotoak" "$BACKUP_PATH/"
+    if [ -d "$PARENT_DIR/Pilotoak" ]; then
+        cp -r "$PARENT_DIR/Pilotoak" "$BACKUP_PATH/"
         log "✓ Pilotoak directory backed up"
     else
-        warning "Pilotoak directory not found at $PROJECT_ROOT/Pilotoak"
+        warning "Pilotoak directory not found at $PARENT_DIR/Pilotoak"
     fi
-    
+
     # Backup WebServer directory (excluding large directories that will be recreated)
-    mkdir -p "$BACKUP_PATH/WebServer"
-    rsync -av --exclude='node_modules' --exclude='__pycache__' --exclude='*.pyc' \
-          --exclude='.git' --exclude='logs' --exclude='data' --exclude='backup' \
-          "$(dirname "$SCRIPT_DIR")/" "$BACKUP_PATH/WebServer/"
-    log "✓ WebServer directory backed up"
+    if [ -d "$PARENT_DIR/WebServer" ]; then
+        mkdir -p "$BACKUP_PATH/WebServer"
+        rsync -av --exclude='node_modules' --exclude='__pycache__' --exclude='*.pyc' \
+              --exclude='.git' --exclude='logs' --exclude='data' --exclude='backup' \
+              "$PARENT_DIR/WebServer/" "$BACKUP_PATH/WebServer/"
+        log "✓ WebServer directory backed up"
+    else
+        warning "WebServer directory not found at $PARENT_DIR/WebServer"
+    fi
 }
 
 # Create backup metadata
