@@ -32,7 +32,13 @@
                         <td>
                             <a role="button" class="btn btn-success btn-sm" href="/formakuntza_aldatu/{{ form[4] }}" title="Formakuntza aldatu / Editar formación"><i class="bi bi-pencil"></i></a>
                             <a role="button" class=" btn btn-danger btn-sm" href="/formakuntza_ezabatu/{{ form[4] }}" title="Rormakutnza ezabatu / Eliminar formación"><i class="bi bi-x-octagon"></i></a>
-                            <a role="button" class=" btn btn-warning btn-sm ms-5" href="/sortu_zihurtagiriak/{{ form[4] }}" title="Agiriak Blockchainean gorde/ Guardar certificados en la Blockchain"><i class="bi bi-archive"></i></a>
+                            <button class="btn btn-warning btn-sm ms-5 btn-blockchain" data-idfor="{{ form[4] }}" title="Agiriak Blockchainean gorde/ Guardar certificados en la Blockchain">
+                                <span class="btn-text"><i class="bi bi-archive"></i></span>
+                                <span class="btn-loading d-none">
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    Procesando...
+                                </span>
+                            </button>
                         </td>
                         {% else %}
                         <td>
@@ -48,74 +54,67 @@
     </div>
     {% include 'includes/footer.html' %}
     <script src="/static/js/pasahitza_aldatu.js"></script>
-<!--    <script>
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Crear la ventana modal dinámicamente
-            var modalHtml = `
-                <div class="modal" id="pasahitzaModal" tabindex="-1" role="dialog">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Cambiar Contraseña</h5>
-                                <button type="button" class="border border-0 btn btn-lg" data-dismiss="modal" aria-label="Close" onclick="closeModal()">
-                                    <i class="bi bi-x-square"></i>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <form id="cambiarContrasenaForm">
-                                    <div class="form-group">
-                                        <label for="current_password">Contraseña Actual</label>
-                                        <input type="password" class="form-control" id="current_password" name="current_password" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="new_password">Nueva Contraseña</label>
-                                        <input type="password" class="form-control" id="new_password" name="new_password" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="confirm_password">Confirmar Nueva Contraseña</label>
-                                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
-                                    </div>
-                                    <div class="text-center mt-4">
-                                        <button type="submit" class="btn btn-primary">Cambiar Contraseña</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-            // Manejar el envío del formulario de cambio de contraseña
-            document.getElementById('cambiarContrasenaForm').addEventListener('submit', function(event) {
-                event.preventDefault();
-                var formData = new FormData(this);
-                fetch('/pasahitza_aldatu', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        alert('Contraseña actualizada correctamente');
-                        closeModal();
-                    } else {
-                        alert(data.message);
-                    }
-                })
-                .catch(error => console.error('Error:', error));
+            // Manejar el clic en los botones de blockchain
+            document.querySelectorAll('.btn-blockchain').forEach(button => {
+                button.addEventListener('click', function() {
+                    const idfor = this.dataset.idfor;
+                    const btnText = this.querySelector('.btn-text');
+                    const btnLoading = this.querySelector('.btn-loading');
+                    
+                    // Encontrar la fila actual y deshabilitar todos los botones de la fila
+                    const row = this.closest('tr');
+                    const allButtons = row.querySelectorAll('a[role="button"], button');
+                    allButtons.forEach(btn => {
+                        btn.disabled = true;
+                        btn.style.pointerEvents = 'none';
+                        btn.style.opacity = '0.6';
+                    });
+                    
+                    // Deshabilitar el botón y mostrar spinner
+                    this.disabled = true;
+                    btnText.classList.add('d-none');
+                    btnLoading.classList.remove('d-none');
+                    
+                    // Realizar la petición AJAX
+                    fetch(`/sortu_zihurtagiriak/${idfor}`, {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            // Mostrar mensaje de éxito
+                            alert('Proceso iniciado correctamente. Los certificados se están generando en segundo plano.');
+                            // Recargar la página después de un breve delay para mostrar el cambio
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 2000);
+                        } else {
+                            throw new Error('Error en la respuesta del servidor');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al procesar la solicitud. Intente nuevamente.');
+                        // Restaurar todos los botones de la fila en caso de error
+                        const row = this.closest('tr');
+                        const allButtons = row.querySelectorAll('a[role="button"], button');
+                        allButtons.forEach(btn => {
+                            btn.disabled = false;
+                            btn.style.pointerEvents = '';
+                            btn.style.opacity = '';
+                        });
+                        
+                        // Restaurar el botón de blockchain específicamente
+                        btnText.classList.remove('d-none');
+                        btnLoading.classList.add('d-none');
+                    });
+                });
             });
-
-            // Función para abrir la ventana modal
-            window.pasahitzaAldatu = function() {
-                document.getElementById('pasahitzaModal').style.display = 'block';
-            };
-
-            // Función para cerrar la ventana modal
-            window.closeModal = function() {
-                document.getElementById('pasahitzaModal').style.display = 'none';
-            };
         });
-    </script>-->
+    </script>
 </body>
 </html>
