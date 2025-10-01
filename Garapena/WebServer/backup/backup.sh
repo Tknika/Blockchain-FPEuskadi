@@ -241,10 +241,10 @@ copy_to_remote_servers() {
             # Use the target user for scp with specified port
             if [ "$RUNNING_AS_ROOT" = true ]; then
                 # Run scp as the target user
-                sudo -u "$TARGET_USER" scp -P "$server_port" -o StrictHostKeyChecking=no "$backup_file" "$TARGET_USER@$server_ip:~/"
+                sudo -u "$TARGET_USER" scp -P "$server_port" -o StrictHostKeyChecking=no "$backup_file" "$TARGET_USER@$server_ip:~/webserver_backup.tar.gz.gpg"
             else
                 # Run scp as current user
-                scp -P "$server_port" -o StrictHostKeyChecking=no "$backup_file" "$TARGET_USER@$server_ip:~/"
+                scp -P "$server_port" -o StrictHostKeyChecking=no "$backup_file" "$TARGET_USER@$server_ip:~/webserver_backup.tar.gz.gpg"
             fi
             
             if [ $? -eq 0 ]; then
