@@ -77,13 +77,16 @@ To customize the landing page:
 
 1. Edit `index.html` to change content, add/remove services
 2. Edit `style.css` to modify colors, layout, or styling
-3. Update the CSS variables in `:root` selector for quick color scheme changes
+3. The main accent color is `#0066cc` - change this throughout the CSS to rebrand
 
 ## Testing
 
 Access the landing page at:
 - https://blockchain.tkn.eus
-- Any undefined subdomain will also redirect here (e.g., https://undefined.blockchain.tkn.eus)
+
+Any undefined subdomain will automatically redirect to blockchain.tkn.eus:
+- https://undefined.blockchain.tkn.eus → redirects to → https://blockchain.tkn.eus
+- https://random.blockchain.tkn.eus → redirects to → https://blockchain.tkn.eus
 
 ## Troubleshooting
 
