@@ -58,8 +58,8 @@ sudo certbot certonly --webroot -w /var/www/certbot \
 
 ## Features
 
-- **Responsive Design**: Works on desktop, tablet, and mobile devices
-- **Modern UI**: Clean, professional design with gradient backgrounds and hover effects
+- **Simple Design**: Clean, minimal text-based layout
+- **Responsive**: Works on desktop, tablet, and mobile devices
 - **Service Directory**: Direct links to all available services:
   - Ziurtagiriak (Certificates)
   - Formakuntzak (Training)
