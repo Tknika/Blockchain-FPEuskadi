@@ -2,7 +2,7 @@
 
 Pasos a seguir para desplegar Hyperledger Besu en X máquinas físicas distintas (ejemplo del repositorio hecho para 4 máquinas) cada una con su propia IP pública distinta.
 
-Se puede saltar al apartado 3 si se quiere probar la configuración por defecto (preparado para 4 nodos Besu + Tessera y un servidor web, siendo las IPs de los nodos 192.168.100.1, 192.168.100.2, 192.168.100.3 y 192.168.100.4).
+Se puede saltar al apartado 3 si se quiere probar la configuración por defecto (preparado para 4 nodos Besu y un servidor web, siendo las IPs de los nodos 192.168.100.1, 192.168.100.2, 192.168.100.3 y 192.168.100.4).
 
 ## 1.- Software necesario
 
@@ -29,14 +29,7 @@ Se puede saltar al apartado 3 si se quiere probar la configuración por defecto 
 
 `tar -xvf ./node-v20.10.0-linux-x64.tar.xz`
 
-- Tessera:
-
-`wget https://s01.oss.sonatype.org/service/local/repositories/releases/content/net/consensys/quorum/tessera/tessera-dist/24.4.2/tessera-dist-24.4.2.tar`
-
-`tar -xvf ./tessera-dist-24.4.2.tar`
-
 Añadir esto al fichero *.profile* del usuario Linux para que se incluyan los binarios en el PATH:
-
 > 
 	if [ -d "$HOME/node-v20.10.0-linux-x64/bin" ] ; then
   		PATH="$PATH:$HOME/node-v20.10.0-linux-x64/bin"
@@ -44,10 +37,6 @@ Añadir esto al fichero *.profile* del usuario Linux para que se incluyan los bi
 	if [ -d "$HOME/besu-24.10.0/bin" ] ; then
   		PATH="$PATH:$HOME/besu-24.10.0/bin"
 	fi
-	if [ -d "$HOME/tessera-24.4.2/bin" ] ; then
-  		PATH="$PATH:$HOME/tessera-24.4.2/bin"
-	fi
-
 
 Aplicar esos cambios con `source .profile`
 
@@ -77,12 +66,6 @@ Tras configurar [**qbftConfigFile.json**](https://besu.hyperledger.org/stable/pr
 
 Esto nos genera la carpeta *networkFiles* con *genesis.json* y las direcciones de los nodos con sus claves dentro. Estas claves privadas las vamos a copiar a la carpeta padre (networkFiles/keys) como keyX (tal y como se ve en este repositorio como ejemplo) para que se referencien desde el docker-composeX.yml de cada nodo sin tener que poner la ruta con la carpeta que tiene como nombre la dirección asociada.
 
-Para generar las claves de los 'tenant' Tessera (usuarios que pueden hacer sus propias transacciones privadas) podemos utilizar el siguiente comando:
-
-`tessera -keygen -filename tenantKeyX`
-
-En el repositorio actual se proporcionan las claves de cuatro nodos (en producción habría que recrearlos), están en la carpeta TesseraKeys. Estas claves están referenciadas en el fichero tessera.conf (se ha hecho uno común para todos para simplificar).
-
 #### 2.1.3.- Configuración de los nodos (carpetas **configNodes** y **networkFiles**)
 
 En la carpeta *configNodes* está el fichero **config-node.toml** (en este caso común para todos) donde se configuran parámetros del nodo. Además hay una serie de ficheros de configuración a los que se hace referencia en el mismo y hay que modificar:
@@ -92,8 +75,6 @@ En la carpeta *configNodes* está el fichero **config-node.toml** (en este caso 
 - En el fichero *networkFiles/nodes_permissions_config.toml* incluir los nodos a los que se permite conectar. **Hay que poner las IP públicas de cada nodo.**
 
 - En el fichero *networkFiles/accounts_permissions_config.toml* incluir las cuentas (direcciones) a las que se permite operar. Vamos a incluir las direcciones de cada nodo, las direcciones configuradas en el génesis y las direcciones asociadas a las claves privadas que van a desplegar contratos en la red.
-
-En la carpeta *configNodes* también está el fichero **tessera.conf** que hay que adaptar para configurar los demás nodos Tessera con los que se comunica y la ubicación de las claves de los 'tenants'. **Hay que poner las IP públicas de cada nodo.**
 
 ### 2.2.- Autenticación: generar tokens JWT
 
@@ -106,6 +87,8 @@ Necesitaremos identificarnor y autenticarnos mediante tokens JWT si queremos acc
 Estos ficheros deben situarse en la carpeta **networkFiles/JWTkeys** y se llamarán **privateRSAKeyOperator.pem** y **publicRSAKeyOperator.pem**.
 
 Para generar los tokens JWT [ejecutamos el script de Python](https://github.com/Tknika/Blockchain-FPEuskadi/tree/main/Garapena/Pilotoak/Erremintak/README.md) *createJWT.py* de la carpeta *Pilotoak/Erremintak/*. También podemos utilizar la herramienta [jwt.io](https://jwt.io/) para generar los tokens JWT.
+
+En el repositorio actual se proporcionan las claves de cuatro usuarios y sus token JWT con acceso completo a las API administrativas, uno por cada nodo (en producción habría que recrearlos), están en las carpeta TenantKeys y JWTkeys.
 
 ## 3.- Despliegue blockchain
 
