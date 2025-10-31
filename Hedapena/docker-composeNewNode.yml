@@ -17,9 +17,9 @@ services:
     command: --config-file=/var/lib/besu/QBFT-Network/configNodes/node-config.toml
     environment:
       #- BESU_PRIVACY_URL=http://tessera-node:9102
-      #- BESU_NODE_PRIVATE_KEY_FILE=/var/lib/besu/QBFT-Network/networkFiles/keys/keyNewNode
+      - BESU_NODE_PRIVATE_KEY_FILE=/var/lib/besu/QBFT-Network/networkFiles/keys/keyNewNode
       #- BESU_PRIVACY_MARKER_TRANSACTION_SIGNING_KEY_FILE=/var/lib/besu/QBFT-Network/networkFiles/keys/keyNewNode
-      - BESU_ETHSTATS=besu_node:asdf@192.168.100.5:3000
+      #- BESU_ETHSTATS=besu_node:asdf@192.168.100.5:3000
     #depends_on:
       #- tessera-node
     networks:
