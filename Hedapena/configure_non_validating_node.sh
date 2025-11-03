@@ -4,7 +4,8 @@
 sudo apt update
 
 # Instalar Java
-echo -e "\n"
+echo -e 
+echo "\n"
 echo "Instalando Java, Docker, Docker Compose y Python3-distutils-extra..."
 sudo apt install openjdk-21-jdk-headless docker.io docker-compose python3-distutils-extra
 
@@ -13,7 +14,7 @@ sudo apt install openjdk-21-jdk-headless docker.io docker-compose python3-distut
 #sudo apt install snmp snmpd snmptrapd -y
 
 # Instalar ejecutables Besu
-echo -e "\n"
+echo "\n"
 echo "Instalando ejecutables Besu..."
 wget https://github.com/hyperledger/besu/releases/download/24.10.0/besu-24.10.0.tar.gz
 tar -xvzf ./besu-24.10.0.tar.gz
@@ -27,7 +28,7 @@ rm ./besu-24.10.0.tar.gz
 #rm ./tessera-dist-24.4.2.tar
 
 # Generar claves Besu
-echo -e "\n"
+echo "\n"
 echo "Generando claves Besu..."
 rm -r ./networkFiles/keys/
 ./besu-24.10.0/bin/besu --data-path=./networkFiles/keys public-key export --to=./networkFiles/keys/keyNewNode.pub
@@ -43,7 +44,7 @@ mv ./networkFiles/keys/key ./networkFiles/keys/keyNewNode
 #mv ./tenantKeyNewNode.* ./networkFiles/TesseraKeys/
 
 #Generar clave privada RSA para el token JWT
-echo -e "\n"
+echo "\n"
 echo "Generando clave privada RSA para el token JWT..."
 rm -r ./networkFiles/JWTkeys/
 mkdir ./networkFiles/JWTkeys/
@@ -74,20 +75,20 @@ rm -r ./besu-24.10.0
 
 #ADDRESS_KEY=$(cat ./networkFiles/keys/addressNewNode | tr -d '\n')
 cat ./networkFiles/keys/addressNewNode > ./informacion_importante.txt
-echo -e "\n" >> ./informacion_importante.txt
+echo "\n" >> ./informacion_importante.txt
 #PUBLIC_KEY=$(cat ./networkFiles/keys/keyNewNode.pub | tr -d '\n')
 cat ./networkFiles/keys/keyNewNode.pub >> ./informacion_importante.txt
-echo -e "\n" >> ./informacion_importante.txt
+echo "\n" >> ./informacion_importante.txt
 
 # Mensaje con la clave pública del nuevo nodo
 echo "Clave pública del nuevo nodo:"
-echo -e "\n"
+echo "\n"
 cat ./networkFiles/keys/keyNewNode.pub
-echo -e "\n"
+echo "\n"
 echo "Hay que proporcionar el fichero 'informacion_importante.txt' con junto con la IP pública del nodo a los administradores de la red blockchain para que puedan agregar el nodo."
-echo -e "\n"
+echo "\n"
 echo "Ejecuta el siguiente comando para arrancar el nodo:"
-echo -e "\n"
+echo "\n"
 echo "docker compose -f docker-composeNewNode.yml up"
-echo -e "\n"
+echo "\n"
 
