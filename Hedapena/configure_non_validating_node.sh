@@ -81,6 +81,7 @@ cat ./networkFiles/keys/keyNewNode.pub >> ./informacion_importante.txt
 echo "\n" >> ./informacion_importante.txt
 
 # Mensaje con la clave pública del nuevo nodo
+echo "\n"
 echo "Clave pública del nuevo nodo:"
 echo "\n"
 cat ./networkFiles/keys/keyNewNode.pub
