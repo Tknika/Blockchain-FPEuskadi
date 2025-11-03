@@ -5,8 +5,8 @@ sudo apt update
 
 # Instalar Java
 echo -e "\n"
-echo "Instalando Java..."
-sudo apt install openjdk-21-jdk-headless
+echo "Instalando Java, Docker, Docker Compose y Python3-distutils-extra..."
+sudo apt install openjdk-21-jdk-headless docker.io docker-compose python3-distutils-extra
 
 #Instalar SNMP
 #echo "Instalando SNMP..."

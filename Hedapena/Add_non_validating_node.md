@@ -5,14 +5,15 @@
 El administrador del nuevo nodo tiene que:
 - Clonar el repositorio.
 - Ejecutar el script **configure_non_validating_node.sh** para generar las claves y configuraciones necesarias.
-- Ejecutar `docker compose -f docker-composeNewNode.yml up` (o *docker-compose*) cuando se haya permitido que el nuevo nodo se conecte a la red. Si no se dispone de Docker puede instalarse con los paquetes *docker.io* y *docker-compose*. También puede ser necesario *python3-distutils-extra* de la versión Ubuntu 24.04 en adelante. 
+- Entregar el fichero información_importante.txt a los administradores de la red BFPE.
+- Ejecutar `docker-compose -f docker-composeNewNode.yml up` cuando se haya permitido que el nuevo nodo se conecte a la red.
 
 Si todo va bien, el nuevo nodo se conectará a la red y se sincronizará.
 
 
 ## Administrador de la red Blockchain
 
-Primero necesita obtener el e-node del nuevo nodo.
+Primero necesita obtener el e-node del nuevo nodo (en el fichero información_importante.txt).
 
 Deberá añadirlo al fichero **nodes_permissions_config.toml** en todos los nodos que forman la red (para que si hay un reinicio de la red, el nuevo nodo pueda conectarse a ella).
 
