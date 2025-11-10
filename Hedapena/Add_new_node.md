@@ -10,7 +10,7 @@ El administrador del nuevo nodo tiene que:
   - `sh ./configure_new_node.sh`
 - Entregar el fichero *información_importante.txt* que se ha generado a los administradores de la red BFPE.
 - Sustituir los ficheros *networkFiles/genesis.json*, *networkFiles/static-nodes.json* y *networkFiles/nodes_permissions_config.toml* proporcionados por los administradores de la red BFPE.
-- Ejecutar `sudo docker-compose -f docker-composeNewNode.yml up`.
+- Ejecutar `sudo docker-compose -f docker-composeNewNode.yml up`
 
 Si todo va bien, el nuevo nodo se conectará a la red y se sincronizará.
 
@@ -23,7 +23,7 @@ Deberá añadirlo al fichero **nodes_permissions_config.toml** en todos los nodo
 
 Entregar los ficheros *networkFiles/genesis.json*, *networkFiles/static-nodes.json* y *networkFiles/nodes_permissions_config.toml* a los administradores del nuevo nodo para que los sustituyan.
 
-Si no se reinician los nodos (para actualizar el contenido de *nodes_permissions_config.toml*) se deberá hacer uso de la API PERM para indicar a todos los nodos, mientras están en marcha, que el nuevo nodo puede conectarse con ellos. Esto se puede hacer así:
+**Reiniciar los nodos** (para actualizar el contenido de *nodes_permissions_config.toml*), **si no**, se deberá hacer uso de la API PERM para indicar a todos los nodos, mientras están en marcha, que el nuevo nodo puede conectarse con ellos. Esto se puede hacer así:
 `websocat -H="Authorization: Bearer TOKEN_JWT" ws://IP_NODO:8546`
 `{"jsonrpc":"2.0","method":"perm_addNodesToAllowlist","params":[["enode://CLAVE_PUBLICA_NUEVO_NODO@IP_NUEVO_NODO:30303"]], "id":1}`
 Si hay ido bien recibiremos un Success: *{"jsonrpc":"2.0","id":1,"result":"Success"}*
