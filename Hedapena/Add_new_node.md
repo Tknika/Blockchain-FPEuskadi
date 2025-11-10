@@ -7,7 +7,7 @@ El administrador del nuevo nodo tiene que:
   - `git clone https://github.com/Tknika/Blockchain-FPEuskadi.git`
 - Ejecutar el script **configure_non_validating_node.sh** para instalar Java y Docker y generar las claves y configuraciones necesarias:
   - `cd Blockchain-FPEuskadi/Hedapena`
-  - `sh ./configure_non_validating_node.sh`
+  - `sh ./configure_new_node.sh`
 - Entregar el fichero *información_importante.txt* que se ha generado a los administradores de la red BFPE.
 - Sustituir los ficheros *networkFiles/genesis.json*, *networkFiles/static-nodes.json* y *networkFiles/nodes_permissions_config.toml* proporcionados por los administradores de la red BFPE.
 - Ejecutar `sudo docker-compose -f docker-composeNewNode.yml up`.

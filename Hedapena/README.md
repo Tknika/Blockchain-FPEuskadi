@@ -102,7 +102,7 @@ donde X es el número de nodo en el que nos encontramos. Tras ejecutarlo en todo
 
 ### 3.2.- Nodos NO validadores
 
-Si queremos que un nuevo **no validador** se una a la red, hay que seguir los pasos descritos en [este documento](https://github.com/Tknika/Blockchain-FPEuskadi/tree/main/Hedapena/Add_non_validating_node.md).
+Si queremos que un nuevo nodo se una a la red, hay que seguir los pasos descritos en [este documento](https://github.com/Tknika/Blockchain-FPEuskadi/tree/main/Hedapena/Add_new_node.md).
 
 ### 3.3.- Monitorización / Chainlens
 
