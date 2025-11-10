@@ -45,7 +45,7 @@ metrics-host="127.0.0.1" #The host on which Prometheus accesses Besu metrics. Th
 metrics-port=9545 #The port (TCP) on which Prometheus accesses Besu metrics. The default is 9545. Ports must be exposed appropriately
 
 # Hecho por mi para la tabla [Privacy]
-privacy-enabled=true #Enables or disables private transactions. The default is false.
+#privacy-enabled=true #Enables or disables private transactions. The default is false.
 # Esta ultima variable es parte de "Private networks" https://besu.hyperledger.org/private-networks/concepts/privacy#privacy-enabled-networks
 #specifies the Q2T server address of the Tessera node (Q2T in tessera.conf)
 # El siguiente parámetro como variable de entorno BESU_PRIVACY_URL para mantener este fichero único
@@ -55,7 +55,7 @@ privacy-enabled=true #Enables or disables private transactions. The default is f
 #rpc-http-authentication-jwt-public-key-file="/var/lib/besu/QBFT-Network/networkFiles/TesseraKeys/publicRSAKeyOperator.pem"
 rpc-ws-authentication-enabled=true
 rpc-ws-authentication-jwt-public-key-file="/var/lib/besu/QBFT-Network/networkFiles/JWTkeys/publicRSAKeyOperator.pem"
-privacy-multi-tenancy-enabled=true
+#privacy-multi-tenancy-enabled=true
 # Necesario si activamos privacidad y permisionado de cuentas: POR VARIABLE DE ENTORNO
 #privacy-marker-transaction-signing-key-file="/var/lib/besu/QBFT-Network/Node/data/key"
 

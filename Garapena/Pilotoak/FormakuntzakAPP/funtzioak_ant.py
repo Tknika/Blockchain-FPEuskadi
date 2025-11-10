@@ -1,4 +1,3 @@
-import math
 from flask import Flask, render_template, request, session, jsonify, redirect, send_file
 from web3 import Web3
 #from web3.middleware import geth_poa_middleware
@@ -213,51 +212,6 @@ def nft_sortu(uri, text_info):
     
     return tokenId
 
-def nft_sortu_batch(uris, texts, batch_size=50):
-    """Mina NFTs en lotes y devuelve una lista con los tokenIds asignados"""
-    assert len(uris) == len(texts), "Las listas uris y texts deben tener la misma longitud"
-    all_token_ids = []
-
-    contract, web3 = get_contract()
-    #nonce = w3.eth.get_transaction_count(owner)
-    nonce = web3.manager.request_blocking(
-            "eth_getTransactionCount", 
-            [BK_OWNER_ADDRESS, "pending"]
-        )
-    print("Nonce: "+str(nonce), flush=True)
-    num_batches = math.ceil(len(uris) / batch_size)
-    print(f"Mina {len(uris)} NFTs en {num_batches} lotes de hasta {batch_size} NFTs cada uno.", flush=True)
-    for i in range(num_batches):
-        start = i * batch_size
-        end = min((i + 1) * batch_size, len(uris))
-        batch_uris = uris[start:end]
-        batch_texts = texts[start:end]
-
-        tx = contract.functions.batchSafeMint(BK_OWNER_ADDRESS, batch_uris, batch_texts).build_transaction({
-            'chainId': BK_CHAIN_ID,  # ID de la red
-            'from': BK_OWNER_ADDRESS,
-            'nonce': nonce,
-            'maxFeePerGas': 0,
-            'maxPriorityFeePerGas': 0,
-        })
-        nonce = hex(int(nonce, 16)+1)
-        #nonce += 1
-        #nonce = hex(nonce)
-        print("Nonce: "+str(nonce), flush=True)
-
-        signed_tx = web3.eth.account.sign_transaction(tx, private_key=BK_OWNER_PRIVATE)
-        tx_hash = web3.eth.send_raw_transaction(signed_tx.raw_transaction)
-        receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
-
-        print(f"Lote {i+1}/{num_batches} minado en bloque {receipt.blockNumber}")
-
-        # Buscar en los logs del receipt los tokenIds acuñados
-        events = contract.events.Transfer().process_receipt(receipt)
-        token_ids = [e["args"]["tokenId"] for e in events]
-        all_token_ids.extend(token_ids)
-    print(f"Total de {len(all_token_ids)} NFTs minados.", flush=True)
-    return all_token_ids
-
 def get_nft_info(idfor):
     bbdd = get_db_con()
     cursor = bbdd.cursor()
@@ -382,7 +336,5 @@ def pdf_orria_sortu(p, bg_image, width, height, partaidea, formakuntza, lok):
     qr_x = 10  # 10 píxeles desde el borde izquierdo
     qr_y = 10  # 10 píxeles desde el borde inferior
     # Asegurarse de que el código QR sea visible
-    p.drawImage(qr_image, qr_x, qr_y, width=100, height=100)  # Tamaño fijo para mejor visibilidad
-    p.showPage()
     p.drawImage(qr_image, qr_x, qr_y, width=100, height=100)  # Tamaño fijo para mejor visibilidad
     p.showPage()

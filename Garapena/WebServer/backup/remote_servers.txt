@@ -1,0 +1,12 @@
+# Remote Servers Configuration
+# Format: IP:PORT
+# One server per line
+# Lines starting with # are comments and will be ignored
+# Files will be copied to ~/ (home directory) of TARGET_USER on each server
+
+# Example server configurations:
+# 192.168.1.100:22222
+# 10.0.0.50:22
+# 172.16.0.25:2222
+
+# Add your remote servers below:
