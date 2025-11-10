@@ -1,11 +1,11 @@
-# Añadir nodos no validadores a la red
+# Añadir nuevos nodos a la red
 
 ## Administrador del nuevo nodo
 
 El administrador del nuevo nodo tiene que:
 - Clonar el repositorio:
   - `git clone https://github.com/Tknika/Blockchain-FPEuskadi.git`
-- Ejecutar el script **configure_non_validating_node.sh** para instalar Java y Docker y generar las claves y configuraciones necesarias:
+- Ejecutar el script **configure_new_node.sh** para instalar Java y Docker y generar las claves y configuraciones necesarias:
   - `cd Blockchain-FPEuskadi/Hedapena`
   - `sh ./configure_new_node.sh`
 - Entregar el fichero *información_importante.txt* que se ha generado a los administradores de la red BFPE.
