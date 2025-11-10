@@ -1,0 +1,39 @@
+// We require the Hardhat Runtime Environment explicitly here. This is optional
+// but useful for running the script in a standalone fashion through `node <script>`.
+//
+// You can also run a script with `npx hardhat run <script>`. If you do that, Hardhat
+// will compile your contracts, add the Hardhat Runtime Environment's members to the
+// global scope, and execute the script.
+const hre = require("hardhat");
+
+async function main() {
+  const accounts = await hre.ethers.getSigners();
+  const deployer = accounts[3]; // Using the third account for deployment
+  // Create a contract factory for the Etiketa contract with the deployer account
+  const EkozirFactory = await hre.ethers.getContractFactory("Ekozir", deployer);
+
+ // const ekozir = await hre.ethers.deployContract("Ekozir", {
+   // gasPrice: null, gasLimit: null,
+  //});
+  // Deploy the Etiketa contract
+  const ekozir = await EkozirFactory.deploy({gasPrice: null, gasLimit: null,});
+
+
+  await ekozir.waitForDeployment();
+
+  //const ownerAddress = await ekozir.owner();
+
+  console.log(
+    `Ekozir deployed to ${ekozir.target}`
+  );
+  //console.log(`Owner is set to ${ownerAddress}`);
+  //console.log(`Does the owner match the second account? ${ownerAddress === deployer.address}`);
+
+}
+
+// We recommend this pattern to be able to use async/await everywhere
+// and properly handle errors.
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

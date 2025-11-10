@@ -1,0 +1,118 @@
+:root {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background-color: #f2f5f9;
+  color: #212529;
+}
+
+body {
+  margin: 0;
+  padding: 0 0 4rem;
+}
+
+.app-header {
+  background: linear-gradient(135deg, #2a5298, #1e3c72);
+  color: #ffffff;
+  padding: 2rem;
+  text-align: center;
+}
+
+.app-header h1 {
+  margin: 0 0 0.5rem;
+  font-size: 2rem;
+}
+
+.app-header .subtitle {
+  margin: 0;
+  font-size: 1rem;
+  opacity: 0.8;
+}
+
+.app-body {
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  padding: 1.5rem;
+}
+
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
+button {
+  background-color: #1e3c72;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.65rem 1.25rem;
+  margin-top: 0.75rem;
+  transition: transform 0.1s ease-in-out;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  margin-top: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid #d0d7e2;
+  font-size: 0.95rem;
+}
+
+.info-panel {
+  background: #f0f4ff;
+  border-radius: 8px;
+  border: 1px solid #c7d2fe;
+  padding: 0.75rem;
+  font-family: "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  overflow-x: auto;
+}
+
+.list-panel {
+  max-height: 340px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #f8fafc;
+}
+
+.list-item {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.list-item strong {
+  display: block;
+}
+
+.button-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.muted {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Ekozir Dashboard{% endblock %}
+
+{% block content %}
+<section class="card">
+  <h2>Wallet Connection</h2>
+  <p>
+    Connect your MetaMask account to sign transactions against the Besu network.
+  </p>
+  <button id="connectWallet">Connect MetaMask</button>
+  <pre id="walletInfo" class="info-panel">Not connected</pre>
+</section>
+
+<section class="card">
+  <h2>Set Public Key</h2>
+  <p>
+    Publish your encryption public key so other group members can share secrets.
+  </p>
+  <textarea id="publicKeyInput" rows="3" placeholder="Paste your public key"></textarea>
+  <button id="setPublicKey">Save Public Key</button>
+</section>
+
+<section class="card">
+  <h2>Create Group</h2>
+  <p>
+    Define a group name and optional comma-separated initial members.
+  </p>
+  <input id="groupName" type="text" placeholder="Group name" />
+  <input
+    id="groupMembers"
+    type="text"
+    placeholder="0x123...,0x456..."
+  />
+  <button id="createGroup">Create Group</button>
+</section>
+
+<section class="card">
+  <h2>Manage Membership</h2>
+  <p>
+    Add or remove participants when you are the group creator.
+  </p>
+  <input id="memberGroupId" type="number" placeholder="Group ID" />
+  <input id="memberAddress" type="text" placeholder="0x..." />
+  <div class="button-row">
+    <button id="addMember">Add Member</button>
+    <button id="removeMember">Remove Member</button>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Send Message</h2>
+  <p>
+    Messages are stored encrypted. Provide recipient addresses and their
+    encrypted symmetric keys (comma separated, same order as recipients).
+  </p>
+  <input id="messageGroupId" type="number" placeholder="Group ID" />
+  <textarea
+    id="messageContent"
+    rows="3"
+    placeholder="Encrypted message payload (base64, cipher text, etc.)"
+  ></textarea>
+  <input
+    id="messageRecipients"
+    type="text"
+    placeholder="Recipients 0x123...,0x456..."
+  />
+  <input
+    id="messageRecipientKeys"
+    type="text"
+    placeholder="Recipient encrypted keys keyFor0x123,keyFor0x456"
+  />
+  <input
+    id="messageSenderKey"
+    type="text"
+    placeholder="Sender encrypted key"
+  />
+  <button id="sendMessage">Send Message</button>
+</section>
+
+<section class="card">
+  <h2>Your Groups</h2>
+  <p>
+    Select a group to inspect members and messages.
+  </p>
+  <button id="refreshGroups">Refresh Groups</button>
+  <div id="groupsList" class="list-panel"></div>
+</section>
+
+<section class="card">
+  <h2>Group Messages</h2>
+  <p>
+    View encrypted content, keys, and confirmation status.
+  </p>
+  <div id="messagesList" class="list-panel"></div>
+</section>
+
+<script>
+  // Inject configuration for the front-end controller.
+  window.APP_CONFIG = {
+    contractAddress: "{{ contract_address }}",
+    chainId: "{{ chain_id }}",
+    besuRpc: "{{ besu_rpc }}"
+  };
+</script>
+{% endblock %}
+
