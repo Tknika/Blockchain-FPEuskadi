@@ -14,6 +14,46 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def _get_repo_root() -> Path:
+    """
+    Return the project root directory regardless of the deployment layout.
+
+    When the application runs inside Docker the filesystem is typically much
+    shallower than on a developer workstation, which previously caused
+    ``IndexError`` when assuming a fixed number of parents.  We therefore walk
+    upwards looking for well-known project markers and fall back to the app
+    package directory.
+    """
+    current = Path(__file__).resolve()
+    project_markers = (
+        "wsgi.py",
+        "Dockerfile",
+        "requirements.txt",
+        "app",
+    )
+    repository_markers = (".git", "pyproject.toml")
+    for parent in current.parents:
+        if any((parent / marker).exists() for marker in project_markers):
+            return parent
+        if any((parent / marker).exists() for marker in repository_markers):
+            repo_candidate = parent
+            # keep looking for a project-specific marker on the way up
+            project_root = next(
+                (
+                    ancestor
+                    for ancestor in current.parents
+                    if ancestor.is_relative_to(parent)
+                    and any((ancestor / marker).exists() for marker in project_markers)
+                ),
+                None,
+            )
+            if project_root:
+                return project_root
+            return repo_candidate
+    # Final fallback: keep the application directory to maintain relative paths.
+    return current.parent
+
+
 def _resolve_path(path_value: str) -> Path:
     """
     Resolve a filesystem path provided via environment variable.
@@ -24,7 +64,11 @@ def _resolve_path(path_value: str) -> Path:
     candidate = Path(path_value).expanduser()
     if candidate.is_absolute():
         return candidate
-    repo_root = Path(__file__).resolve().parents[3]
+    module_root = Path(__file__).resolve().parent
+    module_candidate = module_root / candidate
+    if module_candidate.exists():
+        return module_candidate
+    repo_root = _get_repo_root()
     return repo_root / candidate
 
 
@@ -61,7 +105,7 @@ def load_config() -> Dict[str, Any]:
     A dictionary is returned instead of mutating ``app.config`` directly so the
     settings can also be inspected in unit tests if desired.
     """
-    repo_root = Path(__file__).resolve().parents[3]
+    repo_root = _get_repo_root()
 
     rpc_setting = os.getenv("BESU_RPC_URL", "http://127.0.0.1:8545")
     rpc_urls = [entry.strip() for entry in rpc_setting.split(",") if entry.strip()]
