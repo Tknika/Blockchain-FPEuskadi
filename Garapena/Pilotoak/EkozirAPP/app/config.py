@@ -81,7 +81,7 @@ def load_config() -> Dict[str, Any]:
 
     abi_env = os.getenv(
         "EKOZIR_ABI_PATH",
-        "app/static/abi/ekozir.abi",
+        "static/abi/ekozir.abi",
     )
     abi_path = _resolve_path(abi_env)
     config["EKOZIR_ABI_PATH"] = str(abi_path)
