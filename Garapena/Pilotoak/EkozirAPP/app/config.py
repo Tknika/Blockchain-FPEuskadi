@@ -76,26 +76,23 @@ def _load_contract_abi(abi_path: Path) -> Any:
     """
     Load and return the ABI definition from the supplied JSON file.
 
-    The function expects the Hardhat artifact structure, where the ABI is stored
-    under the ``abi`` key. A helpful error message is raised when something is
-    missing to guide local configuration.
+    The function expects the ABI file to contain the ABI array directly,
+    rather than wrapped under an 'abi' key.
     """
     if not abi_path.exists():
         raise FileNotFoundError(
-            f"Ekozir ABI not found at {abi_path}. Compile the contract with Hardhat "
-            "or update the EKOZIR_ABI_PATH environment variable."
+            f"Ekozir ABI not found at {abi_path}. Compile the contract or update the EKOZIR_ABI_PATH environment variable."
         )
 
     with abi_path.open("r", encoding="utf-8") as handler:
-        artifact = json.load(handler)
+        abi = json.load(handler)
 
-    if "abi" not in artifact:
-        raise KeyError(
-            f"The ABI file at {abi_path} does not contain an 'abi' key. "
-            "Ensure you are pointing to a Hardhat artifact JSON."
+    if not isinstance(abi, list):
+        raise ValueError(
+            f"The ABI file at {abi_path} is not a valid ABI array."
         )
 
-    return artifact["abi"]
+    return abi
 
 
 def load_config() -> Dict[str, Any]:
@@ -107,7 +104,7 @@ def load_config() -> Dict[str, Any]:
     """
     repo_root = _get_repo_root()
 
-    rpc_setting = os.getenv("BESU_RPC_URL", "http://127.0.0.1:8545")
+    rpc_setting = os.getenv("BESU_RPC_URL", "http://192.168.100.1:8545")
     rpc_urls = [entry.strip() for entry in rpc_setting.split(",") if entry.strip()]
     if not rpc_urls:
         raise ValueError("BESU_RPC_URL must contain at least one HTTP endpoint.")
