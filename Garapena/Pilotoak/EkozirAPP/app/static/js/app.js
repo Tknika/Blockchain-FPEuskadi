@@ -9,6 +9,7 @@
     contract: null,
     contractMetadata: null,
     selectedGroupId: null,
+    isSignedIn: false,
   };
 
   const ui = {
@@ -16,15 +17,18 @@
     walletInfo: document.getElementById("walletInfo"),
     setPublicKey: document.getElementById("setPublicKey"),
     publicKeyInput: document.getElementById("publicKeyInput"),
+    autoRegisterPublicKey: document.getElementById("autoRegisterPublicKey"),
+    signInStatus: document.getElementById("signInStatus"),
+    signedInSections: document.querySelectorAll("[data-requires-signin]"),
     createGroup: document.getElementById("createGroup"),
     groupName: document.getElementById("groupName"),
     groupMembers: document.getElementById("groupMembers"),
     addMember: document.getElementById("addMember"),
     removeMember: document.getElementById("removeMember"),
-    memberGroupId: document.getElementById("memberGroupId"),
+    memberGroupSelect: document.getElementById("memberGroupSelect"),
     memberAddress: document.getElementById("memberAddress"),
     sendMessage: document.getElementById("sendMessage"),
-    messageGroupId: document.getElementById("messageGroupId"),
+    messageGroupSelect: document.getElementById("messageGroupSelect"),
     messageContent: document.getElementById("messageContent"),
     messageRecipients: document.getElementById("messageRecipients"),
     messageRecipientKeys: document.getElementById("messageRecipientKeys"),
@@ -83,6 +87,7 @@
 
     await ensureCorrectChain();
     await ensureContractInstance();
+    await syncPublicKeyStatus();
     await refreshGroups();
   }
 
@@ -131,6 +136,74 @@
   }
 
   /**
+   * Show or hide sections that require the user to be signed in (wallet connected + key published).
+   */
+  function updateSignedInUI() {
+    const shouldDisplay = Boolean(state.account && state.isSignedIn);
+    ui.signedInSections.forEach((section) => {
+      if (!section) {
+        return;
+      }
+      section.style.display = shouldDisplay ? "" : "none";
+    });
+
+    if (!shouldDisplay) {
+      clearGroupSelectors();
+      ui.groupsList.innerHTML = '<p class="muted">Sign in to view your groups.</p>';
+      ui.messagesList.innerHTML = '<p class="muted">Sign in to view group messages.</p>';
+    }
+  }
+
+  /**
+   * Reset the group selection dropdowns to their placeholder state.
+   */
+  function clearGroupSelectors() {
+    if (ui.memberGroupSelect) {
+      ui.memberGroupSelect.innerHTML =
+        '<option value="">Select one of your groups</option>';
+    }
+    if (ui.messageGroupSelect) {
+      ui.messageGroupSelect.innerHTML =
+        '<option value="">Select one of your groups</option>';
+    }
+  }
+
+  /**
+   * Refresh the UI with the latest on-chain public key status for the connected account.
+   */
+  async function syncPublicKeyStatus() {
+    if (!state.account) {
+      ui.signInStatus.textContent = "Connect your wallet to check registration status.";
+      state.isSignedIn = false;
+      updateSignedInUI();
+      return;
+    }
+
+    try {
+      await ensureContractInstance();
+      const existingKey = await state.contract.userPublicKeys(state.account);
+      const hasKey = Boolean(existingKey && existingKey.length > 0);
+      state.isSignedIn = hasKey;
+
+      if (hasKey) {
+        ui.signInStatus.textContent = "Signed up — public key already published for this wallet.";
+        ui.publicKeyInput.value = existingKey;
+      } else {
+        ui.signInStatus.textContent =
+          "Not signed up yet — publish your public key so other members can share secrets.";
+        ui.publicKeyInput.value = "";
+      }
+      updateSignedInUI();
+    } catch (error) {
+      ui.signInStatus.textContent =
+        "Unable to check public key status. See wallet info panel for details.";
+      updateStatus("Failed to fetch public key status.", { error: error.message });
+      state.isSignedIn = false;
+      updateSignedInUI();
+    }
+  }
+
+  /**
    * Call the contract to set/update the user's public key.
    */
   async function handleSetPublicKey() {
@@ -146,8 +219,54 @@
       updateStatus("Saving public key...", { txHash: tx.hash });
       await tx.wait(1);
       updateStatus("Public key saved successfully.", { txHash: tx.hash });
+      await syncPublicKeyStatus();
+      await refreshGroups();
     } catch (error) {
       updateStatus("Failed to set public key.", { error: error.message });
+    }
+  }
+
+  /**
+   * Ask MetaMask for the account's encryption public key and register it on-chain.
+   */
+  async function handleAutoRegisterPublicKey() {
+    if (!window.ethereum) {
+      updateStatus("MetaMask is not available in this browser.");
+      return;
+    }
+
+    try {
+      await ensureContractInstance();
+
+      const encryptionKey = await window.ethereum.request({
+        method: "eth_getEncryptionPublicKey",
+        params: [state.account],
+      });
+
+      if (!encryptionKey) {
+        updateStatus("MetaMask did not return an encryption public key for this account.");
+        return;
+      }
+
+      ui.publicKeyInput.value = encryptionKey;
+
+      const tx = await state.contract.setPublicKey(encryptionKey);
+      updateStatus("Publishing MetaMask encryption key...", { txHash: tx.hash });
+      await tx.wait(1);
+      updateStatus("Public key published via MetaMask.", { txHash: tx.hash });
+      await syncPublicKeyStatus();
+      await refreshGroups();
+    } catch (error) {
+      if (error && error.code === 4001) {
+        updateStatus("MetaMask request rejected by the user.");
+      } else if (error && error.message && error.message.includes("eth_getEncryptionPublicKey")) {
+        updateStatus(
+          "MetaMask could not expose the encryption public key for this account.",
+          { error: error.message }
+        );
+      } else {
+        updateStatus("Failed to publish MetaMask encryption key.", { error: error.message });
+      }
     }
   }
 
@@ -185,11 +304,11 @@
     return async () => {
       try {
         await ensureContractInstance();
-        const groupId = parseInt(ui.memberGroupId.value, 10);
+        const groupId = parseInt(ui.memberGroupSelect.value, 10);
         const address = ui.memberAddress.value.trim();
 
         if (!groupId || !address) {
-          updateStatus("Group ID and member address are required.");
+          updateStatus("Select a group and provide a member address.");
           return;
         }
 
@@ -208,7 +327,7 @@
    * Build the payload required by `sendMessage`.
    */
   function buildMessagePayload() {
-    const groupId = parseInt(ui.messageGroupId.value, 10);
+    const groupId = parseInt(ui.messageGroupSelect.value, 10);
     const content = ui.messageContent.value.trim();
     const senderKey = ui.messageSenderKey.value.trim();
     const recipients = ui.messageRecipients.value
@@ -221,7 +340,7 @@
       .filter(Boolean);
 
     if (!groupId || !content || !senderKey) {
-      throw new Error("Group ID, message content and sender key are required.");
+      throw new Error("Select a group, provide message content and sender key.");
     }
     if (recipients.length === 0) {
       throw new Error("Provide at least one recipient address.");
@@ -278,6 +397,10 @@
       updateStatus("Connect MetaMask to load group information.");
       return;
     }
+    if (!state.isSignedIn) {
+      updateStatus("Publish your public key to access group information.");
+      return;
+    }
     try {
       const response = await fetch(`/api/users/${state.account}/groups`);
       const { data } = await response.json();
@@ -287,13 +410,19 @@
       if (groupIds.length === 0) {
         ui.groupsList.innerHTML =
           '<p class="muted">No groups found for this account.</p>';
+        clearGroupSelectors();
+        ui.messagesList.innerHTML =
+          '<p class="muted">Join or create a group to see messages.</p>';
         return;
       }
 
+      const collectedGroups = [];
       for (const groupId of groupIds) {
         const group = await loadGroup(groupId);
         renderGroup(group);
+        collectedGroups.push(group.group);
       }
+      populateGroupSelectors(collectedGroups);
     } catch (error) {
       updateStatus("Failed to load groups.", { error: error.message });
     }
@@ -336,6 +465,9 @@
       .addEventListener("click", async (event) => {
         const targetGroupId = parseInt(event.target.dataset.group, 10);
         state.selectedGroupId = targetGroupId;
+        if (ui.messageGroupSelect && !ui.messageGroupSelect.value) {
+          ui.messageGroupSelect.value = String(targetGroupId);
+        }
         await loadMessages(targetGroupId);
       });
 
@@ -426,6 +558,7 @@
   function registerEventListeners() {
     ui.connectButton.addEventListener("click", connectWallet);
     ui.setPublicKey.addEventListener("click", handleSetPublicKey);
+    ui.autoRegisterPublicKey.addEventListener("click", handleAutoRegisterPublicKey);
     ui.createGroup.addEventListener("click", handleCreateGroup);
     ui.addMember.addEventListener("click", buildMembershipHandler("addMember"));
     ui.removeMember.addEventListener(
@@ -434,6 +567,65 @@
     );
     ui.sendMessage.addEventListener("click", handleSendMessage);
     ui.refreshGroups.addEventListener("click", refreshGroups);
+    ui.memberGroupSelect.addEventListener("change", (event) => {
+      const selected = parseInt(event.target.value, 10);
+      if (selected) {
+        state.selectedGroupId = selected;
+      }
+    });
+    ui.messageGroupSelect.addEventListener("change", async (event) => {
+      const selected = parseInt(event.target.value, 10);
+      if (selected) {
+        state.selectedGroupId = selected;
+        await loadMessages(selected);
+      } else {
+        ui.messagesList.innerHTML =
+          '<p class="muted">Select a group to view its messages.</p>';
+      }
+    });
+  }
+
+  /**
+   * Populate group selection dropdowns with the latest list of groups.
+   */
+  function populateGroupSelectors(groups) {
+    clearGroupSelectors();
+
+    if (!groups || groups.length === 0) {
+      return;
+    }
+
+    const options = groups
+      .map(
+        (group) =>
+          `<option value="${group.id}">#${group.id} — ${group.name}</option>`
+      )
+      .join("");
+
+    const defaultOption = '<option value="">Select one of your groups</option>';
+
+    if (ui.memberGroupSelect) {
+      ui.memberGroupSelect.innerHTML = `${defaultOption}${options}`;
+    }
+    if (ui.messageGroupSelect) {
+      ui.messageGroupSelect.innerHTML = `${defaultOption}${options}`;
+    }
+
+    if (state.selectedGroupId) {
+      const selectedId = String(state.selectedGroupId);
+      if (
+        ui.memberGroupSelect &&
+        [...ui.memberGroupSelect.options].some((opt) => opt.value === selectedId)
+      ) {
+        ui.memberGroupSelect.value = selectedId;
+      }
+      if (
+        ui.messageGroupSelect &&
+        [...ui.messageGroupSelect.options].some((opt) => opt.value === selectedId)
+      ) {
+        ui.messageGroupSelect.value = selectedId;
+      }
+    }
   }
 
   /**
@@ -442,6 +634,7 @@
   async function bootstrap() {
     await loadContractMetadata();
     registerEventListeners();
+    updateSignedInUI();
   }
 
   bootstrap().catch((error) => {

@@ -17,11 +17,15 @@
   <p>
     Publish your encryption public key so other group members can share secrets.
   </p>
+  <p id="signInStatus" class="muted">Connect your wallet to check registration status.</p>
   <textarea id="publicKeyInput" rows="3" placeholder="Paste your public key"></textarea>
-  <button id="setPublicKey">Save Public Key</button>
+  <div class="button-row">
+    <button id="autoRegisterPublicKey">Sign in with MetaMask</button>
+    <button id="setPublicKey">Save Public Key</button>
+  </div>
 </section>
 
-<section class="card">
+<section class="card" data-requires-signin>
   <h2>Create Group</h2>
   <p>
     Define a group name and optional comma-separated initial members.
@@ -35,12 +39,14 @@
   <button id="createGroup">Create Group</button>
 </section>
 
-<section class="card">
+<section class="card" data-requires-signin>
   <h2>Manage Membership</h2>
   <p>
     Add or remove participants when you are the group creator.
   </p>
-  <input id="memberGroupId" type="number" placeholder="Group ID" />
+  <select id="memberGroupSelect">
+    <option value="">Select one of your groups</option>
+  </select>
   <input id="memberAddress" type="text" placeholder="0x..." />
   <div class="button-row">
     <button id="addMember">Add Member</button>
@@ -48,13 +54,15 @@
   </div>
 </section>
 
-<section class="card">
+<section class="card" data-requires-signin>
   <h2>Send Message</h2>
   <p>
     Messages are stored encrypted. Provide recipient addresses and their
     encrypted symmetric keys (comma separated, same order as recipients).
   </p>
-  <input id="messageGroupId" type="number" placeholder="Group ID" />
+  <select id="messageGroupSelect">
+    <option value="">Select one of your groups</option>
+  </select>
   <textarea
     id="messageContent"
     rows="3"
@@ -78,7 +86,7 @@
   <button id="sendMessage">Send Message</button>
 </section>
 
-<section class="card">
+<section class="card" data-requires-signin>
   <h2>Your Groups</h2>
   <p>
     Select a group to inspect members and messages.
@@ -87,7 +95,7 @@
   <div id="groupsList" class="list-panel"></div>
 </section>
 
-<section class="card">
+<section class="card" data-requires-signin>
   <h2>Group Messages</h2>
   <p>
     View encrypted content, keys, and confirmation status.
