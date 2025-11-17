@@ -638,7 +638,7 @@
       const messageHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(content));
 
       // Send message to each recipient individually
-      updateStatus(`Sending messages to ${recipients.length} recipient(s)...`);
+      updateStatus(`Preparing to send messages to ${recipients.length} recipient(s)...`);
       
       // Get group data once to access all recipient public keys
       const groupData = await loadGroup(groupId);
@@ -650,6 +650,9 @@
       // Encrypt the message content once with the symmetric key
       const encryptedContent = await encryptContent(content, symmetricKey);
       
+      let successCount = 0;
+      let failCount = 0;
+      
       for (let i = 0; i < recipients.length; i++) {
         const recipient = recipients[i];
         const recipientData = groupData.members.find(m => 
@@ -658,6 +661,7 @@
         
         if (!recipientData || !recipientData.publicKey) {
           updateStatus(`Error: Recipient ${recipient} does not have a public key. Skipping...`);
+          failCount++;
           continue;
         }
         
@@ -665,6 +669,10 @@
           // Encrypt the symmetric key with the recipient's public key
           const encryptedKey = encryptSymmetricKey(symmetricKeyBase64, recipientData.publicKey);
           
+          updateStatus(`Encrypting and sending message ${i + 1}/${recipients.length} to ${recipientData.name || recipient}...`);
+          
+          // Send the transaction - this will trigger MetaMask confirmation
+          // The sendMessage function is a state-changing function, so it requires a transaction
           const tx = await state.contract.sendMessage(
             groupId,
             recipient,
@@ -672,14 +680,35 @@
             encryptedKey,
             messageHash
           );
-          updateStatus(`Sending message ${i + 1}/${recipients.length}...`, { txHash: tx.hash });
-          await tx.wait(1);
+          
+          updateStatus(`Transaction submitted for message ${i + 1}/${recipients.length}. Please confirm in MetaMask...`, { txHash: tx.hash });
+          
+          // Wait for the transaction to be mined
+          const receipt = await tx.wait(1);
+          
+          updateStatus(`Message ${i + 1}/${recipients.length} sent successfully!`, { 
+            txHash: tx.hash,
+            blockNumber: receipt.blockNumber 
+          });
+          successCount++;
         } catch (error) {
-          updateStatus(`Failed to send message to ${recipient}: ${error.message}`);
+          if (error.code === 4001) {
+            updateStatus(`Message ${i + 1}/${recipients.length} cancelled by user in MetaMask.`);
+            failCount++;
+          } else {
+            updateStatus(`Failed to send message ${i + 1}/${recipients.length} to ${recipient}: ${error.message}`);
+            console.error("Send message error:", error);
+            failCount++;
+          }
+          // Continue with next recipient even if one fails
         }
       }
 
-      updateStatus(`Successfully sent ${recipients.length} message(s).`);
+      if (successCount > 0) {
+        updateStatus(`Successfully sent ${successCount} out of ${recipients.length} message(s).${failCount > 0 ? ` ${failCount} failed.` : ''}`);
+      } else {
+        updateStatus(`Failed to send any messages. Please check the errors above.`);
+      }
       
       // Clear form
       ui.messageContent.value = "";
@@ -797,8 +826,26 @@
         return;
       }
 
+      // Load messages, filtering out any that fail (user might not be authorized)
+      const loadedMessages = [];
       for (const messageId of messageIds) {
-        const details = await loadMessage(messageId);
+        try {
+          const details = await loadMessage(messageId);
+          loadedMessages.push(details);
+        } catch (error) {
+          // Skip messages the user is not authorized to view
+          console.warn(`Cannot load message ${messageId}: ${error.message}`);
+        }
+      }
+      
+      if (loadedMessages.length === 0 && messageIds.length > 0) {
+        ui.messagesList.innerHTML =
+          '<p class="muted">No messages available for you in this group.</p>';
+        return;
+      }
+      
+      // Render all successfully loaded messages
+      for (const details of loadedMessages) {
         await renderMessage(details);
       }
     } catch (error) {

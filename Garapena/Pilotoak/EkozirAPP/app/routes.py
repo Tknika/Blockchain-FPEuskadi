@@ -78,12 +78,13 @@ def group_detail(group_id: int) -> Response:
 
 @bp.route("/api/groups/<int:group_id>/messages", methods=["GET"])
 def group_messages(group_id: int) -> Response:
-    """Return message identifiers for the group."""
+    """Return message identifiers for the group that are relevant to the caller."""
     caller = request.args.get("caller")
     if not caller:
         return _json_response({"error": "caller parameter is required"}, status=400)
 
-    message_ids = ekozir_service.get_group_message_ids(group_id, caller)
+    # Get only messages where the caller is sender or recipient
+    message_ids = ekozir_service.get_user_messages_in_group(group_id, caller)
     return _json_response({"messageIds": message_ids})
 
 

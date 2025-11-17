@@ -82,6 +82,35 @@ def get_group_message_ids(group_id: int, caller: str) -> List[int]:
     )
 
 
+def get_user_messages_in_group(group_id: int, caller: str) -> List[int]:
+    """
+    Return all message IDs for a user in a group (both sent and received).
+
+    This combines sent and received messages to show all messages relevant to the user.
+    """
+    contract = get_contract()
+    checksum = _checksum(caller)
+    
+    sent_messages = list(
+        contract.functions.getGroupMessagesSentBy(group_id, checksum).call(
+            build_default_call_args(caller)
+        )
+    )
+    
+    received_messages = list(
+        contract.functions.getGroupMessagesReceivedBy(group_id, checksum).call(
+            build_default_call_args(caller)
+        )
+    )
+    
+    # Combine and deduplicate (in case there are duplicates, though there shouldn't be)
+    all_messages = list(set(sent_messages + received_messages))
+    # Sort by message ID (assuming higher IDs are newer)
+    all_messages.sort()
+    
+    return all_messages
+
+
 def get_message(message_id: int, caller: str) -> Dict[str, Any]:
     """
     Fetch a single message scoped to the caller (sender or recipient).
