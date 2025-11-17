@@ -49,19 +49,23 @@ def get_group(group_id: int) -> Dict[str, Any]:
 
 def get_group_member_public_keys(group_id: int, caller: str) -> List[Dict[str, str]]:
     """
-    Obtain each group member's published encryption key.
+    Obtain each group member's published encryption key and name.
 
-    The contract returns two parallel arrays (addresses and keys). They are
+    The contract returns three parallel arrays (addresses, names, and keys). They are
     zipped into a list of dictionaries for ease of use on the client side.
     """
     contract = get_contract()
-    result = contract.functions.getGroupMemberPublicKeys(group_id).call(
+    result = contract.functions.getGroupMemberInfo(group_id).call(
         build_default_call_args(caller)
     )
 
     members: List[str] = result[0]
-    keys: List[str] = result[1]
-    return [{"address": members[i], "publicKey": keys[i]} for i in range(len(members))]
+    names: List[str] = result[1]
+    keys: List[str] = result[2]
+    return [
+        {"address": members[i], "name": names[i], "publicKey": keys[i]}
+        for i in range(len(members))
+    ]
 
 
 def get_group_message_ids(group_id: int, caller: str) -> List[int]:
@@ -80,9 +84,9 @@ def get_group_message_ids(group_id: int, caller: str) -> List[int]:
 
 def get_message(message_id: int, caller: str) -> Dict[str, Any]:
     """
-    Fetch a single message scoped to the caller.
+    Fetch a single message scoped to the caller (sender or recipient).
 
-    Only the encrypted symmetric key for the caller is returned, mirroring the
+    The encrypted symmetric key is returned for the recipient, mirroring the
     smart contract implementation.
     """
     contract = get_contract()
@@ -94,49 +98,64 @@ def get_message(message_id: int, caller: str) -> Dict[str, Any]:
         "id": message[0],
         "groupId": message[1],
         "sender": message[2],
-        "encryptedContent": message[3],
-        "encryptedKey": message[4],
-        "timestamp": message[5],
-        "messageHash": message[6].hex(),
+        "recipient": message[3],
+        "encryptedContent": message[4],
+        "encryptedKey": message[5],
+        "timestamp": message[6],
+        "messageHash": message[7].hex(),
     }
 
 
 def get_message_confirmations(message_id: int, caller: str) -> List[Dict[str, Any]]:
     """
-    Return confirmation status for every participant that received the message.
+    Return confirmation status for the message.
 
-    The sender can use the endpoint to track delivery acknowledgements.
+    Only the sender or recipient can check the confirmation status.
     """
     contract = get_contract()
-    recipients, confirmations, timestamps = contract.functions.getAllMessageConfirmations(
+    confirmed, timestamp = contract.functions.getMessageConfirmation(
         message_id
     ).call(build_default_call_args(caller))
 
-    result: List[Dict[str, Any]] = []
-    for index, recipient in enumerate(recipients):
-        result.append(
-            {
-                "recipient": recipient,
-                "confirmed": confirmations[index],
-                "timestamp": timestamps[index],
-            }
-        )
-    return result
+    # Get message details to know who the recipient is
+    message = get_message(message_id, caller)
+    
+    return [
+        {
+            "recipient": message["recipient"],
+            "confirmed": confirmed,
+            "timestamp": timestamp,
+        }
+    ]
 
 
 def get_message_stats(message_id: int, caller: str) -> Dict[str, int]:
     """
-    Return aggregate confirmation statistics for the message sender.
+    Return confirmation statistics for the message.
+
+    Since messages are now individual (one recipient per message), we return
+    simple stats. Only the sender can see these stats.
     """
-    contract = get_contract()
-    totals = contract.functions.getMessageConfirmationStats(message_id).call(
-        build_default_call_args(caller)
-    )
-    return {
-        "totalRecipients": totals[0],
-        "confirmedCount": totals[1],
-        "pendingCount": totals[2],
-    }
+    try:
+        contract = get_contract()
+        confirmed, timestamp = contract.functions.getMessageConfirmation(
+            message_id
+        ).call(build_default_call_args(caller))
+        
+        message = get_message(message_id, caller)
+        
+        # Only sender can see stats
+        if message["sender"].lower() != caller.lower():
+            return {}
+        
+        return {
+            "totalRecipients": 1,
+            "confirmedCount": 1 if confirmed else 0,
+            "pendingCount": 0 if confirmed else 1,
+        }
+    except Exception:
+        # If caller is not sender or recipient, return empty stats
+        return {}
 
 
 

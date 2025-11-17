@@ -14,7 +14,6 @@ contract Ekozir {
         address creator;
         address[] members;
         mapping(address => bool) isMember;
-        mapping(address => string) memberPublicKeys; // Optional: store public keys for encryption
         uint256 messageCount;
         bool exists;
         uint256 createdAt;
@@ -25,11 +24,11 @@ contract Ekozir {
         uint256 id;
         uint256 groupId;
         address sender;
+        address recipient; // Single recipient for individual messages
         string encryptedContent; // Encrypted message content (encrypted with symmetric key)
-        mapping(address => string) encryptedKeys; // Symmetric key encrypted for each member
-        address[] keyRecipients; // Addresses for whom keys are encrypted
-        mapping(address => bool) confirmations; // Track if each recipient confirmed receiving the message
-        mapping(address => uint256) confirmationTimestamps; // When each recipient confirmed
+        string encryptedKey; // Symmetric key encrypted for the recipient
+        bool confirmed; // Track if recipient confirmed receiving the message
+        uint256 confirmationTimestamp; // When the recipient confirmed
         uint256 timestamp;
         bytes32 messageHash; // Hash for integrity verification
     }
@@ -43,6 +42,7 @@ contract Ekozir {
     mapping(uint256 => uint256[]) public groupMessages; // groupId => messageIds[]
     mapping(address => uint256[]) public userGroups; // user => groupIds[]
     mapping(address => string) public userPublicKeys; // user => publicKey
+    mapping(address => string) public userNames; // user => name
     
     // Mapping from group ID to user address to their sent messages in that group
     mapping(uint256 => mapping(address => uint256[])) private groupUserSentMessages;
@@ -57,16 +57,10 @@ contract Ekozir {
     event GroupCreated(uint256 indexed groupId, string name, address indexed creator, uint256 timestamp);
     event MemberAdded(uint256 indexed groupId, address indexed member, address indexed addedBy);
     event MemberRemoved(uint256 indexed groupId, address indexed member, address indexed removedBy);
-    event MessageSent(uint256 indexed messageId, uint256 indexed groupId, address indexed sender, uint256 timestamp);
+    event MessageSent(uint256 indexed messageId, uint256 indexed groupId, address indexed sender, address recipient, uint256 timestamp);
     event MessageConfirmed(uint256 indexed messageId, uint256 indexed groupId, address indexed recipient, uint256 timestamp);
+    event UserSignedUp(address indexed user, string publicKey, string name);
     event PublicKeyUpdated(address indexed user, string publicKey);
-    event MessageTraced(
-        uint256 indexed groupId,
-        address indexed sender,
-        address indexed recipient,
-        uint256 messageId,
-        uint256 timestamp
-    );
     
     // Modifiers
     modifier groupExists(uint256 _groupId) {
@@ -85,11 +79,25 @@ contract Ekozir {
     }
     
     /**
-     * @dev Set or update user's public key for encryption purposes
+     * @dev Sign up a user with both public key and name
+     * @param _publicKey The user's public key in string format
+     * @param _name The user's name
+     */
+    function signUp(string memory _publicKey, string memory _name) external {
+        require(bytes(_publicKey).length > 0, "Public key cannot be empty");
+        require(bytes(_name).length > 0, "Name cannot be empty");
+        userPublicKeys[msg.sender] = _publicKey;
+        userNames[msg.sender] = _name;
+        emit UserSignedUp(msg.sender, _publicKey, _name);
+    }
+    
+    /**
+     * @dev Set or update user's public key for encryption purposes (kept for backward compatibility)
      * @param _publicKey The user's public key in string format
      */
     function setPublicKey(string memory _publicKey) external {
         require(bytes(_publicKey).length > 0, "Public key cannot be empty");
+        require(bytes(userNames[msg.sender]).length > 0, "User must sign up first with name");
         userPublicKeys[msg.sender] = _publicKey;
         emit PublicKeyUpdated(msg.sender, _publicKey);
     }
@@ -118,23 +126,17 @@ contract Ekozir {
         newGroup.isMember[msg.sender] = true;
         userGroups[msg.sender].push(newGroupId);
         
-        // Add creator's public key if available
-        if (bytes(userPublicKeys[msg.sender]).length > 0) {
-            newGroup.memberPublicKeys[msg.sender] = userPublicKeys[msg.sender];
-        }
-        
         // Add initial members
         for (uint256 i = 0; i < _initialMembers.length; i++) {
             address member = _initialMembers[i];
             if (member != msg.sender && member != address(0) && !newGroup.isMember[member]) {
+                // Verify member has signed up (has both public key and name)
+                require(bytes(userPublicKeys[member]).length > 0, "Member must have a public key");
+                require(bytes(userNames[member]).length > 0, "Member must have a name");
+                
                 newGroup.members.push(member);
                 newGroup.isMember[member] = true;
                 userGroups[member].push(newGroupId);
-                
-                // Add member's public key if available
-                if (bytes(userPublicKeys[member]).length > 0) {
-                    newGroup.memberPublicKeys[member] = userPublicKeys[member];
-                }
                 
                 emit MemberAdded(newGroupId, member, msg.sender);
             }
@@ -152,16 +154,13 @@ contract Ekozir {
     function addMember(uint256 _groupId, address _member) external groupExists(_groupId) onlyGroupCreator(_groupId) {
         require(_member != address(0), "Invalid member address");
         require(!groups[_groupId].isMember[_member], "Address is already a member");
+        require(bytes(userPublicKeys[_member]).length > 0, "Member must have a public key");
+        require(bytes(userNames[_member]).length > 0, "Member must have a name");
         
         Group storage group = groups[_groupId];
         group.members.push(_member);
         group.isMember[_member] = true;
         userGroups[_member].push(_groupId);
-        
-        // Add member's public key if available
-        if (bytes(userPublicKeys[_member]).length > 0) {
-            group.memberPublicKeys[_member] = userPublicKeys[_member];
-        }
         
         emit MemberAdded(_groupId, _member, msg.sender);
     }
@@ -197,41 +196,32 @@ contract Ekozir {
             }
         }
         
-        // Remove public key from group
-        delete group.memberPublicKeys[_member];
-        
         emit MemberRemoved(_groupId, _member, msg.sender);
     }
     
     /**
-     * @dev Send an encrypted message to a group
+     * @dev Send an encrypted message to a single recipient in a group
      * @param _groupId The ID of the group
+     * @param _recipient Address of the recipient
      * @param _encryptedContent The encrypted message content (encrypted with symmetric key)
-     * @param _recipients Array of recipient addresses (sender will be automatically included)
-     * @param _encryptedKeys Array of symmetric keys encrypted for each recipient
-     * @param _senderEncryptedKey The symmetric key encrypted for the sender
+     * @param _encryptedKey The symmetric key encrypted for the recipient
      * @param _messageHash Hash of the original message for integrity
      */
     function sendMessage(
         uint256 _groupId,
+        address _recipient,
         string memory _encryptedContent,
-        address[] memory _recipients,
-        string[] memory _encryptedKeys,
-        string memory _senderEncryptedKey,
+        string memory _encryptedKey,
         bytes32 _messageHash
     ) external groupExists(_groupId) onlyGroupMember(_groupId) {
+        require(_recipient != address(0), "Invalid recipient address");
+        require(_recipient != msg.sender, "Cannot send message to yourself");
         require(bytes(_encryptedContent).length > 0, "Message content cannot be empty");
-        require(_recipients.length == _encryptedKeys.length, "Recipients and keys arrays must have same length");
-        require(_recipients.length > 0, "Must have at least one recipient");
-        require(bytes(_senderEncryptedKey).length > 0, "Sender encrypted key cannot be empty");
+        require(bytes(_encryptedKey).length > 0, "Encrypted key cannot be empty");
         
-        // Verify all recipients are group members and sender is not in recipients list
+        // Verify recipient is a group member
         Group storage group = groups[_groupId];
-        for (uint256 i = 0; i < _recipients.length; i++) {
-            require(group.isMember[_recipients[i]], "All recipients must be group members");
-            require(bytes(_encryptedKeys[i]).length > 0, "Encrypted key cannot be empty");
-            require(_recipients[i] != msg.sender, "Sender should not be included in recipients array");
-        }
+        require(group.isMember[_recipient], "Recipient must be a group member");
         
         _messageCounter++;
         uint256 newMessageId = _messageCounter;
@@ -240,35 +230,23 @@ contract Ekozir {
         newMessage.id = newMessageId;
         newMessage.groupId = _groupId;
         newMessage.sender = msg.sender;
+        newMessage.recipient = _recipient;
         newMessage.encryptedContent = _encryptedContent;
+        newMessage.encryptedKey = _encryptedKey;
         newMessage.timestamp = block.timestamp;
         newMessage.messageHash = _messageHash;
+        newMessage.confirmed = false;
         
-        // Store sender's encrypted key first
-        newMessage.encryptedKeys[msg.sender] = _senderEncryptedKey;
-        newMessage.keyRecipients.push(msg.sender);
-        
-        // Store encrypted keys for each recipient and update message tracking
-        for (uint256 i = 0; i < _recipients.length; i++) {
-            newMessage.encryptedKeys[_recipients[i]] = _encryptedKeys[i];
-            newMessage.keyRecipients.push(_recipients[i]);
-            
-            // Update group-specific message tracking for this recipient
-            groupUserReceivedMessages[_groupId][_recipients[i]].push(newMessageId);
-            groupSenderRecipientMessages[_groupId][msg.sender][_recipients[i]].push(newMessageId);
-            
-            // Emit trace event for each recipient with optimized parameter order
-            emit MessageTraced(_groupId, msg.sender, _recipients[i], newMessageId, block.timestamp);
-        }
-        
-        // Update sender's group-specific message tracking
+        // Update group-specific message tracking
         groupUserSentMessages[_groupId][msg.sender].push(newMessageId);
+        groupUserReceivedMessages[_groupId][_recipient].push(newMessageId);
+        groupSenderRecipientMessages[_groupId][msg.sender][_recipient].push(newMessageId);
         
         // Add to group messages
         groupMessages[_groupId].push(newMessageId);
         groups[_groupId].messageCount++;
         
-        emit MessageSent(newMessageId, _groupId, msg.sender, block.timestamp);
+        emit MessageSent(newMessageId, _groupId, msg.sender, _recipient, block.timestamp);
     }
     
     /**
@@ -301,34 +279,38 @@ contract Ekozir {
     }
     
     /**
-     * @dev Get member's public key within a group
-     * @param _groupId The ID of the group
-     * @param _member Address of the member
-     * @return publicKey The member's public key
+     * @dev Get user's name
+     * @param _user Address of the user
+     * @return name The user's name
      */
-    function getMemberPublicKey(uint256 _groupId, address _member) external view 
-        groupExists(_groupId) onlyGroupMember(_groupId) returns (string memory) {
-        require(groups[_groupId].isMember[_member], "Address is not a group member");
-        return groups[_groupId].memberPublicKeys[_member];
+    function getUserName(address _user) external view returns (string memory) {
+        return userNames[_user];
     }
     
     /**
-     * @dev Get all public keys of group members
+     * @dev Get all member information (addresses, names, public keys) for a group
      * @param _groupId The ID of the group
      * @return members Array of member addresses
+     * @return names Array of corresponding names
      * @return publicKeys Array of corresponding public keys
      */
-    function getGroupMemberPublicKeys(uint256 _groupId) external view 
-        groupExists(_groupId) onlyGroupMember(_groupId) returns (address[] memory, string[] memory) {
+    function getGroupMemberInfo(uint256 _groupId) external view 
+        groupExists(_groupId) onlyGroupMember(_groupId) returns (
+            address[] memory members,
+            string[] memory names,
+            string[] memory publicKeys
+        ) {
         Group storage group = groups[_groupId];
-        address[] memory members = group.members;
-        string[] memory publicKeys = new string[](members.length);
+        address[] memory memberAddresses = group.members;
+        string[] memory memberNames = new string[](memberAddresses.length);
+        string[] memory memberPublicKeys = new string[](memberAddresses.length);
         
-        for (uint256 i = 0; i < members.length; i++) {
-            publicKeys[i] = group.memberPublicKeys[members[i]];
+        for (uint256 i = 0; i < memberAddresses.length; i++) {
+            memberNames[i] = userNames[memberAddresses[i]];
+            memberPublicKeys[i] = userPublicKeys[memberAddresses[i]];
         }
         
-        return (members, publicKeys);
+        return (memberAddresses, memberNames, memberPublicKeys);
     }
     
     /**
@@ -342,13 +324,14 @@ contract Ekozir {
     }
     
     /**
-     * @dev Get a specific message (only for group members)
+     * @dev Get a specific message (only for sender or recipient)
      * @param _messageId The ID of the message
      * @return id Message ID
      * @return groupId Group ID
      * @return sender Sender address
+     * @return recipient Recipient address
      * @return encryptedContent Encrypted message content
-     * @return encryptedKey Encrypted symmetric key for the caller
+     * @return encryptedKey Encrypted symmetric key for the recipient
      * @return timestamp Message timestamp
      * @return messageHash Message hash for integrity
      */
@@ -356,6 +339,7 @@ contract Ekozir {
         uint256 id,
         uint256 groupId,
         address sender,
+        address recipient,
         string memory encryptedContent,
         string memory encryptedKey,
         uint256 timestamp,
@@ -363,47 +347,35 @@ contract Ekozir {
     ) {
         require(_messageId > 0 && _messageId <= _messageCounter, "Message does not exist");
         Message storage message = messages[_messageId];
-        require(groups[message.groupId].isMember[msg.sender], "Not authorized to read this message");
+        require(
+            message.sender == msg.sender || message.recipient == msg.sender,
+            "Not authorized to read this message"
+        );
         
         return (
             message.id,
             message.groupId,
             message.sender,
+            message.recipient,
             message.encryptedContent,
-            message.encryptedKeys[msg.sender], // Only return the key encrypted for this user
+            message.encryptedKey,
             message.timestamp,
             message.messageHash
         );
     }
     
     /**
-     * @dev Get the encrypted key for a specific message (only for authorized recipients)
-     * @param _messageId The ID of the message
-     * @return encryptedKey The symmetric key encrypted for the caller
-     */
-    function getMessageKey(uint256 _messageId) external view returns (string memory) {
-        require(_messageId > 0 && _messageId <= _messageCounter, "Message does not exist");
-        Message storage message = messages[_messageId];
-        require(groups[message.groupId].isMember[msg.sender], "Not authorized to read this message");
-        require(bytes(message.encryptedKeys[msg.sender]).length > 0, "No key available for this user");
-        
-        return message.encryptedKeys[msg.sender];
-    }
-    
-    /**
-     * @dev Confirm reception of a message (only for intended recipients, not the sender)
+     * @dev Confirm reception of a message (only for the recipient)
      * @param _messageId The ID of the message to confirm
      */
     function confirmMessageReception(uint256 _messageId) external {
         require(_messageId > 0 && _messageId <= _messageCounter, "Message does not exist");
         Message storage message = messages[_messageId];
-        require(groups[message.groupId].isMember[msg.sender], "Not a group member");
-        require(message.sender != msg.sender, "Senders cannot confirm their own messages");
-        require(bytes(message.encryptedKeys[msg.sender]).length > 0, "You are not a recipient of this message");
-        require(!message.confirmations[msg.sender], "Message already confirmed");
+        require(message.recipient == msg.sender, "Only the recipient can confirm this message");
+        require(!message.confirmed, "Message already confirmed");
         
-        message.confirmations[msg.sender] = true;
-        message.confirmationTimestamps[msg.sender] = block.timestamp;
+        message.confirmed = true;
+        message.confirmationTimestamp = block.timestamp;
         
         emit MessageConfirmed(_messageId, message.groupId, msg.sender, block.timestamp);
     }
@@ -444,102 +416,25 @@ contract Ekozir {
     }
     
     /**
-     * @dev Check if a specific recipient has confirmed a message
+     * @dev Check if a message has been confirmed (only sender or recipient can check)
      * @param _messageId The ID of the message
-     * @param _recipient The address of the recipient to check
-     * @return confirmed True if the recipient has confirmed the message
+     * @return confirmed True if the message has been confirmed
      * @return timestamp When the confirmation was made (0 if not confirmed)
      */
-    function getMessageConfirmation(uint256 _messageId, address _recipient) external view returns (bool confirmed, uint256 timestamp) {
+    function getMessageConfirmation(uint256 _messageId) external view returns (bool confirmed, uint256 timestamp) {
         require(_messageId > 0 && _messageId <= _messageCounter, "Message does not exist");
         Message storage message = messages[_messageId];
         
-        // Only allow group members to check confirmations
-        require(groups[message.groupId].isMember[msg.sender], "Not a group member");
+        // Only allow sender or recipient to check confirmation
+        require(
+            message.sender == msg.sender || message.recipient == msg.sender,
+            "Not authorized to check this message"
+        );
         
         return (
-            message.confirmations[_recipient],
-            message.confirmationTimestamps[_recipient]
+            message.confirmed,
+            message.confirmationTimestamp
         );
-    }
-    
-    /**
-     * @dev Get confirmation status for all recipients of a message
-     * @param _messageId The ID of the message
-     * @return recipients Array of recipient addresses
-     * @return confirmations Array of confirmation statuses
-     * @return timestamps Array of confirmation timestamps
-     */
-    function getAllMessageConfirmations(uint256 _messageId) external view returns (
-        address[] memory recipients,
-        bool[] memory confirmations,
-        uint256[] memory timestamps
-    ) {
-        require(_messageId > 0 && _messageId <= _messageCounter, "Message does not exist");
-        Message storage message = messages[_messageId];
-        
-        // Only allow group members to check confirmations
-        require(groups[message.groupId].isMember[msg.sender], "Not a group member");
-        
-        recipients = message.keyRecipients;
-        confirmations = new bool[](recipients.length);
-        timestamps = new uint256[](recipients.length);
-        
-        for (uint256 i = 0; i < recipients.length; i++) {
-            confirmations[i] = message.confirmations[recipients[i]];
-            timestamps[i] = message.confirmationTimestamps[recipients[i]];
-        }
-        
-        return (recipients, confirmations, timestamps);
-    }
-    
-    /**
-     * @dev Check if the caller has confirmed a specific message
-     * @param _messageId The ID of the message
-     * @return confirmed True if the caller has confirmed the message
-     * @return timestamp When the confirmation was made (0 if not confirmed)
-     */
-    function getMyConfirmation(uint256 _messageId) external view returns (bool confirmed, uint256 timestamp) {
-        require(_messageId > 0 && _messageId <= _messageCounter, "Message does not exist");
-        Message storage message = messages[_messageId];
-        require(groups[message.groupId].isMember[msg.sender], "Not a group member");
-        
-        return (
-            message.confirmations[msg.sender],
-            message.confirmationTimestamps[msg.sender]
-        );
-    }
-    
-    /**
-     * @dev Get confirmation statistics for a message (sender only)
-     * @param _messageId The ID of the message
-     * @return totalRecipients Total number of recipients
-     * @return confirmedCount Number of recipients who confirmed
-     * @return pendingCount Number of recipients who haven't confirmed
-     */
-    function getMessageConfirmationStats(uint256 _messageId) external view returns (
-        uint256 totalRecipients,
-        uint256 confirmedCount,
-        uint256 pendingCount
-    ) {
-        require(_messageId > 0 && _messageId <= _messageCounter, "Message does not exist");
-        Message storage message = messages[_messageId];
-        
-        // Only allow the sender to check detailed stats
-        require(message.sender == msg.sender, "Only message sender can view confirmation stats");
-        
-        totalRecipients = message.keyRecipients.length;
-        confirmedCount = 0;
-        
-        for (uint256 i = 0; i < totalRecipients; i++) {
-            if (message.confirmations[message.keyRecipients[i]]) {
-                confirmedCount++;
-            }
-        }
-        
-        pendingCount = totalRecipients - confirmedCount;
-        
-        return (totalRecipients, confirmedCount, pendingCount);
     }
     
     /**

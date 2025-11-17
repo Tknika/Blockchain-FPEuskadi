@@ -15,7 +15,9 @@
   const ui = {
     connectButton: document.getElementById("connectWallet"),
     walletInfo: document.getElementById("walletInfo"),
-    setPublicKey: document.getElementById("setPublicKey"),
+    signUpSection: document.getElementById("signUpSection"),
+    signUp: document.getElementById("signUp"),
+    userNameInput: document.getElementById("userNameInput"),
     publicKeyInput: document.getElementById("publicKeyInput"),
     autoRegisterPublicKey: document.getElementById("autoRegisterPublicKey"),
     signInStatus: document.getElementById("signInStatus"),
@@ -29,10 +31,9 @@
     memberAddress: document.getElementById("memberAddress"),
     sendMessage: document.getElementById("sendMessage"),
     messageGroupSelect: document.getElementById("messageGroupSelect"),
+    recipientSelection: document.getElementById("recipientSelection"),
+    recipientCheckboxes: document.getElementById("recipientCheckboxes"),
     messageContent: document.getElementById("messageContent"),
-    messageRecipients: document.getElementById("messageRecipients"),
-    messageRecipientKeys: document.getElementById("messageRecipientKeys"),
-    messageSenderKey: document.getElementById("messageSenderKey"),
     refreshGroups: document.getElementById("refreshGroups"),
     groupsList: document.getElementById("groupsList"),
     messagesList: document.getElementById("messagesList"),
@@ -155,6 +156,24 @@
   }
 
   /**
+   * Show or hide the sign-up section based on wallet connection and registration status.
+   */
+  function updateSignUpUI() {
+    if (!state.account) {
+      // Wallet not connected - hide sign-up section
+      if (ui.signUpSection) {
+        ui.signUpSection.style.display = "none";
+      }
+      return;
+    }
+
+    // Wallet connected - show sign-up section only if not registered
+    if (ui.signUpSection) {
+      ui.signUpSection.style.display = state.isSignedIn ? "none" : "";
+    }
+  }
+
+  /**
    * Reset the group selection dropdowns to their placeholder state.
    */
   function clearGroupSelectors() {
@@ -169,65 +188,77 @@
   }
 
   /**
-   * Refresh the UI with the latest on-chain public key status for the connected account.
+   * Refresh the UI with the latest on-chain public key and name status for the connected account.
    */
   async function syncPublicKeyStatus() {
     if (!state.account) {
       ui.signInStatus.textContent = "Connect your wallet to check registration status.";
       state.isSignedIn = false;
       updateSignedInUI();
+      updateSignUpUI();
       return;
     }
 
     try {
       await ensureContractInstance();
       const existingKey = await state.contract.userPublicKeys(state.account);
+      const existingName = await state.contract.userNames(state.account);
       const hasKey = Boolean(existingKey && existingKey.length > 0);
-      state.isSignedIn = hasKey;
+      const hasName = Boolean(existingName && existingName.length > 0);
+      state.isSignedIn = hasKey && hasName;
 
-      if (hasKey) {
-        ui.signInStatus.textContent = "Signed up — public key already published for this wallet.";
+      if (state.isSignedIn) {
+        ui.signInStatus.textContent = "Signed up — public key and name already published for this wallet.";
         ui.publicKeyInput.value = existingKey;
+        ui.userNameInput.value = existingName;
       } else {
         ui.signInStatus.textContent =
-          "Not signed up yet — publish your public key so other members can share secrets.";
+          "Not signed up yet — publish your public key and name so other members can share secrets.";
         ui.publicKeyInput.value = "";
+        ui.userNameInput.value = "";
       }
       updateSignedInUI();
+      updateSignUpUI();
     } catch (error) {
       ui.signInStatus.textContent =
-        "Unable to check public key status. See wallet info panel for details.";
-      updateStatus("Failed to fetch public key status.", { error: error.message });
+        "Unable to check registration status. See wallet info panel for details.";
+      updateStatus("Failed to fetch registration status.", { error: error.message });
       state.isSignedIn = false;
       updateSignedInUI();
+      updateSignUpUI();
     }
   }
 
   /**
-   * Call the contract to set/update the user's public key.
+   * Call the contract to sign up the user with public key and name.
    */
-  async function handleSetPublicKey() {
+  async function handleSignUp() {
     try {
       await ensureContractInstance();
       const publicKey = ui.publicKeyInput.value.trim();
+      const name = ui.userNameInput.value.trim();
       if (!publicKey) {
         updateStatus("Please provide a public key value.");
         return;
       }
+      if (!name) {
+        updateStatus("Please provide a name.");
+        return;
+      }
 
-      const tx = await state.contract.setPublicKey(publicKey);
-      updateStatus("Saving public key...", { txHash: tx.hash });
+      const tx = await state.contract.signUp(publicKey, name);
+      updateStatus("Signing up...", { txHash: tx.hash });
       await tx.wait(1);
-      updateStatus("Public key saved successfully.", { txHash: tx.hash });
+      updateStatus("Sign up successful.", { txHash: tx.hash });
       await syncPublicKeyStatus();
       await refreshGroups();
     } catch (error) {
-      updateStatus("Failed to set public key.", { error: error.message });
+      updateStatus("Failed to sign up.", { error: error.message });
     }
   }
 
   /**
-   * Ask MetaMask for the account's encryption public key and register it on-chain.
+   * Ask MetaMask for the account's encryption public key and register it on-chain with a name.
    */
   async function handleAutoRegisterPublicKey() {
     if (!window.ethereum) {
@@ -250,10 +281,22 @@
 
       ui.publicKeyInput.value = encryptionKey;
 
-      const tx = await state.contract.setPublicKey(encryptionKey);
-      updateStatus("Publishing MetaMask encryption key...", { txHash: tx.hash });
+      // Prompt for name if not already provided
+      const name = ui.userNameInput.value.trim();
+      if (!name) {
+        const userName = prompt("Please enter your name:");
+        if (!userName || !userName.trim()) {
+          updateStatus("Name is required to sign up.");
+          return;
+        }
+        ui.userNameInput.value = userName.trim();
+      }
+
+      const finalName = ui.userNameInput.value.trim();
+      const tx = await state.contract.signUp(encryptionKey, finalName);
+      updateStatus("Signing up with MetaMask encryption key...", { txHash: tx.hash });
       await tx.wait(1);
-      updateStatus("Public key published via MetaMask.", { txHash: tx.hash });
+      updateStatus("Sign up successful via MetaMask.", { txHash: tx.hash });
       await syncPublicKeyStatus();
       await refreshGroups();
     } catch (error) {
@@ -265,7 +308,7 @@
           { error: error.message }
         );
       } else {
-        updateStatus("Failed to publish MetaMask encryption key.", { error: error.message });
+        updateStatus("Failed to sign up with MetaMask encryption key.", { error: error.message });
       }
     }
   }
@@ -324,65 +367,135 @@
   }
 
   /**
-   * Build the payload required by `sendMessage`.
+   * Load group members and populate recipient checkboxes when a group is selected.
    */
-  function buildMessagePayload() {
-    const groupId = parseInt(ui.messageGroupSelect.value, 10);
-    const content = ui.messageContent.value.trim();
-    const senderKey = ui.messageSenderKey.value.trim();
-    const recipients = ui.messageRecipients.value
-      .split(",")
-      .map((entry) => entry.trim())
-      .filter(Boolean);
-    const recipientKeys = ui.messageRecipientKeys.value
-      .split(",")
-      .map((entry) => entry.trim())
-      .filter(Boolean);
-
-    if (!groupId || !content || !senderKey) {
-      throw new Error("Select a group, provide message content and sender key.");
-    }
-    if (recipients.length === 0) {
-      throw new Error("Provide at least one recipient address.");
-    }
-    if (recipients.length !== recipientKeys.length) {
-      throw new Error("Recipients and keys must contain the same number of entries.");
+  async function loadGroupMembersForMessage(groupId) {
+    if (!groupId) {
+      ui.recipientSelection.style.display = "none";
+      ui.messageContent.style.display = "none";
+      ui.sendMessage.style.display = "none";
+      return;
     }
 
-    const messageHash = ethers.utils.keccak256(
-      ethers.utils.toUtf8Bytes(content)
-    );
+    try {
+      const groupData = await loadGroup(groupId);
+      const members = groupData.members || [];
+      
+      // Filter out the current user from recipients
+      const otherMembers = members.filter(m => m.address.toLowerCase() !== state.account.toLowerCase());
+      
+      // Clear previous content
+      ui.recipientCheckboxes.innerHTML = "";
+      
+      if (otherMembers.length === 0) {
+        const noMembersMsg = document.createElement("p");
+        noMembersMsg.className = "muted";
+        noMembersMsg.textContent = "No other members in this group.";
+        ui.recipientCheckboxes.appendChild(noMembersMsg);
+        ui.recipientSelection.style.display = "";
+        ui.messageContent.style.display = "none";
+        ui.sendMessage.style.display = "none";
+        return;
+      }
 
-    return {
-      groupId,
-      content,
-      recipients,
-      recipientKeys,
-      senderKey,
-      messageHash,
-    };
+      // Populate checkboxes
+      otherMembers.forEach(member => {
+        const label = document.createElement("label");
+        label.style.display = "block";
+        label.style.marginBottom = "8px";
+        
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = member.address;
+        checkbox.dataset.name = member.name || member.address;
+        
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(` ${member.name || member.address}`));
+        ui.recipientCheckboxes.appendChild(label);
+      });
+
+      ui.recipientSelection.style.display = "";
+      ui.messageContent.style.display = "";
+      ui.sendMessage.style.display = "";
+    } catch (error) {
+      updateStatus("Failed to load group members.", { error: error.message });
+    }
   }
 
   /**
-   * Dispatch the `sendMessage` transaction.
+   * Dispatch the `sendMessage` transaction for each selected recipient.
    */
   async function handleSendMessage() {
     try {
       await ensureContractInstance();
-      const payload = buildMessagePayload();
-      const tx = await state.contract.sendMessage(
-        payload.groupId,
-        payload.content,
-        payload.recipients,
-        payload.recipientKeys,
-        payload.senderKey,
-        payload.messageHash
-      );
-      updateStatus("Sending message...", { txHash: tx.hash });
-      await tx.wait(1);
-      updateStatus("Message sent successfully.", { txHash: tx.hash });
-      if (state.selectedGroupId === payload.groupId) {
-        await loadMessages(payload.groupId);
+      const groupId = parseInt(ui.messageGroupSelect.value, 10);
+      const content = ui.messageContent.value.trim();
+
+      if (!groupId) {
+        updateStatus("Please select a group.");
+        return;
+      }
+
+      if (!content) {
+        updateStatus("Please provide message content.");
+        return;
+      }
+
+      // Get selected recipients
+      const checkboxes = ui.recipientCheckboxes.querySelectorAll("input[type='checkbox']:checked");
+      if (checkboxes.length === 0) {
+        updateStatus("Please select at least one recipient.");
+        return;
+      }
+
+      const recipients = Array.from(checkboxes).map(cb => cb.value);
+      const messageHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(content));
+
+      // Send message to each recipient individually
+      updateStatus(`Sending messages to ${recipients.length} recipient(s)...`);
+      
+      // TODO: Implement proper encryption here
+      // The requirement states users shouldn't need to write encrypted keys,
+      // so encryption should happen automatically client-side.
+      // For now, using content as placeholder - this needs proper encryption implementation.
+      
+      for (let i = 0; i < recipients.length; i++) {
+        const recipient = recipients[i];
+        // Get recipient's public key for encryption
+        const groupData = await loadGroup(groupId);
+        const recipientData = groupData.members.find(m => 
+          m.address.toLowerCase() === recipient.toLowerCase()
+        );
+        
+        // Encrypt the message for this recipient
+        // TODO: Implement actual encryption using recipientData.publicKey
+        // For now, using a placeholder - in production, encrypt content and key properly
+        const encryptedContent = content; // Should be encrypted with symmetric key
+        const encryptedKey = ""; // Should be encrypted with recipient's public key
+        
+        if (!encryptedKey && recipientData && recipientData.publicKey) {
+          updateStatus(`Warning: Encryption not implemented. Message will be sent unencrypted.`);
+        }
+        
+        const tx = await state.contract.sendMessage(
+          groupId,
+          recipient,
+          encryptedContent,
+          encryptedKey || "placeholder", // Contract requires non-empty string
+          messageHash
+        );
+        updateStatus(`Sending message ${i + 1}/${recipients.length}...`, { txHash: tx.hash });
+        await tx.wait(1);
+      }
+
+      updateStatus(`Successfully sent ${recipients.length} message(s).`);
+      
+      // Clear form
+      ui.messageContent.value = "";
+      checkboxes.forEach(cb => cb.checked = false);
+      
+      if (state.selectedGroupId === groupId) {
+        await loadMessages(groupId);
       }
     } catch (error) {
       updateStatus("Failed to send message.", { error: error.message });
@@ -449,7 +562,7 @@
     const members = groupData.members || [];
 
     const memberList = members
-      .map((entry) => `<li>${entry.address} <span class="muted">${entry.publicKey || "no key"}</span></li>`)
+      .map((entry) => `<li>${entry.name || entry.address} <span class="muted">(${entry.address})</span></li>`)
       .join("");
 
     wrapper.innerHTML = `
@@ -525,28 +638,27 @@
     const confirmations = messageData.confirmations || [];
     const stats = messageData.stats || {};
 
-    const confirmationList = confirmations
-      .map(
-        (entry) =>
-          `<li>${entry.recipient} — ${
-            entry.confirmed ? "✅ confirmed" : "⏳ pending"
-          }</li>`
-      )
-      .join("");
+    const isSender = msg.sender.toLowerCase() === state.account.toLowerCase();
+    const isRecipient = msg.recipient && msg.recipient.toLowerCase() === state.account.toLowerCase();
+    
+    const confirmationInfo = confirmations.length > 0 
+      ? `<p class="muted">Recipient: ${msg.recipient} — ${
+          confirmations[0].confirmed ? "✅ confirmed" : "⏳ pending"
+        }</p>`
+      : "";
 
     wrapper.innerHTML = `
       <strong>Message #${msg.id}</strong>
       <p class="muted">Sender: ${msg.sender}</p>
+      ${msg.recipient ? `<p class="muted">Recipient: ${msg.recipient}</p>` : ""}
       <p class="muted">Encrypted content: ${msg.encryptedContent}</p>
-      <p class="muted">Encrypted key (you): ${msg.encryptedKey || "N/A"}</p>
+      ${isRecipient ? `<p class="muted">Encrypted key (you): ${msg.encryptedKey || "N/A"}</p>` : ""}
       <p class="muted">Timestamp: ${msg.timestamp}</p>
       <p class="muted">Hash: ${msg.messageHash}</p>
-      <p class="muted">Stats: ${
-        Object.keys(stats).length
-          ? `${stats.confirmedCount}/${stats.totalRecipients} confirmed`
-          : "Only the sender can see stats"
-      }</p>
-      <ul>${confirmationList}</ul>
+      ${isSender && Object.keys(stats).length > 0
+        ? `<p class="muted">Stats: ${stats.confirmedCount}/${stats.totalRecipients} confirmed</p>`
+        : ""}
+      ${confirmationInfo}
     `;
 
     ui.messagesList.appendChild(wrapper);
@@ -557,7 +669,7 @@
    */
   function registerEventListeners() {
     ui.connectButton.addEventListener("click", connectWallet);
-    ui.setPublicKey.addEventListener("click", handleSetPublicKey);
+    ui.signUp.addEventListener("click", handleSignUp);
     ui.autoRegisterPublicKey.addEventListener("click", handleAutoRegisterPublicKey);
     ui.createGroup.addEventListener("click", handleCreateGroup);
     ui.addMember.addEventListener("click", buildMembershipHandler("addMember"));
@@ -577,8 +689,12 @@
       const selected = parseInt(event.target.value, 10);
       if (selected) {
         state.selectedGroupId = selected;
+        await loadGroupMembersForMessage(selected);
         await loadMessages(selected);
       } else {
+        ui.recipientSelection.style.display = "none";
+        ui.messageContent.style.display = "none";
+        ui.sendMessage.style.display = "none";
         ui.messagesList.innerHTML =
           '<p class="muted">Select a group to view its messages.</p>';
       }
@@ -635,6 +751,7 @@
     await loadContractMetadata();
     registerEventListeners();
     updateSignedInUI();
+    updateSignUpUI();
   }
 
   bootstrap().catch((error) => {

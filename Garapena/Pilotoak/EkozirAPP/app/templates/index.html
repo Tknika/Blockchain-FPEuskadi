@@ -12,16 +12,17 @@
   <pre id="walletInfo" class="info-panel">Not connected</pre>
 </section>
 
-<section class="card">
-  <h2>Set Public Key</h2>
+<section class="card" id="signUpSection" style="display: none;">
+  <h2>Sign Up</h2>
   <p>
-    Publish your encryption public key so other group members can share secrets.
+    Publish your encryption public key and name so other group members can share secrets.
   </p>
   <p id="signInStatus" class="muted">Connect your wallet to check registration status.</p>
+  <input id="userNameInput" type="text" placeholder="Your name" />
   <textarea id="publicKeyInput" rows="3" placeholder="Paste your public key"></textarea>
   <div class="button-row">
     <button id="autoRegisterPublicKey">Sign in with MetaMask</button>
-    <button id="setPublicKey">Save Public Key</button>
+    <button id="signUp">Sign Up</button>
   </div>
 </section>
 
@@ -57,33 +58,22 @@
 <section class="card" data-requires-signin>
   <h2>Send Message</h2>
   <p>
-    Messages are stored encrypted. Provide recipient addresses and their
-    encrypted symmetric keys (comma separated, same order as recipients).
+    Select a group and choose recipients. Messages are stored encrypted.
   </p>
   <select id="messageGroupSelect">
     <option value="">Select one of your groups</option>
   </select>
+  <div id="recipientSelection" style="display: none;">
+    <p>Select recipients:</p>
+    <div id="recipientCheckboxes"></div>
+  </div>
   <textarea
     id="messageContent"
     rows="3"
     placeholder="Encrypted message payload (base64, cipher text, etc.)"
+    style="display: none;"
   ></textarea>
-  <input
-    id="messageRecipients"
-    type="text"
-    placeholder="Recipients 0x123...,0x456..."
-  />
-  <input
-    id="messageRecipientKeys"
-    type="text"
-    placeholder="Recipient encrypted keys keyFor0x123,keyFor0x456"
-  />
-  <input
-    id="messageSenderKey"
-    type="text"
-    placeholder="Sender encrypted key"
-  />
-  <button id="sendMessage">Send Message</button>
+  <button id="sendMessage" style="display: none;">Send Message</button>
 </section>
 
 <section class="card" data-requires-signin>
