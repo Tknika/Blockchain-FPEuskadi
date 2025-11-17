@@ -1,0 +1,38 @@
+{
+  "genesis": {
+    "config": {
+      "chainId": 1337,
+      "londonBlock" : 0,
+      "zeroBaseFee": true,
+      "contractSizeLimit": 2147483647,
+      "qbft": {
+        "blockperiodseconds": 10,
+        "epochlength": 30000,
+        "requesttimeoutseconds": 20
+      }
+    },
+    "nonce": "0x0",
+    "timestamp": "0x58ee40ba",
+    "gasLimit": "0x1fffffffffffff",
+    "difficulty": "0x1",
+    "mixHash": "0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365",
+    "coinbase": "0x0000000000000000000000000000000000000000",
+    "alloc": {
+      "0x432132e8561785c33afe931762cf8eeb9c80e3ad": {
+        "balance": "90000000000000000000000"
+      },
+      "0xcb88953e60948e3a76fa658d65b7c2d5043c6409": {
+        "balance": "90000000000000000000000"
+      },
+      "0xdd76406b124f9e3ae9fbeb47e4d8dc0ab143902d": {
+        "balance": "90000000000000000000000"
+      }
+    }
+  },
+  "blockchain": {
+    "nodes": {
+      "generate": true,
+      "count": 1
+    }
+  }
+}

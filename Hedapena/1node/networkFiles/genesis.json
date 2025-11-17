@@ -2,8 +2,8 @@
   "config" : {
     "chainId" : 1337,
     "londonBlock" : 0,
-    "zeroBaseFee": true,
-    "contractSizeLimit": 2147483647,
+    "zeroBaseFee" : true,
+    "contractSizeLimit" : 2147483647,
     "qbft" : {
       "blockperiodseconds" : 10,
       "epochlength" : 30000,
@@ -27,5 +27,5 @@
       "balance" : "90000000000000000000000"
     }
   },
-  "extraData" : "0xf837a00000000000000000000000000000000000000000000000000000000000000000d594867e3dcc2e546ab8d62ab8b25e6800c328ca2dd8"
+  "extraData" : "0xf83aa00000000000000000000000000000000000000000000000000000000000000000d59464827109fe9d572b5fe8cbe59e27a92b1efece39c080c0"
 }

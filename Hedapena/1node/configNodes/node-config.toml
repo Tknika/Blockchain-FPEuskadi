@@ -1,0 +1,104 @@
+# Para saber componer las opciones correctamente en TOML en la tecnología Besu se ha utilizado
+# en el siguiente enlace:
+# https://besu.hyperledger.org/public-networks/reference/cli/options
+
+# Modo debug para los logs de Besu
+logging="DEBUG"
+# Node 1 configuration
+min-gas-price=0
+# Hecho por mi para la tabla [Node]
+data-storage-format="FOREST" # Necesario para privacidad (en posteriores versiones por defecto es "BONSAI")
+data-path="/var/lib/besu/QBFT-Network/Node/data" #The path to the Besu data directory. 
+#The default is the directory you installed Besu in, or /opt/besu/database if using the Besu Docker image.
+p2p-port="30303"
+p2p-host="0.0.0.0"
+
+# Hecho por mi para la tabla [RPC]
+rpc-http-enabled=true
+rpc-http-host="0.0.0.0" #To allow remote connections, set to 0.0.0.0.
+rpc-http-port="8545" #The port (TCP) on which HTTP JSON-RPC listens. The default is 8545
+# Como por ahora no hemos habilitado autenticación HTTP, eliminamos el acceso a ciertas API
+# ADMIN hay que dejar para que Chainlens funcione bien. ¿CAMBIAR de monitorización?
+rpc-http-api=["ADMIN","DEBUG","MINER","ETH","TXPOOL","NET","TRACE","WEB3","EEA","PRIV","PLUGINS","QBFT","PERM"]
+rpc-http-cors-origins=["all"] # A list of domain URLs for CORS validation. Listed domains can access the node using JSON-RPC. If your client interacts with Besu using a browser app (such as Remix or a block explorer), add the client domain to the list.
+# The default value is "none". If you do not list any domains, browser apps cannot interact with your Besu node.
+#rpc-ws-enabled=true #Enables or disables the WebSocket JSON-RPC service. The default is false
+#rpc-ws-host="0.0.0.0" #To allow remote connections, set to 0.0.0.0
+#rpc-ws-port="8546" #The port (TCP) on which WebSocket JSON-RPC listens. The default is 8546
+#rpc-ws-api=["ADMIN","DEBUG","MINER","ETH","TXPOOL","NET","TRACE","WEB3","EEA","PRIV","PLUGINS","QBFT","PERM"]
+
+# Hecho por mi para la tabla [Network]
+network-id="1" # The P2P network identifier.
+# Use this option to override the default network ID. The default value is the same 
+# as the chain ID defined in the genesis file.
+
+# Hecho por mi para la tabla [Genesis]
+genesis-file="/var/lib/besu/QBFT-Network/networkFiles/genesis.json"
+
+# Hecho por mi para la tabla [Metrics]
+metrics-enabled=true
+ # Enables or disables the metrics exporter. The default is false.
+#To enable the Prometheus monitoring and alerting service to access Hyperledger Besu metrics,
+#use the --metrics-enabled option.
+metrics-host="127.0.0.1" #The host on which Prometheus accesses Besu metrics. The metrics server respects the --host-allowlist option.
+#The default is 127.0.0.1.
+metrics-port=9545 #The port (TCP) on which Prometheus accesses Besu metrics. The default is 9545. Ports must be exposed appropriately
+
+# Hecho por mi para la tabla [Privacy]
+#privacy-enabled=true #Enables or disables private transactions. The default is false.
+# Esta ultima variable es parte de "Private networks" https://besu.hyperledger.org/private-networks/concepts/privacy#privacy-enabled-networks
+#specifies the Q2T server address of the Tessera node (Q2T in tessera.conf)
+# El siguiente parámetro como variable de entorno BESU_PRIVACY_URL para mantener este fichero único
+#privacy-url=http://tessera_nodeX:9102
+# Activamos autenticación solamente para RPC mediante WS por ahora
+#rpc-http-authentication-enabled=true
+#rpc-http-authentication-jwt-public-key-file="/var/lib/besu/QBFT-Network/networkFiles/TesseraKeys/publicRSAKeyOperator.pem"
+#rpc-ws-authentication-enabled=true
+#rpc-ws-authentication-jwt-public-key-file="/var/lib/besu/QBFT-Network/networkFiles/JWTkeys/publicRSAKeyOperator.pem"
+#privacy-multi-tenancy-enabled=true
+# Necesario si activamos privacidad y permisionado de cuentas: POR VARIABLE DE ENTORNO
+#privacy-marker-transaction-signing-key-file="/var/lib/besu/QBFT-Network/Node/data/key"
+
+host-allowlist=["*"]
+
+# bootnodes - si estos nodos están en static-nodes.json no hace falta ponerlos aquí.
+bootnodes=[]
+
+# Discovery at boot is set to a list of static files, but will also discover new nodes should they be added
+# static nodes
+#static-nodes-file="/var/lib/besu/QBFT-Network/networkFiles/static-nodes.json"
+discovery-enabled=false
+#permissions-nodes-config-file-enabled=true
+#permissions-nodes-config-file="/var/lib/besu/QBFT-Network/networkFiles/nodes_permissions_config.toml"
+
+# Tal vez sea demasiado restrictivo limitar el acceso a ciertas cuentas.
+#permissions-accounts-config-file-enabled=true
+#permissions-accounts-config-file="/var/lib/besu/QBFT-Network/networkFiles/accounts_permissions_config.toml"
+
+# Enables or disables random prioritization of incoming connections. Enable in small, stable networks to prevent closed groups of peers forming
+random-peer-priority-enabled=true
+# The minimum number of peers required before starting sync. The default is 5. Set to 0 for single-node operation
+sync-min-peers=0
+# The default is FULL when connecting to a private network by not using the --network option and specifying the --genesis-file option
+# For single-node networks, FULL sync mode allows the node to start producing blocks immediately
+sync-mode="FULL"
+# Enable fast sync can help with single-node networks, but FULL is recommended for QBFT
+# fast-sync-min-peers=0
+# Enables or disables using the --remote-connections-max-percentage option to limit the percentage of remote P2P connections initiated by peers. The default is true.
+# Disabled for single-node networks to allow the node to operate independently
+remote-connections-limit-enabled=false
+# Maximum number of P2P connections. For single-node, we can set this to 0 or a low number
+max-peers=0
+# Set to sequenced to use the sequenced transaction pool. The default is sequenced for the enterprise/private profile.
+tx-pool="SEQUENCED"
+# If this option is set to true, senders of transactions submitted via RPC are not prioritized over remote transactions in the transaction pool. The default is false.
+tx-pool-no-local-priority=true
+# The maximum percentage of transactions from a single sender kept in the transaction pool. Accepted values are in the range (0–1]. The default is .001, or 0.1% of transactions from a single sender to be kept in the pool.
+tx-pool-limit-by-account-percentage=0.15
+# The maximum number of allowed JSON-RPC HTTP connections. Once this limit is reached, incoming connections are rejected. The default is 80.
+rpc-http-max-active-connections=300
+# Enables or disables limiting the number of Bonsai Trie logs that are retained. When enabled, this limit is set to the value of --bonsai-historical-block-limit. The default is true, unless --sync-mode=FULL is set, in which case this option is disallowed and must be set to false.
+bonsai-limit-trie-logs-enabled=false
+
+# Monitorización (se ha implementado en docker-composeX.yml, se van a comentar al web server)
+# ethstats="besu_node1:asdf@ethstats:3000"
