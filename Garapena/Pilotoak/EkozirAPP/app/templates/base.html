@@ -13,6 +13,10 @@
     />
     <!-- Ethers.js powers MetaMask interactions -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <!-- eth-sig-util for ECIES encryption compatible with MetaMask -->
+    <!-- Try multiple CDN sources for compatibility -->
+    <script src="https://unpkg.com/eth-sig-util@5.0.0/dist/index.umd.min.js" 
+            onerror="console.error('Failed to load eth-sig-util from unpkg')"></script>
   </head>
   <body>
     <header class="app-header">

@@ -367,6 +367,192 @@
   }
 
   /**
+   * Generate a random symmetric key for AES encryption.
+   * @returns {Promise<CryptoKey>} The generated AES-GCM key
+   */
+  async function generateSymmetricKey() {
+    return await crypto.subtle.generateKey(
+      {
+        name: "AES-GCM",
+        length: 256,
+      },
+      true, // extractable
+      ["encrypt", "decrypt"]
+    );
+  }
+
+  /**
+   * Export a CryptoKey to a base64 string.
+   * @param {CryptoKey} key The key to export
+   * @returns {Promise<string>} Base64-encoded key
+   */
+  async function exportKey(key) {
+    const exported = await crypto.subtle.exportKey("raw", key);
+    const keyArray = Array.from(new Uint8Array(exported));
+    return btoa(String.fromCharCode(...keyArray));
+  }
+
+  /**
+   * Import a base64 string as a CryptoKey.
+   * @param {string} keyBase64 Base64-encoded key
+   * @returns {Promise<CryptoKey>} The imported key
+   */
+  async function importKey(keyBase64) {
+    const keyData = Uint8Array.from(atob(keyBase64), c => c.charCodeAt(0));
+    return await crypto.subtle.importKey(
+      "raw",
+      keyData,
+      { name: "AES-GCM", length: 256 },
+      true,
+      ["encrypt", "decrypt"]
+    );
+  }
+
+  /**
+   * Encrypt message content with AES-GCM.
+   * @param {string} plaintext The message to encrypt
+   * @param {CryptoKey} key The AES key
+   * @returns {Promise<string>} Base64-encoded encrypted data with IV
+   */
+  async function encryptContent(plaintext, key) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(plaintext);
+    
+    // Generate a random IV (12 bytes for AES-GCM)
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    
+    const encrypted = await crypto.subtle.encrypt(
+      {
+        name: "AES-GCM",
+        iv: iv,
+      },
+      key,
+      data
+    );
+    
+    // Combine IV and encrypted data, then encode as base64
+    const combined = new Uint8Array(iv.length + encrypted.byteLength);
+    combined.set(iv, 0);
+    combined.set(new Uint8Array(encrypted), iv.length);
+    
+    return btoa(String.fromCharCode(...combined));
+  }
+
+  /**
+   * Decrypt message content with AES-GCM.
+   * @param {string} encryptedData Base64-encoded encrypted data with IV
+   * @param {CryptoKey} key The AES key
+   * @returns {Promise<string>} Decrypted plaintext
+   */
+  async function decryptContent(encryptedData, key) {
+    const combined = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
+    
+    // Extract IV (first 12 bytes) and encrypted data
+    const iv = combined.slice(0, 12);
+    const encrypted = combined.slice(12);
+    
+    const decrypted = await crypto.subtle.decrypt(
+      {
+        name: "AES-GCM",
+        iv: iv,
+      },
+      key,
+      encrypted
+    );
+    
+    const decoder = new TextDecoder();
+    return decoder.decode(decrypted);
+  }
+
+  /**
+   * Encrypt a symmetric key with ECIES using recipient's public key.
+   * @param {string} symmetricKeyBase64 Base64-encoded symmetric key
+   * @param {string} recipientPublicKey The recipient's public key (MetaMask format)
+   * @returns {string} Encrypted key data (JSON string)
+   */
+  function encryptSymmetricKey(symmetricKeyBase64, recipientPublicKey) {
+    // Check if eth-sig-util is available (try different possible global names)
+    let sigUtil = null;
+    if (typeof EthSigUtil !== 'undefined') {
+      sigUtil = EthSigUtil;
+    } else if (typeof window.EthSigUtil !== 'undefined') {
+      sigUtil = window.EthSigUtil;
+    } else if (typeof ethSigUtil !== 'undefined') {
+      sigUtil = ethSigUtil;
+    } else if (typeof window.ethSigUtil !== 'undefined') {
+      sigUtil = window.ethSigUtil;
+    }
+    
+    if (!sigUtil) {
+      throw new Error('eth-sig-util library is not loaded. Please check the script tag.');
+    }
+    
+    // eth-sig-util expects the data to be encrypted as a hex string
+    // Convert base64 to hex
+    const keyBytes = Uint8Array.from(atob(symmetricKeyBase64), c => c.charCodeAt(0));
+    const keyHex = "0x" + Array.from(keyBytes)
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+    
+    // Use eth-sig-util's encrypt function (ECIES)
+    // The encrypt function signature: encrypt(publicKey, data, version)
+    // Different versions of eth-sig-util may export it differently
+    let encrypted;
+    try {
+      // Try different possible function locations
+      if (typeof sigUtil.encrypt === 'function') {
+        encrypted = sigUtil.encrypt(
+          recipientPublicKey,
+          { data: keyHex },
+          "x25519-xsalsa20-poly1305"
+        );
+      } else if (sigUtil.encryption && typeof sigUtil.encryption.encrypt === 'function') {
+        encrypted = sigUtil.encryption.encrypt(
+          recipientPublicKey,
+          { data: keyHex },
+          "x25519-xsalsa20-poly1305"
+        );
+      } else if (typeof sigUtil.encryptMessage === 'function') {
+        // Some versions use encryptMessage
+        encrypted = sigUtil.encryptMessage(recipientPublicKey, { data: keyHex });
+      } else {
+        // Log available properties for debugging
+        console.error('Available sigUtil properties:', Object.keys(sigUtil));
+        throw new Error('Could not find encrypt function in eth-sig-util. Available: ' + Object.keys(sigUtil).join(', '));
+      }
+    } catch (error) {
+      throw new Error(`Encryption failed: ${error.message}`);
+    }
+    
+    return JSON.stringify(encrypted);
+  }
+
+  /**
+   * Decrypt a symmetric key using MetaMask's decryption.
+   * @param {string} encryptedKeyData JSON string of encrypted key data
+   * @returns {Promise<string>} Base64-encoded decrypted symmetric key
+   */
+  async function decryptSymmetricKey(encryptedKeyData) {
+    if (!window.ethereum) {
+      throw new Error("MetaMask is not available");
+    }
+    
+    const encrypted = JSON.parse(encryptedKeyData);
+    
+    // Use MetaMask's eth_decrypt method
+    const decryptedHex = await window.ethereum.request({
+      method: "eth_decrypt",
+      params: [encrypted, state.account],
+    });
+    
+    // Convert hex to base64
+    const keyBytes = new Uint8Array(
+      decryptedHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16))
+    );
+    return btoa(String.fromCharCode(...keyBytes));
+  }
+
+  /**
    * Load group members and populate recipient checkboxes when a group is selected.
    */
   async function loadGroupMembersForMessage(groupId) {
@@ -454,38 +640,43 @@
       // Send message to each recipient individually
       updateStatus(`Sending messages to ${recipients.length} recipient(s)...`);
       
-      // TODO: Implement proper encryption here
-      // The requirement states users shouldn't need to write encrypted keys,
-      // so encryption should happen automatically client-side.
-      // For now, using content as placeholder - this needs proper encryption implementation.
+      // Get group data once to access all recipient public keys
+      const groupData = await loadGroup(groupId);
+      
+      // Generate a symmetric key for this message
+      const symmetricKey = await generateSymmetricKey();
+      const symmetricKeyBase64 = await exportKey(symmetricKey);
+      
+      // Encrypt the message content once with the symmetric key
+      const encryptedContent = await encryptContent(content, symmetricKey);
       
       for (let i = 0; i < recipients.length; i++) {
         const recipient = recipients[i];
-        // Get recipient's public key for encryption
-        const groupData = await loadGroup(groupId);
         const recipientData = groupData.members.find(m => 
           m.address.toLowerCase() === recipient.toLowerCase()
         );
         
-        // Encrypt the message for this recipient
-        // TODO: Implement actual encryption using recipientData.publicKey
-        // For now, using a placeholder - in production, encrypt content and key properly
-        const encryptedContent = content; // Should be encrypted with symmetric key
-        const encryptedKey = ""; // Should be encrypted with recipient's public key
-        
-        if (!encryptedKey && recipientData && recipientData.publicKey) {
-          updateStatus(`Warning: Encryption not implemented. Message will be sent unencrypted.`);
+        if (!recipientData || !recipientData.publicKey) {
+          updateStatus(`Error: Recipient ${recipient} does not have a public key. Skipping...`);
+          continue;
         }
         
-        const tx = await state.contract.sendMessage(
-          groupId,
-          recipient,
-          encryptedContent,
-          encryptedKey || "placeholder", // Contract requires non-empty string
-          messageHash
-        );
-        updateStatus(`Sending message ${i + 1}/${recipients.length}...`, { txHash: tx.hash });
-        await tx.wait(1);
+        try {
+          // Encrypt the symmetric key with the recipient's public key
+          const encryptedKey = encryptSymmetricKey(symmetricKeyBase64, recipientData.publicKey);
+          
+          const tx = await state.contract.sendMessage(
+            groupId,
+            recipient,
+            encryptedContent,
+            encryptedKey,
+            messageHash
+          );
+          updateStatus(`Sending message ${i + 1}/${recipients.length}...`, { txHash: tx.hash });
+          await tx.wait(1);
+        } catch (error) {
+          updateStatus(`Failed to send message to ${recipient}: ${error.message}`);
+        }
       }
 
       updateStatus(`Successfully sent ${recipients.length} message(s).`);
@@ -608,7 +799,7 @@
 
       for (const messageId of messageIds) {
         const details = await loadMessage(messageId);
-        renderMessage(details);
+        await renderMessage(details);
       }
     } catch (error) {
       updateStatus("Failed to load messages.", { error: error.message });
@@ -630,7 +821,7 @@
   /**
    * Render message information inside the messages panel.
    */
-  function renderMessage(messageData) {
+  async function renderMessage(messageData) {
     const wrapper = document.createElement("div");
     wrapper.className = "list-item";
 
@@ -647,19 +838,75 @@
         }</p>`
       : "";
 
+    // Try to decrypt the message if user is the recipient
+    let decryptedContent = null;
+    let decryptionError = null;
+    
+    if (isRecipient && msg.encryptedKey) {
+      try {
+        // Decrypt the symmetric key using MetaMask
+        const symmetricKeyBase64 = await decryptSymmetricKey(msg.encryptedKey);
+        const symmetricKey = await importKey(symmetricKeyBase64);
+        
+        // Decrypt the message content
+        decryptedContent = await decryptContent(msg.encryptedContent, symmetricKey);
+      } catch (error) {
+        decryptionError = error.message;
+        updateStatus(`Failed to decrypt message #${msg.id}: ${error.message}`);
+      }
+    }
+
+    let contentDisplay = "";
+    if (isRecipient) {
+      if (decryptedContent !== null) {
+        contentDisplay = `<p><strong>Decrypted message:</strong> ${decryptedContent}</p>`;
+      } else if (decryptionError) {
+        contentDisplay = `<p class="muted">Encrypted content (decryption failed: ${decryptionError})</p>`;
+      } else {
+        contentDisplay = `<p class="muted">Encrypted content (click to decrypt)</p>`;
+      }
+    } else if (isSender) {
+      contentDisplay = `<p class="muted">Encrypted content (you sent this message)</p>`;
+    } else {
+      contentDisplay = `<p class="muted">Encrypted content (not addressed to you)</p>`;
+    }
+
     wrapper.innerHTML = `
       <strong>Message #${msg.id}</strong>
       <p class="muted">Sender: ${msg.sender}</p>
       ${msg.recipient ? `<p class="muted">Recipient: ${msg.recipient}</p>` : ""}
-      <p class="muted">Encrypted content: ${msg.encryptedContent}</p>
-      ${isRecipient ? `<p class="muted">Encrypted key (you): ${msg.encryptedKey || "N/A"}</p>` : ""}
-      <p class="muted">Timestamp: ${msg.timestamp}</p>
+      ${contentDisplay}
+      ${isRecipient && msg.encryptedKey ? `<p class="muted">Encrypted key available: Yes</p>` : ""}
+      <p class="muted">Timestamp: ${new Date(msg.timestamp * 1000).toLocaleString()}</p>
       <p class="muted">Hash: ${msg.messageHash}</p>
       ${isSender && Object.keys(stats).length > 0
         ? `<p class="muted">Stats: ${stats.confirmedCount}/${stats.totalRecipients} confirmed</p>`
         : ""}
       ${confirmationInfo}
+      ${isRecipient && !confirmations[0]?.confirmed 
+        ? `<button class="confirm-message" data-message="${msg.id}">Confirm Reception</button>` 
+        : ""}
     `;
+
+    // Add confirm button handler if applicable
+    const confirmButton = wrapper.querySelector(".confirm-message");
+    if (confirmButton) {
+      confirmButton.addEventListener("click", async () => {
+        try {
+          await ensureContractInstance();
+          const tx = await state.contract.confirmMessageReception(msg.id);
+          updateStatus("Confirming message reception...", { txHash: tx.hash });
+          await tx.wait(1);
+          updateStatus("Message confirmed.", { txHash: tx.hash });
+          // Reload messages to update UI
+          if (state.selectedGroupId) {
+            await loadMessages(state.selectedGroupId);
+          }
+        } catch (error) {
+          updateStatus("Failed to confirm message.", { error: error.message });
+        }
+      });
+    }
 
     ui.messagesList.appendChild(wrapper);
   }
