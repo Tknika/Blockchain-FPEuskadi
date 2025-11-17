@@ -134,31 +134,6 @@
         },
         {
           "indexed": false,
-          "internalType": "uint256",
-          "name": "timestamp",
-          "type": "uint256"
-        }
-      ],
-      "name": "MessageSent",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "groupId",
-          "type": "uint256"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "sender",
-          "type": "address"
-        },
-        {
-          "indexed": true,
           "internalType": "address",
           "name": "recipient",
           "type": "address"
@@ -166,17 +141,11 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "messageId",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
           "name": "timestamp",
           "type": "uint256"
         }
       ],
-      "name": "MessageTraced",
+      "name": "MessageSent",
       "type": "event"
     },
     {
@@ -196,6 +165,31 @@
         }
       ],
       "name": "PublicKeyUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "publicKey",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        }
+      ],
+      "name": "UserSignedUp",
       "type": "event"
     },
     {
@@ -257,35 +251,6 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_messageId",
-          "type": "uint256"
-        }
-      ],
-      "name": "getAllMessageConfirmations",
-      "outputs": [
-        {
-          "internalType": "address[]",
-          "name": "recipients",
-          "type": "address[]"
-        },
-        {
-          "internalType": "bool[]",
-          "name": "confirmations",
-          "type": "bool[]"
-        },
-        {
-          "internalType": "uint256[]",
-          "name": "timestamps",
-          "type": "uint256[]"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
           "name": "_groupId",
           "type": "uint256"
         }
@@ -334,16 +299,21 @@
           "type": "uint256"
         }
       ],
-      "name": "getGroupMemberPublicKeys",
+      "name": "getGroupMemberInfo",
       "outputs": [
         {
           "internalType": "address[]",
-          "name": "",
+          "name": "members",
           "type": "address[]"
         },
         {
           "internalType": "string[]",
-          "name": "",
+          "name": "names",
+          "type": "string[]"
+        },
+        {
+          "internalType": "string[]",
+          "name": "publicKeys",
           "type": "string[]"
         }
       ],
@@ -450,30 +420,6 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_groupId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "_member",
-          "type": "address"
-        }
-      ],
-      "name": "getMemberPublicKey",
-      "outputs": [
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
           "name": "_messageId",
           "type": "uint256"
         }
@@ -493,6 +439,11 @@
         {
           "internalType": "address",
           "name": "sender",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "recipient",
           "type": "address"
         },
         {
@@ -525,86 +476,9 @@
           "internalType": "uint256",
           "name": "_messageId",
           "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "_recipient",
-          "type": "address"
         }
       ],
       "name": "getMessageConfirmation",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "confirmed",
-          "type": "bool"
-        },
-        {
-          "internalType": "uint256",
-          "name": "timestamp",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_messageId",
-          "type": "uint256"
-        }
-      ],
-      "name": "getMessageConfirmationStats",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "totalRecipients",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "confirmedCount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "pendingCount",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_messageId",
-          "type": "uint256"
-        }
-      ],
-      "name": "getMessageKey",
-      "outputs": [
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_messageId",
-          "type": "uint256"
-        }
-      ],
-      "name": "getMyConfirmation",
       "outputs": [
         {
           "internalType": "bool",
@@ -660,6 +534,25 @@
           "internalType": "uint256[]",
           "name": "",
           "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getUserName",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
         }
       ],
       "stateMutability": "view",
@@ -783,9 +676,29 @@
           "type": "address"
         },
         {
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        },
+        {
           "internalType": "string",
           "name": "encryptedContent",
           "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "encryptedKey",
+          "type": "string"
+        },
+        {
+          "internalType": "bool",
+          "name": "confirmed",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint256",
+          "name": "confirmationTimestamp",
+          "type": "uint256"
         },
         {
           "internalType": "uint256",
@@ -827,23 +740,18 @@
           "type": "uint256"
         },
         {
+          "internalType": "address",
+          "name": "_recipient",
+          "type": "address"
+        },
+        {
           "internalType": "string",
           "name": "_encryptedContent",
           "type": "string"
         },
         {
-          "internalType": "address[]",
-          "name": "_recipients",
-          "type": "address[]"
-        },
-        {
-          "internalType": "string[]",
-          "name": "_encryptedKeys",
-          "type": "string[]"
-        },
-        {
           "internalType": "string",
-          "name": "_senderEncryptedKey",
+          "name": "_encryptedKey",
           "type": "string"
         },
         {
@@ -873,6 +781,24 @@
     {
       "inputs": [
         {
+          "internalType": "string",
+          "name": "_publicKey",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_name",
+          "type": "string"
+        }
+      ],
+      "name": "signUp",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "address",
           "name": "",
           "type": "address"
@@ -889,6 +815,25 @@
           "internalType": "uint256",
           "name": "",
           "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "userNames",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
         }
       ],
       "stateMutability": "view",
