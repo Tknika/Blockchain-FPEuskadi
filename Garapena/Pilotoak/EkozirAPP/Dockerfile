@@ -14,7 +14,7 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY . /app
+COPY --no-cache . /app
 
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
