@@ -470,36 +470,54 @@
    * @param {string} recipientPublicKey The recipient's public key (MetaMask format)
    * @returns {string} Encrypted key data (JSON string)
    */
-  function encryptSymmetricKey(symmetricKeyBase64, recipientPublicKey) {
+  /**
+   * Encrypt a symmetric key with ECIES using recipient's public key.
+   * Uses eth-sig-util if available.
+   */
+  async function encryptSymmetricKey(symmetricKeyBase64, recipientPublicKey) {
+    // Wait a moment for library to load if it's still loading
+    let attempts = 0;
+    while (attempts < 10 && window.checkEthSigUtil && !window.checkEthSigUtil() && !window.ethSigUtilLoaded) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+    
     // Check if eth-sig-util is available (try different possible global names)
     let sigUtil = null;
-    if (typeof EthSigUtil !== 'undefined') {
-      sigUtil = EthSigUtil;
-    } else if (typeof window.EthSigUtil !== 'undefined') {
+    
+    // Try to find the library in various locations
+    if (typeof window.EthSigUtil !== 'undefined') {
       sigUtil = window.EthSigUtil;
-    } else if (typeof ethSigUtil !== 'undefined') {
-      sigUtil = ethSigUtil;
     } else if (typeof window.ethSigUtil !== 'undefined') {
       sigUtil = window.ethSigUtil;
+    } else if (typeof EthSigUtil !== 'undefined') {
+      sigUtil = EthSigUtil;
+    } else if (typeof ethSigUtil !== 'undefined') {
+      sigUtil = ethSigUtil;
+    }
+    
+    // Also check for default export
+    if (sigUtil && sigUtil.default) {
+      sigUtil = sigUtil.default;
     }
     
     if (!sigUtil) {
-      throw new Error('eth-sig-util library is not loaded. Please check the script tag.');
+      // Log what's available for debugging
+      console.error('Available window properties:', Object.keys(window).filter(k => k.toLowerCase().includes('eth') || k.toLowerCase().includes('sig')));
+      throw new Error('eth-sig-util library is not loaded. Please refresh the page and ensure your internet connection is working. The library should load automatically from a CDN.');
     }
     
-    // eth-sig-util expects the data to be encrypted as a hex string
     // Convert base64 to hex
     const keyBytes = Uint8Array.from(atob(symmetricKeyBase64), c => c.charCodeAt(0));
     const keyHex = "0x" + Array.from(keyBytes)
       .map(b => b.toString(16).padStart(2, "0"))
       .join("");
     
-    // Use eth-sig-util's encrypt function (ECIES)
-    // The encrypt function signature: encrypt(publicKey, data, version)
-    // Different versions of eth-sig-util may export it differently
-    let encrypted;
+    // Try to use eth-sig-util
     try {
-      // Try different possible function locations
+      let encrypted;
+      
+      // Try different function locations
       if (typeof sigUtil.encrypt === 'function') {
         encrypted = sigUtil.encrypt(
           recipientPublicKey,
@@ -512,19 +530,25 @@
           { data: keyHex },
           "x25519-xsalsa20-poly1305"
         );
-      } else if (typeof sigUtil.encryptMessage === 'function') {
-        // Some versions use encryptMessage
+      } else if (sigUtil.encryptMessage && typeof sigUtil.encryptMessage === 'function') {
         encrypted = sigUtil.encryptMessage(recipientPublicKey, { data: keyHex });
       } else {
         // Log available properties for debugging
+        console.error('sigUtil object:', sigUtil);
         console.error('Available sigUtil properties:', Object.keys(sigUtil));
-        throw new Error('Could not find encrypt function in eth-sig-util. Available: ' + Object.keys(sigUtil).join(', '));
+        throw new Error('Could not find encrypt function. Available methods: ' + Object.keys(sigUtil).join(', '));
       }
+      
+      return JSON.stringify(encrypted);
     } catch (error) {
+      console.error('Encryption error details:', {
+        error,
+        sigUtilType: typeof sigUtil,
+        sigUtilKeys: sigUtil ? Object.keys(sigUtil) : 'null',
+        recipientPublicKey: recipientPublicKey ? 'present' : 'missing'
+      });
       throw new Error(`Encryption failed: ${error.message}`);
     }
-    
-    return JSON.stringify(encrypted);
   }
 
   /**
@@ -674,7 +698,7 @@
           try {
             // Encrypt the symmetric key with the recipient's public key
             updateStatus(`Encrypting key for ${recipientData.name || recipient}...`);
-            const encryptedKey = encryptSymmetricKey(symmetricKeyBase64, recipientData.publicKey);
+            const encryptedKey = await encryptSymmetricKey(symmetricKeyBase64, recipientData.publicKey);
             
             updateStatus(`Sending message ${i + 1}/${recipients.length} to ${recipientData.name || recipient}...`);
             
