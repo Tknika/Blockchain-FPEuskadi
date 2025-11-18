@@ -640,74 +640,121 @@
       // Send message to each recipient individually
       updateStatus(`Preparing to send messages to ${recipients.length} recipient(s)...`);
       
-      // Get group data once to access all recipient public keys
-      const groupData = await loadGroup(groupId);
-      
-      // Generate a symmetric key for this message
-      const symmetricKey = await generateSymmetricKey();
-      const symmetricKeyBase64 = await exportKey(symmetricKey);
-      
-      // Encrypt the message content once with the symmetric key
-      const encryptedContent = await encryptContent(content, symmetricKey);
-      
       let successCount = 0;
       let failCount = 0;
+      const errorDetails = [];
       
-      for (let i = 0; i < recipients.length; i++) {
-        const recipient = recipients[i];
-        const recipientData = groupData.members.find(m => 
-          m.address.toLowerCase() === recipient.toLowerCase()
-        );
+      try {
+        // Get group data once to access all recipient public keys
+        const groupData = await loadGroup(groupId);
         
-        if (!recipientData || !recipientData.publicKey) {
-          updateStatus(`Error: Recipient ${recipient} does not have a public key. Skipping...`);
-          failCount++;
-          continue;
-        }
+        // Generate a symmetric key for this message
+        updateStatus("Generating encryption key...");
+        const symmetricKey = await generateSymmetricKey();
+        const symmetricKeyBase64 = await exportKey(symmetricKey);
         
-        try {
-          // Encrypt the symmetric key with the recipient's public key
-          const encryptedKey = encryptSymmetricKey(symmetricKeyBase64, recipientData.publicKey);
-          
-          updateStatus(`Encrypting and sending message ${i + 1}/${recipients.length} to ${recipientData.name || recipient}...`);
-          
-          // Send the transaction - this will trigger MetaMask confirmation
-          // The sendMessage function is a state-changing function, so it requires a transaction
-          const tx = await state.contract.sendMessage(
-            groupId,
-            recipient,
-            encryptedContent,
-            encryptedKey,
-            messageHash
+        // Encrypt the message content once with the symmetric key
+        updateStatus("Encrypting message content...");
+        const encryptedContent = await encryptContent(content, symmetricKey);
+        
+        for (let i = 0; i < recipients.length; i++) {
+          const recipient = recipients[i];
+          const recipientData = groupData.members.find(m => 
+            m.address.toLowerCase() === recipient.toLowerCase()
           );
           
-          updateStatus(`Transaction submitted for message ${i + 1}/${recipients.length}. Please confirm in MetaMask...`, { txHash: tx.hash });
-          
-          // Wait for the transaction to be mined
-          const receipt = await tx.wait(1);
-          
-          updateStatus(`Message ${i + 1}/${recipients.length} sent successfully!`, { 
-            txHash: tx.hash,
-            blockNumber: receipt.blockNumber 
-          });
-          successCount++;
-        } catch (error) {
-          if (error.code === 4001) {
-            updateStatus(`Message ${i + 1}/${recipients.length} cancelled by user in MetaMask.`);
+          if (!recipientData || !recipientData.publicKey) {
+            const errorMsg = `Recipient ${recipient} does not have a public key`;
+            updateStatus(`Error: ${errorMsg}. Skipping...`);
+            errorDetails.push(`Message ${i + 1}: ${errorMsg}`);
             failCount++;
-          } else {
-            updateStatus(`Failed to send message ${i + 1}/${recipients.length} to ${recipient}: ${error.message}`);
-            console.error("Send message error:", error);
+            continue;
+          }
+          
+          try {
+            // Encrypt the symmetric key with the recipient's public key
+            updateStatus(`Encrypting key for ${recipientData.name || recipient}...`);
+            const encryptedKey = encryptSymmetricKey(symmetricKeyBase64, recipientData.publicKey);
+            
+            updateStatus(`Sending message ${i + 1}/${recipients.length} to ${recipientData.name || recipient}...`);
+            
+            // Send the transaction - this will trigger MetaMask confirmation
+            // The sendMessage function is a state-changing function, so it requires a transaction
+            const tx = await state.contract.sendMessage(
+              groupId,
+              recipient,
+              encryptedContent,
+              encryptedKey,
+              messageHash
+            );
+            
+            updateStatus(`Transaction submitted for message ${i + 1}/${recipients.length}. Please confirm in MetaMask...`, { txHash: tx.hash });
+            
+            // Wait for the transaction to be mined
+            const receipt = await tx.wait(1);
+            
+            updateStatus(`Message ${i + 1}/${recipients.length} sent successfully!`, { 
+              txHash: tx.hash,
+              blockNumber: receipt.blockNumber 
+            });
+            successCount++;
+          } catch (error) {
+            // Extract detailed error information
+            let errorMsg = "Unknown error";
+            if (error.code === 4001) {
+              errorMsg = "Transaction cancelled by user in MetaMask";
+              updateStatus(`Message ${i + 1}/${recipients.length} cancelled by user in MetaMask.`);
+            } else if (error.reason) {
+              errorMsg = error.reason;
+            } else if (error.message) {
+              errorMsg = error.message;
+            } else if (typeof error === 'string') {
+              errorMsg = error;
+            } else {
+              errorMsg = JSON.stringify(error);
+            }
+            
+            const fullError = `Message ${i + 1} to ${recipientData.name || recipient}: ${errorMsg}`;
+            updateStatus(`Failed to send message ${i + 1}/${recipients.length}: ${errorMsg}`);
+            errorDetails.push(fullError);
+            console.error("Send message error details:", {
+              error,
+              recipient,
+              recipientData,
+              errorCode: error.code,
+              errorMessage: error.message,
+              errorReason: error.reason,
+              fullError: error
+            });
             failCount++;
           }
-          // Continue with next recipient even if one fails
         }
+      } catch (error) {
+        // Catch errors that happen before or during the loop setup
+        let errorMsg = "Unknown error during message preparation";
+        if (error.reason) {
+          errorMsg = error.reason;
+        } else if (error.message) {
+          errorMsg = error.message;
+        } else if (typeof error === 'string') {
+          errorMsg = error;
+        }
+        
+        updateStatus(`Failed to prepare messages: ${errorMsg}`);
+        errorDetails.push(`Preparation error: ${errorMsg}`);
+        console.error("Message preparation error:", error);
+        failCount = recipients.length; // Mark all as failed
       }
 
+      // Show final summary with detailed errors
       if (successCount > 0) {
         updateStatus(`Successfully sent ${successCount} out of ${recipients.length} message(s).${failCount > 0 ? ` ${failCount} failed.` : ''}`);
       } else {
-        updateStatus(`Failed to send any messages. Please check the errors above.`);
+        let errorSummary = `Failed to send any messages.`;
+        if (errorDetails.length > 0) {
+          errorSummary += `\n\nErrors:\n${errorDetails.join('\n')}`;
+        }
+        updateStatus(errorSummary);
       }
       
       // Clear form
@@ -718,7 +765,21 @@
         await loadMessages(groupId);
       }
     } catch (error) {
-      updateStatus("Failed to send message.", { error: error.message });
+      // Catch any unexpected errors in the outer try-catch
+      let errorMsg = "Unknown error";
+      if (error.reason) {
+        errorMsg = error.reason;
+      } else if (error.message) {
+        errorMsg = error.message;
+      } else if (typeof error === 'string') {
+        errorMsg = error;
+      }
+      
+      updateStatus(`Failed to send message: ${errorMsg}`, { 
+        error: errorMsg,
+        fullError: error 
+      });
+      console.error("Outer send message error:", error);
     }
   }
 
