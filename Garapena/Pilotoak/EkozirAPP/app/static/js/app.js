@@ -549,6 +549,10 @@ Then refresh this page.`;
       throw new Error("MetaMask is not available");
     }
     
+    if (!state.account) {
+      throw new Error("No account connected. Please connect your wallet first.");
+    }
+    
     // MetaMask's eth_decrypt expects a JSON string, not an object
     // Convert to JSON string if it's already an object, otherwise use as-is
     let encryptedString;
@@ -562,16 +566,40 @@ Then refresh this page.`;
       throw new Error('encryptedKeyData must be a JSON string or an object');
     }
     
-    // Use MetaMask's eth_decrypt method
-    // MetaMask expects the encrypted data as a JSON string in the format returned by eth-sig-util
-    const decryptedString = await window.ethereum.request({
-      method: "eth_decrypt",
-      params: [encryptedString, state.account],
+    // Validate that the encrypted string is valid JSON
+    try {
+      JSON.parse(encryptedString);
+    } catch (parseError) {
+      console.error("Invalid JSON format for encrypted key:", parseError);
+      throw new Error(`Invalid encrypted key format: ${parseError.message}`);
+    }
+    
+    // Log the request details for debugging (without sensitive data)
+    console.info("Requesting MetaMask decryption:", {
+      account: state.account,
+      encryptedKeyLength: encryptedString.length,
+      encryptedKeyPreview: encryptedString.substring(0, 50) + "..."
     });
     
-    // The decrypted string is the original data that was encrypted
-    // Since we encrypted the base64 key, we get the base64 string back
-    return decryptedString;
+    // Use MetaMask's eth_decrypt method
+    // MetaMask expects the encrypted data as a JSON string in the format returned by eth-sig-util
+    try {
+      const decryptedString = await window.ethereum.request({
+        method: "eth_decrypt",
+        params: [encryptedString, state.account],
+      });
+      
+      // The decrypted string is the original data that was encrypted
+      // Since we encrypted the base64 key, we get the base64 string back
+      return decryptedString;
+    } catch (metaMaskError) {
+      // Provide more detailed error information
+      console.error("MetaMask decryption error:", metaMaskError);
+      if (metaMaskError.code === 4001) {
+        throw new Error("MetaMask DecryptMessage: User denied message decryption.");
+      }
+      throw metaMaskError;
+    }
   }
 
   /**
@@ -998,7 +1026,7 @@ Then refresh this page.`;
         : ""}
       ${confirmationInfo}
       ${isRecipient && msg.encryptedKey 
-        ? `<button class="decrypt-message" data-message-id="${msg.id}" data-encrypted-key="${encodeURIComponent(typeof msg.encryptedKey === 'string' ? msg.encryptedKey : JSON.stringify(msg.encryptedKey))}" data-encrypted-content="${encodeURIComponent(msg.encryptedContent)}">Decrypt Message</button>` 
+        ? `<button class="decrypt-message" data-message-id="${msg.id}">Decrypt Message</button>` 
         : ""}
       ${isRecipient && !confirmations[0]?.confirmed 
         ? `<button class="confirm-message" data-message="${msg.id}">Confirm Reception</button>` 
@@ -1009,35 +1037,49 @@ Then refresh this page.`;
     const decryptButton = wrapper.querySelector(".decrypt-message");
     if (decryptButton) {
       decryptButton.addEventListener("click", async () => {
+        // Get message ID from button data attribute
+        const messageId = parseInt(decryptButton.dataset.messageId, 10);
+        
         try {
-          // Get encrypted data from data attributes
-          // Decode the URI-encoded data - decryptSymmetricKey handles both strings and objects
-          const decodedKeyData = decodeURIComponent(decryptButton.dataset.encryptedKey);
-          // Try to parse as JSON to get object, otherwise use as string (decryptSymmetricKey handles both)
-          let encryptedKeyData;
-          try {
-            // If it parses successfully, we have an object (preferred format)
-            encryptedKeyData = JSON.parse(decodedKeyData);
-          } catch {
-            // If parsing fails, it's already a JSON string, use it directly
-            encryptedKeyData = decodedKeyData;
-          }
-          const encryptedContent = decodeURIComponent(decryptButton.dataset.encryptedContent);
-          
           // Disable button and show loading state
           decryptButton.disabled = true;
           decryptButton.textContent = "Decrypting...";
           
+          // Re-fetch the message data to ensure we have the latest encrypted key and content
+          // This avoids any encoding issues with data attributes
+          updateStatus(`Loading message #${messageId} data...`);
+          const messageData = await loadMessage(messageId);
+          const message = messageData.message;
+          
+          if (!message.encryptedKey || !message.encryptedContent) {
+            throw new Error("Message data is missing encrypted key or content");
+          }
+          
           // Decrypt the symmetric key using MetaMask
-          updateStatus(`Decrypting message #${msg.id}...`);
-          const symmetricKeyBase64 = await decryptSymmetricKey(encryptedKeyData);
+          // The encryptedKey from the API is already a JSON string
+          updateStatus(`Decrypting message #${messageId}...`);
+          
+          // Validate that encryptedKey is a valid JSON string
+          let encryptedKeyForDecryption = message.encryptedKey;
+          try {
+            // Try to parse it to ensure it's valid JSON
+            const parsed = JSON.parse(encryptedKeyForDecryption);
+            // If it parses successfully, stringify it back to ensure proper format
+            encryptedKeyForDecryption = JSON.stringify(parsed);
+          } catch (parseError) {
+            // If parsing fails, the string might not be valid JSON
+            console.warn("Encrypted key might not be valid JSON, attempting decryption anyway:", parseError);
+            // Use as-is - decryptSymmetricKey will handle it
+          }
+          
+          const symmetricKeyBase64 = await decryptSymmetricKey(encryptedKeyForDecryption);
           const symmetricKey = await importKey(symmetricKeyBase64);
           
           // Decrypt the message content
-          const decryptedContent = await decryptContent(encryptedContent, symmetricKey);
+          const decryptedContent = await decryptContent(message.encryptedContent, symmetricKey);
           
           // Update UI to show decrypted content
-          const decryptedContentDiv = wrapper.querySelector(`#decrypted-content-${msg.id}`);
+          const decryptedContentDiv = wrapper.querySelector(`#decrypted-content-${messageId}`);
           if (decryptedContentDiv) {
             decryptedContentDiv.innerHTML = `<p><strong>Decrypted message:</strong> ${decryptedContent}</p>`;
             decryptedContentDiv.style.display = "block";
@@ -1046,7 +1088,7 @@ Then refresh this page.`;
           // Hide or disable the decrypt button
           decryptButton.style.display = "none";
           
-          updateStatus(`Message #${msg.id} decrypted successfully.`);
+          updateStatus(`Message #${messageId} decrypted successfully.`);
         } catch (error) {
           // Re-enable button on error
           decryptButton.disabled = false;
@@ -1054,15 +1096,24 @@ Then refresh this page.`;
           
           let errorMsg = "Unknown error";
           if (error.code === 4001) {
-            errorMsg = "Decryption cancelled by user in MetaMask";
+            errorMsg = "Decryption cancelled or denied in MetaMask. Please ensure you click 'Decrypt' in the MetaMask popup and that you're using the correct account.";
           } else if (error.message) {
             errorMsg = error.message;
           }
           
-          updateStatus(`Failed to decrypt message #${msg.id}: ${errorMsg}`);
+          // Log detailed error information for debugging
+          console.error("Decryption error details:", {
+            messageId,
+            errorCode: error.code,
+            errorMessage: error.message,
+            error: error,
+            account: state.account
+          });
+          
+          updateStatus(`Failed to decrypt message #${messageId}: ${errorMsg}`);
           
           // Show error in the decrypted content area
-          const decryptedContentDiv = wrapper.querySelector(`#decrypted-content-${msg.id}`);
+          const decryptedContentDiv = wrapper.querySelector(`#decrypted-content-${messageId}`);
           if (decryptedContentDiv) {
             decryptedContentDiv.innerHTML = `<p class="muted">Decryption failed: ${errorMsg}</p>`;
             decryptedContentDiv.style.display = "block";
