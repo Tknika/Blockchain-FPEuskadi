@@ -3,13 +3,14 @@
 {% block title %}Ekozir Dashboard{% endblock %}
 
 {% block content %}
+
+<pre id="walletInfo" class="info-panel">Not connected</pre>
 <section class="card">
   <h2>Wallet Connection</h2>
   <p>
     Connect your MetaMask account to sign transactions against the Besu network.
   </p>
   <button id="connectWallet">Connect MetaMask</button>
-  <pre id="walletInfo" class="info-panel">Not connected</pre>
 </section>
 
 <section class="card" id="signUpSection" style="display: none;">

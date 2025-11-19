@@ -549,22 +549,24 @@ Then refresh this page.`;
       throw new Error("MetaMask is not available");
     }
     
-    // Handle both string (JSON) and already-parsed object formats
-    // If it's already an object, use it directly; otherwise parse the JSON string
-    let encrypted;
+    // MetaMask's eth_decrypt expects a JSON string, not an object
+    // Convert to JSON string if it's already an object, otherwise use as-is
+    let encryptedString;
     if (typeof encryptedKeyData === 'string') {
-      encrypted = JSON.parse(encryptedKeyData);
+      // Already a string, use it directly
+      encryptedString = encryptedKeyData;
     } else if (typeof encryptedKeyData === 'object' && encryptedKeyData !== null) {
-      encrypted = encryptedKeyData;
+      // Convert object back to JSON string for MetaMask
+      encryptedString = JSON.stringify(encryptedKeyData);
     } else {
       throw new Error('encryptedKeyData must be a JSON string or an object');
     }
     
     // Use MetaMask's eth_decrypt method
-    // MetaMask expects the encrypted data in the format returned by eth-sig-util
+    // MetaMask expects the encrypted data as a JSON string in the format returned by eth-sig-util
     const decryptedString = await window.ethereum.request({
       method: "eth_decrypt",
-      params: [encrypted, state.account],
+      params: [encryptedString, state.account],
     });
     
     // The decrypted string is the original data that was encrypted
