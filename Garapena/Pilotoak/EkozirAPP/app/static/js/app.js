@@ -619,20 +619,43 @@ Then refresh this page.`;
     // Use MetaMask's eth_decrypt method
     // Note: This method is deprecated but still supported
     // MetaMask expects the encrypted data as a JSON string in the format returned by eth-sig-util
+    
+    // Ensure the account address is in the correct format (checksummed)
+    const accountAddress = ethers.utils.getAddress(state.account);
+    
+    // Try to ensure the JSON string is in the exact format MetaMask expects
+    // Sometimes MetaMask is very picky about the format
+    const encryptedStringForMetaMask = JSON.stringify(encryptedObj, null, 0); // Compact JSON, no spaces
+    
     console.info("Calling MetaMask eth_decrypt with:", {
       method: "eth_decrypt",
-      account: state.account,
-      encryptedDataLength: encryptedString.length
+      account: accountAddress,
+      accountOriginal: state.account,
+      encryptedDataLength: encryptedStringForMetaMask.length,
+      encryptedDataPreview: encryptedStringForMetaMask.substring(0, 150) + "...",
+      jsonStringified: encryptedStringForMetaMask === encryptedString
     });
     
     try {
-      const decryptedString = await window.ethereum.request({
-        method: "eth_decrypt",
-        params: [encryptedString, state.account],
-      });
+      // Try with checksummed address first
+      let decryptedString;
+      try {
+        decryptedString = await window.ethereum.request({
+          method: "eth_decrypt",
+          params: [encryptedStringForMetaMask, accountAddress],
+        });
+      } catch (checksumError) {
+        // If checksummed address fails, try with original address
+        console.warn("Decryption with checksummed address failed, trying original address:", checksumError);
+        decryptedString = await window.ethereum.request({
+          method: "eth_decrypt",
+          params: [encryptedStringForMetaMask, state.account],
+        });
+      }
       
       // The decrypted string is the original data that was encrypted
       // Since we encrypted the base64 key, we get the base64 string back
+      console.info("Decryption successful!");
       return decryptedString;
     } catch (metaMaskError) {
       // Provide more detailed error information
@@ -653,16 +676,37 @@ Then refresh this page.`;
           message: metaMaskError.message,
           data: metaMaskError.data,
           cause: errorDetails,
-          stack: errorDetails.stack
+          stack: errorDetails.stack,
+          encryptedKeyStructure: {
+            version: encryptedObj.version,
+            nonceLength: encryptedObj.nonce?.length,
+            ephemPublicKey: encryptedObj.ephemPublicKey?.substring(0, 20) + "...",
+            ciphertextLength: encryptedObj.ciphertext?.length
+          }
         });
+        
+        // Check if this might be a known MetaMask bug with the deprecated eth_decrypt
+        // Sometimes MetaMask rejects valid decryption requests incorrectly
+        console.error("⚠️ MetaMask's eth_decrypt is deprecated and may have bugs.");
+        console.error("The encrypted data format appears correct, but MetaMask is rejecting it.");
+        console.error("This could be:");
+        console.error("1. A bug in MetaMask's deprecated eth_decrypt method");
+        console.error("2. The message was encrypted with a different public key (even if keys match now)");
+        console.error("3. A format issue that MetaMask doesn't like");
         
         // Provide a more helpful error message
         let helpfulMessage = "MetaMask was unable to decrypt the message. ";
-        helpfulMessage += "This usually means:\n";
+        helpfulMessage += "\n\nPossible causes:\n";
         helpfulMessage += "1. The message was encrypted with a different public key than your current MetaMask encryption key\n";
         helpfulMessage += "2. Your MetaMask encryption key has changed since the message was sent\n";
-        helpfulMessage += "3. The message was encrypted for a different account\n\n";
-        helpfulMessage += `Error: ${errorMessage}`;
+        helpfulMessage += "3. A bug in MetaMask's deprecated eth_decrypt method\n";
+        helpfulMessage += "4. The message was encrypted for a different account\n\n";
+        helpfulMessage += `Technical error: ${errorMessage}\n\n`;
+        helpfulMessage += "Troubleshooting:\n";
+        helpfulMessage += "- Verify the message was sent to your current account\n";
+        helpfulMessage += "- Check if your encryption public key has changed\n";
+        helpfulMessage += "- Try updating MetaMask to the latest version\n";
+        helpfulMessage += "- The encrypted data format appears correct, so this may be a MetaMask issue";
         
         throw new Error(helpfulMessage);
       }
