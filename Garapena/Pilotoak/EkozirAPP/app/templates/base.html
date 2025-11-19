@@ -13,75 +13,9 @@
     />
     <!-- Ethers.js powers MetaMask interactions -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-    <!-- Load eth-sig-util from multiple CDN sources for reliability -->
-    <script>
-      // Function to check if library is loaded
-      window.checkEthSigUtil = function() {
-        return typeof window.EthSigUtil !== 'undefined' || 
-               typeof window.ethSigUtil !== 'undefined' ||
-               (typeof window !== 'undefined' && window.EthSigUtil);
-      };
-      
-      // Try to load eth-sig-util from multiple sources
-      (function() {
-        const sources = [
-          {
-            url: 'https://unpkg.com/@metamask/eth-sig-util@5.0.0/dist/index.umd.js',
-            name: '@metamask/eth-sig-util (unpkg)'
-          },
-          {
-            url: 'https://cdn.jsdelivr.net/npm/@metamask/eth-sig-util@5.0.0/dist/index.umd.js',
-            name: '@metamask/eth-sig-util (jsdelivr)'
-          },
-          {
-            url: 'https://unpkg.com/eth-sig-util@5.0.0/dist/index.umd.min.js',
-            name: 'eth-sig-util (unpkg)'
-          }
-        ];
-        
-        let loaded = false;
-        let attempts = 0;
-        
-        function tryLoad(index) {
-          if (loaded || index >= sources.length) {
-            if (!loaded && attempts >= sources.length) {
-              console.error('Failed to load eth-sig-util from all sources. Encryption will not work properly.');
-            }
-            return;
-          }
-          
-          attempts++;
-          const source = sources[index];
-          const script = document.createElement('script');
-          script.src = source.url;
-          script.async = true;
-          
-          script.onload = function() {
-            // Wait a bit for the library to initialize
-            setTimeout(function() {
-              if (window.checkEthSigUtil()) {
-                loaded = true;
-                console.log('✓ eth-sig-util loaded successfully from:', source.name);
-                window.ethSigUtilLoaded = true;
-              } else {
-                // Library loaded but not in expected format, try next
-                tryLoad(index + 1);
-              }
-            }, 100);
-          };
-          
-          script.onerror = function() {
-            console.warn('✗ Failed to load from:', source.name);
-            tryLoad(index + 1);
-          };
-          
-          document.head.appendChild(script);
-        }
-        
-        // Start loading
-        tryLoad(0);
-      })();
-    </script>
+    <!-- Load eth-sig-util bundle (created with browserify) -->
+    <!-- The bundle exports @metamask/eth-sig-util as EthSigUtil global -->
+    <script src="{{ url_for('static', filename='js/eth-sig-util.umd.js') }}"></script>
   </head>
   <body>
     <header class="app-header">

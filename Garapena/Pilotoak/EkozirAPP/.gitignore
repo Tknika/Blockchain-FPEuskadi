@@ -6,4 +6,8 @@ __pycache__/
 # Environments
 .venv
 
+# Node.js dependencies (not needed after bundle is created)
+node_modules/
+#package-lock.json
+
 # Other

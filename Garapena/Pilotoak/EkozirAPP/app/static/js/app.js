@@ -258,7 +258,8 @@
   }
 
   /**
-   * Ask MetaMask for the account's encryption public key and register it on-chain with a name.
+   * Ask MetaMask for the account's encryption public key and fill the textarea.
+   * Also prompts for name if not already provided.
    */
   async function handleAutoRegisterPublicKey() {
     if (!window.ethereum) {
@@ -269,6 +270,7 @@
     try {
       await ensureContractInstance();
 
+      // Request encryption public key from MetaMask
       const encryptionKey = await window.ethereum.request({
         method: "eth_getEncryptionPublicKey",
         params: [state.account],
@@ -279,6 +281,7 @@
         return;
       }
 
+      // Fill the public key textarea with the key from MetaMask
       ui.publicKeyInput.value = encryptionKey;
 
       // Prompt for name if not already provided
@@ -292,13 +295,7 @@
         ui.userNameInput.value = userName.trim();
       }
 
-      const finalName = ui.userNameInput.value.trim();
-      const tx = await state.contract.signUp(encryptionKey, finalName);
-      updateStatus("Signing up with MetaMask encryption key...", { txHash: tx.hash });
-      await tx.wait(1);
-      updateStatus("Sign up successful via MetaMask.", { txHash: tx.hash });
-      await syncPublicKeyStatus();
-      await refreshGroups();
+      updateStatus("Public key retrieved from MetaMask. Click 'Sign Up' to register.");
     } catch (error) {
       if (error && error.code === 4001) {
         updateStatus("MetaMask request rejected by the user.");
@@ -308,7 +305,7 @@
           { error: error.message }
         );
       } else {
-        updateStatus("Failed to sign up with MetaMask encryption key.", { error: error.message });
+        updateStatus("Failed to get encryption public key from MetaMask.", { error: error.message });
       }
     }
   }
@@ -472,80 +469,71 @@
    */
   /**
    * Encrypt a symmetric key with ECIES using recipient's public key.
-   * Uses eth-sig-util if available.
+   * Uses @metamask/eth-sig-util library (loaded as EthSigUtil global).
    */
   async function encryptSymmetricKey(symmetricKeyBase64, recipientPublicKey) {
-    // Wait a moment for library to load if it's still loading
-    let attempts = 0;
-    while (attempts < 10 && window.checkEthSigUtil && !window.checkEthSigUtil() && !window.ethSigUtilLoaded) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      attempts++;
-    }
-    
-    // Check if eth-sig-util is available (try different possible global names)
-    let sigUtil = null;
-    
-    // Try to find the library in various locations
-    if (typeof window.EthSigUtil !== 'undefined') {
-      sigUtil = window.EthSigUtil;
-    } else if (typeof window.ethSigUtil !== 'undefined') {
-      sigUtil = window.ethSigUtil;
-    } else if (typeof EthSigUtil !== 'undefined') {
-      sigUtil = EthSigUtil;
-    } else if (typeof ethSigUtil !== 'undefined') {
-      sigUtil = ethSigUtil;
-    }
-    
-    // Also check for default export
-    if (sigUtil && sigUtil.default) {
-      sigUtil = sigUtil.default;
-    }
-    
-    if (!sigUtil) {
-      // Log what's available for debugging
-      console.error('Available window properties:', Object.keys(window).filter(k => k.toLowerCase().includes('eth') || k.toLowerCase().includes('sig')));
-      throw new Error('eth-sig-util library is not loaded. Please refresh the page and ensure your internet connection is working. The library should load automatically from a CDN.');
-    }
-    
-    // Convert base64 to hex
-    const keyBytes = Uint8Array.from(atob(symmetricKeyBase64), c => c.charCodeAt(0));
-    const keyHex = "0x" + Array.from(keyBytes)
-      .map(b => b.toString(16).padStart(2, "0"))
-      .join("");
-    
-    // Try to use eth-sig-util
-    try {
-      let encrypted;
+    // Check if eth-sig-util is available (should be loaded as EthSigUtil global)
+    if (typeof EthSigUtil === 'undefined' && typeof window.EthSigUtil === 'undefined') {
+      const errorMsg = `eth-sig-util library is not loaded. 
       
-      // Try different function locations
-      if (typeof sigUtil.encrypt === 'function') {
-        encrypted = sigUtil.encrypt(
-          recipientPublicKey,
-          { data: keyHex },
-          "x25519-xsalsa20-poly1305"
-        );
-      } else if (sigUtil.encryption && typeof sigUtil.encryption.encrypt === 'function') {
-        encrypted = sigUtil.encryption.encrypt(
-          recipientPublicKey,
-          { data: keyHex },
-          "x25519-xsalsa20-poly1305"
-        );
-      } else if (sigUtil.encryptMessage && typeof sigUtil.encryptMessage === 'function') {
-        encrypted = sigUtil.encryptMessage(recipientPublicKey, { data: keyHex });
-      } else {
-        // Log available properties for debugging
-        console.error('sigUtil object:', sigUtil);
-        console.error('Available sigUtil properties:', Object.keys(sigUtil));
-        throw new Error('Could not find encrypt function. Available methods: ' + Object.keys(sigUtil).join(', '));
+The library should be loaded from: app/static/js/eth-sig-util.umd.js
+
+If the file doesn't exist, run:
+  npx browserify -r @metamask/eth-sig-util -s EthSigUtil -o app/static/js/eth-sig-util.umd.js
+
+Then refresh this page.`;
+      
+      console.error(errorMsg);
+      throw new Error('eth-sig-util library is not loaded. Please ensure the bundle file exists and refresh the page.');
+    }
+    
+    // Get the library (browserify exports it as EthSigUtil)
+    const sigUtil = window.EthSigUtil || EthSigUtil;
+    
+    // Check if encrypt function exists
+    if (!sigUtil.encrypt || typeof sigUtil.encrypt !== 'function') {
+      // Log what's available for debugging
+      console.error('EthSigUtil object:', sigUtil);
+      console.error('Available properties:', Object.keys(sigUtil).slice(0, 30));
+      throw new Error('encrypt function not found. Available: ' + Object.keys(sigUtil).slice(0, 20).join(', '));
+    }
+    
+    // The encrypt function from @metamask/eth-sig-util expects:
+    // - publicKey: base64-encoded public key (which we already have from MetaMask)
+    // - data: string that will be UTF-8 decoded to bytes
+    // - version: "x25519-xsalsa20-poly1305"
+    // 
+    // Since we have a symmetric key as base64, we need to convert it to a format
+    // that can be UTF-8 decoded. The simplest approach is to pass the base64 string
+    // directly, or convert the bytes to a UTF-8 string representation.
+    // 
+    // Actually, we can pass the base64 string directly as the data - it's already
+    // a string representation of the key that can be decoded later.
+    try {
+      // Pass the base64 key as the data string
+      // The library will UTF-8 encode it, and we can decode it the same way on the other end
+      const encrypted = sigUtil.encrypt({
+        publicKey: recipientPublicKey,
+        data: symmetricKeyBase64, // Pass base64 string directly
+        version: "x25519-xsalsa20-poly1305"
+      });
+      
+      if (!encrypted) {
+        throw new Error('Encryption function returned undefined');
       }
       
+      // The encrypted object has: version, nonce, ephemPublicKey, ciphertext (all base64)
       return JSON.stringify(encrypted);
     } catch (error) {
       console.error('Encryption error details:', {
         error,
+        errorMessage: error.message,
+        errorStack: error.stack,
         sigUtilType: typeof sigUtil,
-        sigUtilKeys: sigUtil ? Object.keys(sigUtil) : 'null',
-        recipientPublicKey: recipientPublicKey ? 'present' : 'missing'
+        hasEncrypt: sigUtil && typeof sigUtil.encrypt === 'function',
+        sigUtilKeys: sigUtil ? Object.keys(sigUtil).slice(0, 30) : 'null',
+        recipientPublicKey: recipientPublicKey ? 'present' : 'missing',
+        keyBase64Length: symmetricKeyBase64 ? symmetricKeyBase64.length : 0
       });
       throw new Error(`Encryption failed: ${error.message}`);
     }
@@ -564,16 +552,15 @@
     const encrypted = JSON.parse(encryptedKeyData);
     
     // Use MetaMask's eth_decrypt method
-    const decryptedHex = await window.ethereum.request({
+    // MetaMask expects the encrypted data in the format returned by eth-sig-util
+    const decryptedString = await window.ethereum.request({
       method: "eth_decrypt",
       params: [encrypted, state.account],
     });
     
-    // Convert hex to base64
-    const keyBytes = new Uint8Array(
-      decryptedHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16))
-    );
-    return btoa(String.fromCharCode(...keyBytes));
+    // The decrypted string is the original data that was encrypted
+    // Since we encrypted the base64 key, we get the base64 string back
+    return decryptedString;
   }
 
   /**
