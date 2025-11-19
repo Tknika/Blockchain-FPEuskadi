@@ -582,17 +582,49 @@ Then refresh this page.`;
       throw new Error('encryptedKeyData must be a JSON string or an object');
     }
     
+    // Parse the encrypted string to validate and log structure
+    let encryptedObj;
+    try {
+      encryptedObj = JSON.parse(encryptedString);
+    } catch (e) {
+      throw new Error(`Invalid JSON format in encrypted key: ${e.message}`);
+    }
+    
     // Log the request details for debugging (without sensitive data)
     console.info("Requesting MetaMask decryption:", {
       account: state.account,
       encryptedKeyLength: encryptedString.length,
-      encryptedKeyPreview: encryptedString.substring(0, 50) + "...",
-      encryptedKeyStructure: JSON.parse(encryptedString) // Log structure for debugging
+      encryptedKeyPreview: encryptedString.substring(0, 100) + "...",
+      encryptedKeyStructure: {
+        version: encryptedObj.version,
+        hasNonce: !!encryptedObj.nonce,
+        nonceLength: encryptedObj.nonce?.length,
+        hasEphemPublicKey: !!encryptedObj.ephemPublicKey,
+        ephemPublicKeyLength: encryptedObj.ephemPublicKey?.length,
+        ephemPublicKeyPreview: encryptedObj.ephemPublicKey?.substring(0, 30) + "...",
+        hasCiphertext: !!encryptedObj.ciphertext,
+        ciphertextLength: encryptedObj.ciphertext?.length
+      },
+      fullEncryptedKey: encryptedString // Log full key for debugging (this is safe as it's encrypted)
     });
+    
+    // Verify the encrypted key has the correct structure
+    if (!encryptedObj.version || encryptedObj.version !== "x25519-xsalsa20-poly1305") {
+      throw new Error(`Invalid encryption version: ${encryptedObj.version}. Expected: x25519-xsalsa20-poly1305`);
+    }
+    if (!encryptedObj.nonce || !encryptedObj.ephemPublicKey || !encryptedObj.ciphertext) {
+      throw new Error("Encrypted key missing required fields: nonce, ephemPublicKey, or ciphertext");
+    }
     
     // Use MetaMask's eth_decrypt method
     // Note: This method is deprecated but still supported
     // MetaMask expects the encrypted data as a JSON string in the format returned by eth-sig-util
+    console.info("Calling MetaMask eth_decrypt with:", {
+      method: "eth_decrypt",
+      account: state.account,
+      encryptedDataLength: encryptedString.length
+    });
+    
     try {
       const decryptedString = await window.ethereum.request({
         method: "eth_decrypt",
@@ -1124,6 +1156,17 @@ Then refresh this page.`;
               keysMatch: contractPublicKey === currentMetaMaskKey
             });
             
+            // Also check the encrypted key's ephemeral public key to see if it matches
+            try {
+              const encryptedKeyParsed = JSON.parse(message.encryptedKey);
+              console.info("Encrypted key ephemeral public key:", {
+                ephemPublicKey: encryptedKeyParsed.ephemPublicKey?.substring(0, 30) + "...",
+                ephemPublicKeyLength: encryptedKeyParsed.ephemPublicKey?.length
+              });
+            } catch (e) {
+              console.warn("Could not parse encrypted key to check ephemeral public key:", e);
+            }
+            
             if (contractPublicKey && contractPublicKey !== currentMetaMaskKey) {
               console.error("Public key mismatch detected - this will cause decryption to fail!", {
                 contractKey: contractPublicKey,
@@ -1133,9 +1176,9 @@ Then refresh this page.`;
               });
               throw new Error(`CRITICAL: Your current MetaMask encryption key does NOT match the one registered in the contract. The message was encrypted with the contract's public key (${contractPublicKey.substring(0, 20)}...), but MetaMask is trying to decrypt with a different key (${currentMetaMaskKey.substring(0, 20)}...). You need to either: 1) Re-register with your current MetaMask key, or 2) Use the account that has the matching encryption key.`);
             } else if (contractPublicKey && contractPublicKey === currentMetaMaskKey) {
-              console.info("Public keys match - decryption should work if the message was encrypted correctly.");
+              console.info("✓ Public keys match - decryption should work if the message was encrypted correctly.");
             } else if (!contractPublicKey) {
-              console.warn("No public key found in contract for this account.");
+              console.warn("⚠ No public key found in contract for this account.");
             }
           } catch (keyCheckError) {
             // If it's our custom error about key mismatch, throw it
