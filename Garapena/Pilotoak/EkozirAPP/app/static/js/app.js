@@ -606,14 +606,33 @@ Then refresh this page.`;
       // Provide more detailed error information
       console.error("MetaMask decryption error:", metaMaskError);
       
+      // Extract detailed error information
+      const errorDetails = metaMaskError.data?.cause || {};
+      const errorMessage = errorDetails.message || metaMaskError.message || "Unknown error";
+      
       // Handle different error codes
       if (metaMaskError.code === 4001) {
         throw new Error("MetaMask DecryptMessage: User denied message decryption.");
       } else if (metaMaskError.code === -32603) {
-        // RPC error - could be format issue or account mismatch
-        const errorDetails = metaMaskError.data?.cause || metaMaskError.message || "Unknown RPC error";
-        console.error("RPC Error details:", errorDetails);
-        throw new Error(`MetaMask decryption failed: ${metaMaskError.message || "RPC error -32603"}. Please ensure you're using the correct account that the message was encrypted for.`);
+        // RPC error - MetaMask internally rejected the decryption
+        // This usually means the encrypted data doesn't match the account's encryption key
+        console.error("RPC Error details:", {
+          code: metaMaskError.code,
+          message: metaMaskError.message,
+          data: metaMaskError.data,
+          cause: errorDetails,
+          stack: errorDetails.stack
+        });
+        
+        // Provide a more helpful error message
+        let helpfulMessage = "MetaMask was unable to decrypt the message. ";
+        helpfulMessage += "This usually means:\n";
+        helpfulMessage += "1. The message was encrypted with a different public key than your current MetaMask encryption key\n";
+        helpfulMessage += "2. Your MetaMask encryption key has changed since the message was sent\n";
+        helpfulMessage += "3. The message was encrypted for a different account\n\n";
+        helpfulMessage += `Error: ${errorMessage}`;
+        
+        throw new Error(helpfulMessage);
       }
       throw metaMaskError;
     }
@@ -1085,11 +1104,41 @@ Then refresh this page.`;
             throw new Error(`This message was encrypted for a different account (${message.recipient}). Please switch to the correct account in MetaMask.`);
           }
           
+          // Check if the user's public key in the contract matches their current MetaMask encryption key
+          // This is important because the message was encrypted with the public key stored in the contract
+          try {
+            await ensureContractInstance();
+            const contractPublicKey = await state.contract.userPublicKeys(state.account);
+            const currentMetaMaskKey = await window.ethereum.request({
+              method: "eth_getEncryptionPublicKey",
+              params: [state.account],
+            });
+            
+            if (contractPublicKey && contractPublicKey !== currentMetaMaskKey) {
+              console.warn("Public key mismatch detected:", {
+                contractKey: contractPublicKey.substring(0, 20) + "...",
+                metamaskKey: currentMetaMaskKey.substring(0, 20) + "..."
+              });
+              updateStatus(`Warning: Your current MetaMask encryption key differs from the one registered in the contract. The message may have been encrypted with a different key.`);
+            }
+          } catch (keyCheckError) {
+            console.warn("Could not verify public key match:", keyCheckError);
+            // Continue anyway - the decryption attempt will reveal if there's a mismatch
+          }
+          
           // Validate that encryptedKey is a valid JSON string
           let encryptedKeyForDecryption = message.encryptedKey;
           try {
             // Try to parse it to ensure it's valid JSON
             const parsed = JSON.parse(encryptedKeyForDecryption);
+            // Log the structure for debugging
+            console.info("Encrypted key structure:", {
+              hasVersion: !!parsed.version,
+              hasNonce: !!parsed.nonce,
+              hasEphemPublicKey: !!parsed.ephemPublicKey,
+              hasCiphertext: !!parsed.ciphertext,
+              version: parsed.version
+            });
             // If it parses successfully, stringify it back to ensure proper format
             encryptedKeyForDecryption = JSON.stringify(parsed);
           } catch (parseError) {
