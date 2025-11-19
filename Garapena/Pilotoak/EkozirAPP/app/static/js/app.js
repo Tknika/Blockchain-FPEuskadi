@@ -553,35 +553,45 @@ Then refresh this page.`;
       throw new Error("No account connected. Please connect your wallet first.");
     }
     
-    // MetaMask's eth_decrypt expects a JSON string, not an object
-    // Convert to JSON string if it's already an object, otherwise use as-is
+    // MetaMask's eth_decrypt expects a JSON string in the exact format returned by eth-sig-util
+    // The encrypted data should have: version, nonce, ephemPublicKey, ciphertext
     let encryptedString;
+    
     if (typeof encryptedKeyData === 'string') {
-      // Already a string, use it directly
-      encryptedString = encryptedKeyData;
+      // It's already a string - validate it's proper JSON and normalize it
+      try {
+        // Parse and re-stringify to ensure proper formatting
+        const parsed = JSON.parse(encryptedKeyData);
+        // Validate required fields
+        if (!parsed.version || !parsed.nonce || !parsed.ephemPublicKey || !parsed.ciphertext) {
+          throw new Error("Encrypted key missing required fields (version, nonce, ephemPublicKey, ciphertext)");
+        }
+        // Re-stringify to ensure consistent format
+        encryptedString = JSON.stringify(parsed);
+      } catch (parseError) {
+        console.error("Invalid JSON format for encrypted key:", parseError);
+        throw new Error(`Invalid encrypted key format: ${parseError.message}`);
+      }
     } else if (typeof encryptedKeyData === 'object' && encryptedKeyData !== null) {
-      // Convert object back to JSON string for MetaMask
+      // It's an object - validate and stringify
+      if (!encryptedKeyData.version || !encryptedKeyData.nonce || !encryptedKeyData.ephemPublicKey || !encryptedKeyData.ciphertext) {
+        throw new Error("Encrypted key object missing required fields (version, nonce, ephemPublicKey, ciphertext)");
+      }
       encryptedString = JSON.stringify(encryptedKeyData);
     } else {
       throw new Error('encryptedKeyData must be a JSON string or an object');
-    }
-    
-    // Validate that the encrypted string is valid JSON
-    try {
-      JSON.parse(encryptedString);
-    } catch (parseError) {
-      console.error("Invalid JSON format for encrypted key:", parseError);
-      throw new Error(`Invalid encrypted key format: ${parseError.message}`);
     }
     
     // Log the request details for debugging (without sensitive data)
     console.info("Requesting MetaMask decryption:", {
       account: state.account,
       encryptedKeyLength: encryptedString.length,
-      encryptedKeyPreview: encryptedString.substring(0, 50) + "..."
+      encryptedKeyPreview: encryptedString.substring(0, 50) + "...",
+      encryptedKeyStructure: JSON.parse(encryptedString) // Log structure for debugging
     });
     
     // Use MetaMask's eth_decrypt method
+    // Note: This method is deprecated but still supported
     // MetaMask expects the encrypted data as a JSON string in the format returned by eth-sig-util
     try {
       const decryptedString = await window.ethereum.request({
@@ -595,8 +605,15 @@ Then refresh this page.`;
     } catch (metaMaskError) {
       // Provide more detailed error information
       console.error("MetaMask decryption error:", metaMaskError);
+      
+      // Handle different error codes
       if (metaMaskError.code === 4001) {
         throw new Error("MetaMask DecryptMessage: User denied message decryption.");
+      } else if (metaMaskError.code === -32603) {
+        // RPC error - could be format issue or account mismatch
+        const errorDetails = metaMaskError.data?.cause || metaMaskError.message || "Unknown RPC error";
+        console.error("RPC Error details:", errorDetails);
+        throw new Error(`MetaMask decryption failed: ${metaMaskError.message || "RPC error -32603"}. Please ensure you're using the correct account that the message was encrypted for.`);
       }
       throw metaMaskError;
     }
@@ -1040,6 +1057,10 @@ Then refresh this page.`;
         // Get message ID from button data attribute
         const messageId = parseInt(decryptButton.dataset.messageId, 10);
         
+        // Store messageData in outer scope for error handling
+        let messageData = null;
+        let message = null;
+        
         try {
           // Disable button and show loading state
           decryptButton.disabled = true;
@@ -1048,8 +1069,8 @@ Then refresh this page.`;
           // Re-fetch the message data to ensure we have the latest encrypted key and content
           // This avoids any encoding issues with data attributes
           updateStatus(`Loading message #${messageId} data...`);
-          const messageData = await loadMessage(messageId);
-          const message = messageData.message;
+          messageData = await loadMessage(messageId);
+          message = messageData.message;
           
           if (!message.encryptedKey || !message.encryptedContent) {
             throw new Error("Message data is missing encrypted key or content");
@@ -1058,6 +1079,11 @@ Then refresh this page.`;
           // Decrypt the symmetric key using MetaMask
           // The encryptedKey from the API is already a JSON string
           updateStatus(`Decrypting message #${messageId}...`);
+          
+          // Verify that the current account matches the recipient
+          if (message.recipient && message.recipient.toLowerCase() !== state.account.toLowerCase()) {
+            throw new Error(`This message was encrypted for a different account (${message.recipient}). Please switch to the correct account in MetaMask.`);
+          }
           
           // Validate that encryptedKey is a valid JSON string
           let encryptedKeyForDecryption = message.encryptedKey;
@@ -1097,6 +1123,12 @@ Then refresh this page.`;
           let errorMsg = "Unknown error";
           if (error.code === 4001) {
             errorMsg = "Decryption cancelled or denied in MetaMask. Please ensure you click 'Decrypt' in the MetaMask popup and that you're using the correct account.";
+          } else if (error.code === -32603) {
+            // RPC error - most likely account/key mismatch
+            errorMsg = `Decryption failed: The message may have been encrypted for a different account's public key. Please verify:
+1. You're using the account that was the intended recipient (${messageData?.message?.recipient || 'unknown'})
+2. The account's encryption public key matches the one used to encrypt the message
+3. Try refreshing the page and reconnecting your wallet`;
           } else if (error.message) {
             errorMsg = error.message;
           }
@@ -1107,7 +1139,9 @@ Then refresh this page.`;
             errorCode: error.code,
             errorMessage: error.message,
             error: error,
-            account: state.account
+            account: state.account,
+            messageRecipient: messageData?.message?.recipient,
+            errorData: error.data
           });
           
           updateStatus(`Failed to decrypt message #${messageId}: ${errorMsg}`);
