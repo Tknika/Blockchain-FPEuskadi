@@ -972,33 +972,13 @@ Then refresh this page.`;
         }</p>`
       : "";
 
-    // Try to decrypt the message if user is the recipient
-    let decryptedContent = null;
-    let decryptionError = null;
-    
-    if (isRecipient && msg.encryptedKey) {
-      try {
-        // Decrypt the symmetric key using MetaMask
-        const symmetricKeyBase64 = await decryptSymmetricKey(msg.encryptedKey);
-        const symmetricKey = await importKey(symmetricKeyBase64);
-        
-        // Decrypt the message content
-        decryptedContent = await decryptContent(msg.encryptedContent, symmetricKey);
-      } catch (error) {
-        decryptionError = error.message;
-        updateStatus(`Failed to decrypt message #${msg.id}: ${error.message}`);
-      }
-    }
-
+    // Determine content display based on user role
+    // Don't automatically decrypt - show a button instead
     let contentDisplay = "";
     if (isRecipient) {
-      if (decryptedContent !== null) {
-        contentDisplay = `<p><strong>Decrypted message:</strong> ${decryptedContent}</p>`;
-      } else if (decryptionError) {
-        contentDisplay = `<p class="muted">Encrypted content (decryption failed: ${decryptionError})</p>`;
-      } else {
-        contentDisplay = `<p class="muted">Encrypted content (click to decrypt)</p>`;
-      }
+      // Show encrypted content status and a decrypt button
+      contentDisplay = `<p class="muted">Encrypted content</p>
+        <div id="decrypted-content-${msg.id}" style="display: none;"></div>`;
     } else if (isSender) {
       contentDisplay = `<p class="muted">Encrypted content (you sent this message)</p>`;
     } else {
@@ -1017,10 +997,79 @@ Then refresh this page.`;
         ? `<p class="muted">Stats: ${stats.confirmedCount}/${stats.totalRecipients} confirmed</p>`
         : ""}
       ${confirmationInfo}
+      ${isRecipient && msg.encryptedKey 
+        ? `<button class="decrypt-message" data-message-id="${msg.id}" data-encrypted-key="${encodeURIComponent(typeof msg.encryptedKey === 'string' ? msg.encryptedKey : JSON.stringify(msg.encryptedKey))}" data-encrypted-content="${encodeURIComponent(msg.encryptedContent)}">Decrypt Message</button>` 
+        : ""}
       ${isRecipient && !confirmations[0]?.confirmed 
         ? `<button class="confirm-message" data-message="${msg.id}">Confirm Reception</button>` 
         : ""}
     `;
+
+    // Add decrypt button handler if applicable
+    const decryptButton = wrapper.querySelector(".decrypt-message");
+    if (decryptButton) {
+      decryptButton.addEventListener("click", async () => {
+        try {
+          // Get encrypted data from data attributes
+          // Decode the URI-encoded data - decryptSymmetricKey handles both strings and objects
+          const decodedKeyData = decodeURIComponent(decryptButton.dataset.encryptedKey);
+          // Try to parse as JSON to get object, otherwise use as string (decryptSymmetricKey handles both)
+          let encryptedKeyData;
+          try {
+            // If it parses successfully, we have an object (preferred format)
+            encryptedKeyData = JSON.parse(decodedKeyData);
+          } catch {
+            // If parsing fails, it's already a JSON string, use it directly
+            encryptedKeyData = decodedKeyData;
+          }
+          const encryptedContent = decodeURIComponent(decryptButton.dataset.encryptedContent);
+          
+          // Disable button and show loading state
+          decryptButton.disabled = true;
+          decryptButton.textContent = "Decrypting...";
+          
+          // Decrypt the symmetric key using MetaMask
+          updateStatus(`Decrypting message #${msg.id}...`);
+          const symmetricKeyBase64 = await decryptSymmetricKey(encryptedKeyData);
+          const symmetricKey = await importKey(symmetricKeyBase64);
+          
+          // Decrypt the message content
+          const decryptedContent = await decryptContent(encryptedContent, symmetricKey);
+          
+          // Update UI to show decrypted content
+          const decryptedContentDiv = wrapper.querySelector(`#decrypted-content-${msg.id}`);
+          if (decryptedContentDiv) {
+            decryptedContentDiv.innerHTML = `<p><strong>Decrypted message:</strong> ${decryptedContent}</p>`;
+            decryptedContentDiv.style.display = "block";
+          }
+          
+          // Hide or disable the decrypt button
+          decryptButton.style.display = "none";
+          
+          updateStatus(`Message #${msg.id} decrypted successfully.`);
+        } catch (error) {
+          // Re-enable button on error
+          decryptButton.disabled = false;
+          decryptButton.textContent = "Decrypt Message";
+          
+          let errorMsg = "Unknown error";
+          if (error.code === 4001) {
+            errorMsg = "Decryption cancelled by user in MetaMask";
+          } else if (error.message) {
+            errorMsg = error.message;
+          }
+          
+          updateStatus(`Failed to decrypt message #${msg.id}: ${errorMsg}`);
+          
+          // Show error in the decrypted content area
+          const decryptedContentDiv = wrapper.querySelector(`#decrypted-content-${msg.id}`);
+          if (decryptedContentDiv) {
+            decryptedContentDiv.innerHTML = `<p class="muted">Decryption failed: ${errorMsg}</p>`;
+            decryptedContentDiv.style.display = "block";
+          }
+        }
+      });
+    }
 
     // Add confirm button handler if applicable
     const confirmButton = wrapper.querySelector(".confirm-message");
