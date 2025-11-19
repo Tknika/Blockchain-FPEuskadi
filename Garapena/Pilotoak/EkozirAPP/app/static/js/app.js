@@ -1114,37 +1114,88 @@ Then refresh this page.`;
               params: [state.account],
             });
             
+            console.info("Public key comparison:", {
+              contractKeyExists: !!contractPublicKey,
+              contractKeyLength: contractPublicKey?.length,
+              contractKeyPreview: contractPublicKey ? contractPublicKey.substring(0, 30) + "..." : "none",
+              metamaskKeyExists: !!currentMetaMaskKey,
+              metamaskKeyLength: currentMetaMaskKey?.length,
+              metamaskKeyPreview: currentMetaMaskKey ? currentMetaMaskKey.substring(0, 30) + "..." : "none",
+              keysMatch: contractPublicKey === currentMetaMaskKey
+            });
+            
             if (contractPublicKey && contractPublicKey !== currentMetaMaskKey) {
-              console.warn("Public key mismatch detected:", {
-                contractKey: contractPublicKey.substring(0, 20) + "...",
-                metamaskKey: currentMetaMaskKey.substring(0, 20) + "..."
+              console.error("Public key mismatch detected - this will cause decryption to fail!", {
+                contractKey: contractPublicKey,
+                metamaskKey: currentMetaMaskKey,
+                contractKeyLength: contractPublicKey.length,
+                metamaskKeyLength: currentMetaMaskKey.length
               });
-              updateStatus(`Warning: Your current MetaMask encryption key differs from the one registered in the contract. The message may have been encrypted with a different key.`);
+              throw new Error(`CRITICAL: Your current MetaMask encryption key does NOT match the one registered in the contract. The message was encrypted with the contract's public key (${contractPublicKey.substring(0, 20)}...), but MetaMask is trying to decrypt with a different key (${currentMetaMaskKey.substring(0, 20)}...). You need to either: 1) Re-register with your current MetaMask key, or 2) Use the account that has the matching encryption key.`);
+            } else if (contractPublicKey && contractPublicKey === currentMetaMaskKey) {
+              console.info("Public keys match - decryption should work if the message was encrypted correctly.");
+            } else if (!contractPublicKey) {
+              console.warn("No public key found in contract for this account.");
             }
           } catch (keyCheckError) {
+            // If it's our custom error about key mismatch, throw it
+            if (keyCheckError.message && keyCheckError.message.includes("CRITICAL")) {
+              throw keyCheckError;
+            }
             console.warn("Could not verify public key match:", keyCheckError);
             // Continue anyway - the decryption attempt will reveal if there's a mismatch
           }
           
           // Validate that encryptedKey is a valid JSON string
+          // The encryptedKey from the contract is stored as a string, so we need to handle it carefully
           let encryptedKeyForDecryption = message.encryptedKey;
+          
+          // Log the raw encrypted key for debugging
+          console.info("Raw encrypted key from contract:", {
+            type: typeof encryptedKeyForDecryption,
+            length: encryptedKeyForDecryption?.length,
+            firstChars: encryptedKeyForDecryption?.substring(0, 100),
+            lastChars: encryptedKeyForDecryption?.substring(Math.max(0, encryptedKeyForDecryption.length - 50))
+          });
+          
           try {
             // Try to parse it to ensure it's valid JSON
+            // If it's already a JSON string, parse it to validate, then we'll pass it as-is to MetaMask
             const parsed = JSON.parse(encryptedKeyForDecryption);
+            
             // Log the structure for debugging
             console.info("Encrypted key structure:", {
               hasVersion: !!parsed.version,
               hasNonce: !!parsed.nonce,
               hasEphemPublicKey: !!parsed.ephemPublicKey,
               hasCiphertext: !!parsed.ciphertext,
-              version: parsed.version
+              version: parsed.version,
+              nonceLength: parsed.nonce?.length,
+              ephemPublicKeyLength: parsed.ephemPublicKey?.length,
+              ciphertextLength: parsed.ciphertext?.length
             });
-            // If it parses successfully, stringify it back to ensure proper format
-            encryptedKeyForDecryption = JSON.stringify(parsed);
+            
+            // Validate all required fields are present and non-empty
+            if (!parsed.version || !parsed.nonce || !parsed.ephemPublicKey || !parsed.ciphertext) {
+              throw new Error("Encrypted key missing required fields");
+            }
+            
+            // Use the original string as-is - don't re-stringify as it might change formatting
+            // MetaMask expects the exact JSON string format
+            // encryptedKeyForDecryption remains as the original string from the contract
           } catch (parseError) {
-            // If parsing fails, the string might not be valid JSON
-            console.warn("Encrypted key might not be valid JSON, attempting decryption anyway:", parseError);
-            // Use as-is - decryptSymmetricKey will handle it
+            // If parsing fails, the string might not be valid JSON or might be double-encoded
+            console.error("Failed to parse encrypted key as JSON:", parseError);
+            console.error("Encrypted key value:", encryptedKeyForDecryption);
+            
+            // Try to handle potential double-encoding
+            try {
+              const doubleParsed = JSON.parse(JSON.parse(encryptedKeyForDecryption));
+              console.info("Encrypted key was double-encoded, using parsed version");
+              encryptedKeyForDecryption = JSON.stringify(doubleParsed);
+            } catch (doubleParseError) {
+              throw new Error(`Invalid encrypted key format: ${parseError.message}. The key may be corrupted or in an unexpected format.`);
+            }
           }
           
           const symmetricKeyBase64 = await decryptSymmetricKey(encryptedKeyForDecryption);
