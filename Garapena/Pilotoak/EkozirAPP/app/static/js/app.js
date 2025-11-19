@@ -541,7 +541,7 @@ Then refresh this page.`;
 
   /**
    * Decrypt a symmetric key using MetaMask's decryption.
-   * @param {string} encryptedKeyData JSON string of encrypted key data
+   * @param {string|object} encryptedKeyData JSON string or object of encrypted key data
    * @returns {Promise<string>} Base64-encoded decrypted symmetric key
    */
   async function decryptSymmetricKey(encryptedKeyData) {
@@ -549,7 +549,16 @@ Then refresh this page.`;
       throw new Error("MetaMask is not available");
     }
     
-    const encrypted = JSON.parse(encryptedKeyData);
+    // Handle both string (JSON) and already-parsed object formats
+    // If it's already an object, use it directly; otherwise parse the JSON string
+    let encrypted;
+    if (typeof encryptedKeyData === 'string') {
+      encrypted = JSON.parse(encryptedKeyData);
+    } else if (typeof encryptedKeyData === 'object' && encryptedKeyData !== null) {
+      encrypted = encryptedKeyData;
+    } else {
+      throw new Error('encryptedKeyData must be a JSON string or an object');
+    }
     
     // Use MetaMask's eth_decrypt method
     // MetaMask expects the encrypted data in the format returned by eth-sig-util
@@ -668,6 +677,8 @@ Then refresh this page.`;
         updateStatus("Encrypting message content...");
         const encryptedContent = await encryptContent(content, symmetricKey);
         
+        console.info("[Ekozir]", "Mensaje encriptado: ", encryptedContent || "");
+
         for (let i = 0; i < recipients.length; i++) {
           const recipient = recipients[i];
           const recipientData = groupData.members.find(m => 
