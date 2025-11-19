@@ -14,10 +14,15 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY . /app
-
+# Copy only requirements.txt first to leverage Docker cache
+# This layer will be cached unless requirements.txt changes
+COPY requirements.txt /app/
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code
+# This layer will be rebuilt when app code changes, but dependencies stay cached
+COPY . /app
 
 #EXPOSE 5003
 

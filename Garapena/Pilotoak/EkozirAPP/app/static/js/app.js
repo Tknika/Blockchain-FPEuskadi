@@ -678,8 +678,6 @@ Then refresh this page.`;
         // Encrypt the message content once with the symmetric key
         updateStatus("Encrypting message content...");
         const encryptedContent = await encryptContent(content, symmetricKey);
-        
-        console.info("[Ekozir]", "Mensaje encriptado: ", encryptedContent || "");
 
         for (let i = 0; i < recipients.length; i++) {
           const recipient = recipients[i];
@@ -699,7 +697,11 @@ Then refresh this page.`;
             // Encrypt the symmetric key with the recipient's public key
             updateStatus(`Encrypting key for ${recipientData.name || recipient}...`);
             const encryptedKey = await encryptSymmetricKey(symmetricKeyBase64, recipientData.publicKey);
-            
+            console.info("[Ekozir]", "Grupo: ", groupId || "");
+            console.info("[Ekozir]", "Receptor: ", recipient || "");
+            console.info("[Ekozir]", "Clave simétrica encriptada: ", encryptedKey || "");
+            console.info("[Ekozir]", "Contenido encriptado: ", encryptedContent || "");
+            console.info("[Ekozir]", "Hash del mensaje: ", messageHash || "");
             updateStatus(`Sending message ${i + 1}/${recipients.length} to ${recipientData.name || recipient}...`);
             
             // Send the transaction - this will trigger MetaMask confirmation
