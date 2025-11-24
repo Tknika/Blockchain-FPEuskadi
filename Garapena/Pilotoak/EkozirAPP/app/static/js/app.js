@@ -515,9 +515,13 @@
       state.selectedGroupId = null;
       
       updateSignedInUI();
-      ui.loginUsername.value = "";
-      ui.loginPassword.value = "";
-      ui.loginStatus.textContent = "";
+      // Clear login form fields if they exist
+      if (ui.loginPassword) {
+        ui.loginPassword.value = "";
+      }
+      if (ui.loginStatus) {
+        ui.loginStatus.textContent = "";
+      }
     } catch (error) {
       updateStatus("Logout error", { error: error.message });
     }
@@ -668,26 +672,43 @@
     }
     
     try {
+      // Clear the groups list first
+      if (ui.groupsList) {
+        ui.groupsList.innerHTML = "";
+      }
+      
       const response = await fetch("/api/users/groups");
       const { data } = await response.json();
       const groupIds = data.groups || [];
-      ui.groupsList.innerHTML = "";
 
       if (groupIds.length === 0) {
-        ui.groupsList.innerHTML = '<p class="muted">No groups found.</p>';
+        if (ui.groupsList) {
+          ui.groupsList.innerHTML = '<p class="muted">No groups found.</p>';
+        }
         clearGroupSelectors();
         return;
       }
 
       const collectedGroups = [];
+      // Load and render each group
       for (const groupId of groupIds) {
-        const group = await loadGroup(groupId);
-        renderGroup(group);
-        collectedGroups.push(group.group);
+        try {
+          const groupData = await loadGroup(groupId);
+          if (groupData && groupData.group) {
+            renderGroup(groupData);
+            collectedGroups.push(groupData.group);
+          }
+        } catch (error) {
+          console.warn(`Failed to load group ${groupId}:`, error);
+          // Continue with other groups even if one fails
+        }
       }
+      
+      // Update group selectors with the collected groups
       populateGroupSelectors(collectedGroups);
     } catch (error) {
       updateStatus("Failed to load groups.", { error: error.message });
+      console.error("Error refreshing groups:", error);
     }
   }
 
@@ -704,20 +725,33 @@
    * Render group in UI
    */
   function renderGroup(groupData) {
+    if (!groupData || !groupData.group) {
+      console.warn("Invalid group data provided to renderGroup");
+      return;
+    }
+
     const wrapper = document.createElement("div");
     wrapper.className = "list-item";
+    wrapper.dataset.groupId = groupData.group.id; // Add data attribute for easy identification
 
     const group = groupData.group;
     const members = groupData.members || [];
 
-    const memberList = members
-      .map((entry) => `<li>${entry.name || entry.publicKey.substring(0, 20)}...</li>`)
-      .join("");
+    // Create member list - use name if available, otherwise show truncated public key
+    const memberList = members.length > 0
+      ? members
+          .map((entry) => {
+            const displayName = entry.name || entry.publicKey || "Unknown";
+            const truncatedKey = entry.publicKey ? entry.publicKey.substring(0, 20) + "..." : "";
+            return `<li>${displayName}${!entry.name ? ` (${truncatedKey})` : ""}</li>`;
+          })
+          .join("")
+      : "<li class='muted'>No members yet</li>";
 
     wrapper.innerHTML = `
       <strong>#${group.id} — ${group.name}</strong>
       <span class="muted">Members: ${group.members.length}, Messages: ${group.messageCount}</span>
-      <p class="muted">Creator: ${group.creator.substring(0, 20)}...</p>
+      <p class="muted">Creator: ${group.creator ? group.creator.substring(0, 20) + "..." : "Unknown"}</p>
       <ul>${memberList}</ul>
       <button class="view-group" data-group="${group.id}">View messages</button>
     `;
@@ -732,6 +766,12 @@
         }
         await loadMessages(targetGroupId);
       });
+
+    // Remove any existing entry for this group to prevent duplicates
+    const existingEntry = ui.groupsList.querySelector(`[data-group-id="${group.id}"]`);
+    if (existingEntry) {
+      existingEntry.remove();
+    }
 
     ui.groupsList.appendChild(wrapper);
   }
@@ -881,7 +921,18 @@
       if (response.ok) {
         updateStatus("Member added successfully.", { txHash: data.txHash });
         ui.memberPublicKey.value = ""; // Clear the input
+        
+        // Wait a brief moment to ensure blockchain state is updated
+        // (even though transaction is confirmed, state propagation might need a moment)
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Refresh groups to show the updated member list
         await refreshGroups();
+        
+        // If a group was selected in message group select, refresh it too
+        if (state.selectedGroupId === groupId) {
+          await loadMessages(groupId);
+        }
       } else {
         updateStatus("Failed to add member.", { error: data.error });
       }
