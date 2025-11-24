@@ -2,11 +2,11 @@
 pragma solidity ^0.8.19;
 
 /**
- * @title Ekozir - Private Encrypted Messaging Groups
+ * @title Ekozir_old - Private Encrypted Messaging Groups
  * @dev Smart contract for creating private groups where members can share encrypted messages
  * @author Blockchain-FPEuskadi
  */
-contract Ekozir {
+contract Ekozir_old {
     // Struct to represent a private group
     struct Group {
         uint256 id;
