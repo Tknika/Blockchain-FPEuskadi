@@ -191,38 +191,6 @@ def get_message(message_id: int, caller_public_key: str) -> Dict[str, Any]:
     }
 
 
-def get_sent_messages(group_id: int, sender_public_key: str) -> List[Dict[str, Any]]:
-    """
-    Get all sent messages for a sender in a group.
-    
-    This allows senders to see their own sent messages.
-    
-    Args:
-        group_id: The ID of the group
-        sender_public_key: Public key (JSON string) of the sender
-    
-    Returns:
-        List of SentMessage dictionaries
-    """
-    contract = get_contract()
-    sent_messages = contract.functions.getSentMessages(group_id, sender_public_key).call(
-        build_default_call_args()
-    )
-    
-    # Convert SentMessage structs to dictionaries
-    result = []
-    for sent_msg in sent_messages:
-        result.append({
-            "messageId": sent_msg[0],
-            "groupId": sent_msg[1],
-            "sender": sent_msg[2],  # Public key (JSON string)
-            "recipient": sent_msg[3],  # Public key (JSON string)
-            "timestamp": sent_msg[4],
-        })
-    
-    return result
-
-
 def get_message_confirmations(message_id: int, caller_public_key: str) -> List[Dict[str, Any]]:
     """
     Return confirmation status for the message.
@@ -388,6 +356,7 @@ def send_message_transaction(
     recipient_public_key: str,
     encrypted_content: str,
     encrypted_key: str,
+    encrypted_key_for_sender: str,
     message_hash: bytes
 ) -> TxReceipt:
     """
@@ -399,6 +368,7 @@ def send_message_transaction(
         recipient_public_key: Public key (JSON string) of the recipient
         encrypted_content: Encrypted message content
         encrypted_key: Encrypted symmetric key for the recipient
+        encrypted_key_for_sender: Encrypted symmetric key for the sender (so sender can read their own messages)
         message_hash: Hash of the original message (bytes32)
     
     Returns:
@@ -411,6 +381,7 @@ def send_message_transaction(
         recipient_public_key,
         encrypted_content,
         encrypted_key,
+        encrypted_key_for_sender,
         message_hash
     )
     return send_transaction(function_call)

@@ -27,22 +27,15 @@ contract Ekozir {
         string recipient; // Public key (JSON string) of the recipient
         string encryptedContent; // Encrypted message content (encrypted with symmetric key)
         string encryptedKey; // Symmetric key encrypted for the recipient
+        string encryptedKeyForSender; // Symmetric key encrypted for the sender (so sender can read their own messages)
         bool confirmed; // Track if recipient confirmed receiving the message
         uint256 confirmationTimestamp; // When the recipient confirmed
         uint256 timestamp;
         bytes32 messageHash; // Hash for integrity verification
     }
     
-    // Struct to represent a sent message (for sender's view)
-    struct SentMessage {
-        uint256 messageId;
-        uint256 groupId;
-        string sender; // Public key (JSON string) of the sender
-        string recipient; // Public key (JSON string) of the recipient
-        uint256 timestamp;
-    }
-    
     // State variables
+    address public owner; // Contract owner address
     uint256 private _groupCounter;
     uint256 private _messageCounter;
     
@@ -71,9 +64,21 @@ contract Ekozir {
     event UserSignedUp(string indexed publicKey, string name);
     
     // Modifiers
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only contract owner can execute this function");
+        _;
+    }
+    
     modifier groupExists(uint256 _groupId) {
         require(groups[_groupId].exists, "Group does not exist");
         _;
+    }
+    
+    /**
+     * @dev Constructor sets the contract owner to the deployer
+     */
+    constructor() {
+        owner = msg.sender;
     }
     
     /**
@@ -81,7 +86,7 @@ contract Ekozir {
      * @param _publicKey The user's public key in JSON string format
      * @param _name The user's name
      */
-    function signUp(string memory _publicKey, string memory _name) external {
+    function signUp(string memory _publicKey, string memory _name) external onlyOwner {
         require(bytes(_publicKey).length > 0, "Public key cannot be empty");
         require(bytes(_name).length > 0, "Name cannot be empty");
         require(!isPublicKeyRegistered(_publicKey), "Public key already registered");
@@ -111,7 +116,7 @@ contract Ekozir {
         string memory _name,
         string memory _creatorPublicKey,
         string[] memory _initialMemberPublicKeys
-    ) external returns (uint256) {
+    ) external onlyOwner returns (uint256) {
         require(bytes(_name).length > 0, "Group name cannot be empty");
         require(bytes(_creatorPublicKey).length > 0, "Creator public key cannot be empty");
         require(isPublicKeyRegistered(_creatorPublicKey), "Creator must be registered");
@@ -164,7 +169,7 @@ contract Ekozir {
         uint256 _groupId,
         string memory _creatorPublicKey,
         string memory _memberPublicKey
-    ) external groupExists(_groupId) {
+    ) external onlyOwner groupExists(_groupId) {
         Group storage group = groups[_groupId];
         require(
             keccak256(bytes(group.creator)) == keccak256(bytes(_creatorPublicKey)),
@@ -191,7 +196,7 @@ contract Ekozir {
         uint256 _groupId,
         string memory _creatorPublicKey,
         string memory _memberPublicKey
-    ) external groupExists(_groupId) {
+    ) external onlyOwner groupExists(_groupId) {
         Group storage group = groups[_groupId];
         require(
             keccak256(bytes(group.creator)) == keccak256(bytes(_creatorPublicKey)),
@@ -234,6 +239,7 @@ contract Ekozir {
      * @param _recipientPublicKey Public key (JSON string) of the recipient
      * @param _encryptedContent The encrypted message content (encrypted with symmetric key)
      * @param _encryptedKey The symmetric key encrypted for the recipient
+     * @param _encryptedKeyForSender The symmetric key encrypted for the sender (so sender can read their own messages)
      * @param _messageHash Hash of the original message for integrity
      */
     function sendMessage(
@@ -242,8 +248,9 @@ contract Ekozir {
         string memory _recipientPublicKey,
         string memory _encryptedContent,
         string memory _encryptedKey,
+        string memory _encryptedKeyForSender,
         bytes32 _messageHash
-    ) external groupExists(_groupId) {
+    ) external onlyOwner groupExists(_groupId) {
         require(bytes(_senderPublicKey).length > 0, "Sender public key cannot be empty");
         require(bytes(_recipientPublicKey).length > 0, "Recipient public key cannot be empty");
         require(
@@ -252,6 +259,7 @@ contract Ekozir {
         );
         require(bytes(_encryptedContent).length > 0, "Message content cannot be empty");
         require(bytes(_encryptedKey).length > 0, "Encrypted key cannot be empty");
+        require(bytes(_encryptedKeyForSender).length > 0, "Encrypted key for sender cannot be empty");
         
         // Verify sender and recipient are group members
         Group storage group = groups[_groupId];
@@ -268,6 +276,7 @@ contract Ekozir {
         newMessage.recipient = _recipientPublicKey;
         newMessage.encryptedContent = _encryptedContent;
         newMessage.encryptedKey = _encryptedKey;
+        newMessage.encryptedKeyForSender = _encryptedKeyForSender;
         newMessage.timestamp = block.timestamp;
         newMessage.messageHash = _messageHash;
         newMessage.confirmed = false;
@@ -371,7 +380,7 @@ contract Ekozir {
      * @return sender Sender public key (JSON string)
      * @return recipient Recipient public key (JSON string)
      * @return encryptedContent Encrypted message content
-     * @return encryptedKey Encrypted symmetric key for the recipient
+     * @return encryptedKey Encrypted symmetric key (for recipient if caller is recipient, for sender if caller is sender)
      * @return timestamp Message timestamp
      * @return messageHash Message hash for integrity
      */
@@ -393,13 +402,18 @@ contract Ekozir {
             "Not authorized to read this message"
         );
         
+        // Return encryptedKeyForSender if caller is sender, encryptedKey if caller is recipient
+        string memory keyToReturn = keccak256(bytes(message.sender)) == keccak256(bytes(_callerPublicKey))
+            ? message.encryptedKeyForSender
+            : message.encryptedKey;
+        
         return (
             message.id,
             message.groupId,
             message.sender,
             message.recipient,
             message.encryptedContent,
-            message.encryptedKey,
+            keyToReturn,
             message.timestamp,
             message.messageHash
         );
@@ -410,7 +424,7 @@ contract Ekozir {
      * @param _messageId The ID of the message to confirm
      * @param _recipientPublicKey Public key (JSON string) of the recipient (for authorization)
      */
-    function confirmMessageReception(uint256 _messageId, string memory _recipientPublicKey) external {
+    function confirmMessageReception(uint256 _messageId, string memory _recipientPublicKey) external onlyOwner {
         require(_messageId > 0 && _messageId <= _messageCounter, "Message does not exist");
         Message storage message = messages[_messageId];
         require(
@@ -537,33 +551,4 @@ contract Ekozir {
         return groupSenderRecipientMessages[_groupId][_senderPublicKey][_recipientPublicKey];
     }
     
-    /**
-     * @dev Get sent messages for a sender in a group (allows sender to see their sent messages)
-     * @param _groupId The ID of the group
-     * @param _senderPublicKey Public key (JSON string) of the sender
-     * @return sentMessages Array of SentMessage structs
-     */
-    function getSentMessages(
-        uint256 _groupId,
-        string memory _senderPublicKey
-    ) external view groupExists(_groupId) returns (SentMessage[] memory) {
-        Group storage group = groups[_groupId];
-        require(group.isMember[_senderPublicKey], "Sender must be a group member");
-        
-        uint256[] memory messageIds = groupUserSentMessages[_groupId][_senderPublicKey];
-        SentMessage[] memory sentMessages = new SentMessage[](messageIds.length);
-        
-        for (uint256 i = 0; i < messageIds.length; i++) {
-            Message storage message = messages[messageIds[i]];
-            sentMessages[i] = SentMessage({
-                messageId: message.id,
-                groupId: message.groupId,
-                sender: message.sender,
-                recipient: message.recipient,
-                timestamp: message.timestamp
-            });
-        }
-        
-        return sentMessages;
-    }
 }

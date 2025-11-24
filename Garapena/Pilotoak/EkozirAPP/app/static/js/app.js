@@ -831,6 +831,10 @@
       let successCount = 0;
       let failCount = 0;
 
+      // Encrypt symmetric key for the sender (so sender can read their own messages)
+      const encryptedKeyForSenderPackage = await encryptWithPublicKey(symmetricKeyBase64, state.publicKey);
+      const encryptedKeyForSender = JSON.stringify(encryptedKeyForSenderPackage);
+
       for (let i = 0; i < recipients.length; i++) {
         const recipientPublicKey = recipients[i];
         const recipientData = groupData.members.find(m => m.publicKey === recipientPublicKey);
@@ -853,6 +857,7 @@
               recipientPublicKey,
               encryptedContent: encryptedContentBase64,
               encryptedKey,
+              encryptedKeyForSender,
               messageHash: "0x" + messageHashBytes32
             })
           });
@@ -950,7 +955,8 @@
       contentDisplay = `<p class="muted">Encrypted content</p>
         <div id="decrypted-content-${msg.id}" style="display: none;"></div>`;
     } else if (isSender) {
-      contentDisplay = `<p class="muted">Encrypted content (you sent this message)</p>`;
+      contentDisplay = `<p class="muted">Encrypted content (you sent this message)</p>
+        <div id="decrypted-content-${msg.id}" style="display: none;"></div>`;
     } else {
       contentDisplay = `<p class="muted">Encrypted content (not addressed to you)</p>`;
     }
@@ -961,7 +967,7 @@
       ${msg.recipient ? `<p class="muted">Recipient: ${msg.recipient.substring(0, 20)}...</p>` : ""}
       ${contentDisplay}
       <p class="muted">Timestamp: ${new Date(msg.timestamp * 1000).toLocaleString()}</p>
-      ${isRecipient && msg.encryptedKey 
+      ${(isRecipient || isSender) && msg.encryptedKey 
         ? `<button class="decrypt-message" data-message-id="${msg.id}">Decrypt Message</button>` 
         : ""}
       ${isRecipient && !messageData.confirmations[0]?.confirmed 
@@ -985,7 +991,7 @@
             throw new Error("Message data is missing encrypted key or content");
           }
           
-          // Parse encrypted key package
+          // Parse encrypted key package (encryptedKeyForSender for sender, encryptedKey for recipient)
           const encryptedKeyPackage = JSON.parse(message.encryptedKey);
           
           // Extract encrypted content (first 12 bytes are IV, rest is encrypted data)
@@ -993,7 +999,7 @@
           const iv = new Uint8Array(encryptedContentBytes.slice(0, 12));
           const encryptedData = encryptedContentBytes.slice(12);
           
-          // Decrypt symmetric key
+          // Decrypt symmetric key using the appropriate encrypted key (for sender or recipient)
           const symmetricKeyBase64 = await decryptWithPrivateKey(encryptedKeyPackage, state.password);
           
           // Import symmetric key

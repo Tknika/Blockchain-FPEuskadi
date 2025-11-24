@@ -221,9 +221,10 @@ def transaction_send_message() -> Response:
     recipient_public_key = data.get("recipientPublicKey")
     encrypted_content = data.get("encryptedContent")
     encrypted_key = data.get("encryptedKey")
+    encrypted_key_for_sender = data.get("encryptedKeyForSender")
     message_hash_hex = data.get("messageHash")
     
-    if not all([group_id, recipient_public_key, encrypted_content, encrypted_key, message_hash_hex]):
+    if not all([group_id, recipient_public_key, encrypted_content, encrypted_key, encrypted_key_for_sender, message_hash_hex]):
         return _json_response({"error": "All fields are required"}, status=400)
     
     try:
@@ -239,6 +240,7 @@ def transaction_send_message() -> Response:
             recipient_public_key,
             encrypted_content,
             encrypted_key,
+            encrypted_key_for_sender,
             message_hash
         )
         
