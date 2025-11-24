@@ -365,6 +365,52 @@ def user_groups() -> Response:
         return _json_response({"error": str(e)}, status=500)
 
 
+@bp.route("/getgroup/<int:group_id>", methods=["GET"])
+def get_group_debug(group_id: int) -> Response:
+    """
+    Debug endpoint to display all information from the smart contract's getGroup function.
+    This page shows raw data from the blockchain to help debug member addition issues.
+    """
+    try:
+        # Get raw group data directly from smart contract
+        group = ekozir_service.get_group(group_id)
+        
+        # Also get member info with names if possible (try without auth for debugging)
+        member_info = []
+        try:
+            # Try to get member info - might fail if not authenticated, but that's ok for debugging
+            caller_public_key = session.get('public_key', '')
+            if caller_public_key:
+                member_info = ekozir_service.get_group_member_public_keys(group_id, caller_public_key)
+        except Exception:
+            # If we can't get member info, just show public keys
+            pass
+        
+        # Convert group to JSON string for display
+        group_json = json.dumps(group, indent=2)
+        
+        return render_template(
+            "group_debug.html",
+            group_id=group_id,
+            group=group,
+            members=group.get("members", []),
+            member_info=member_info,
+            creator=group.get("creator", ""),
+            name=group.get("name", ""),
+            message_count=group.get("messageCount", 0),
+            created_at=group.get("createdAt", 0),
+            group_json=group_json
+        )
+    except Exception as e:
+        return render_template(
+            "group_debug.html",
+            group_id=group_id,
+            error=str(e),
+            group=None,
+            group_json=""
+        )
+
+
 @bp.route("/api/groups/<int:group_id>", methods=["GET"])
 @require_auth
 def group_detail(group_id: int) -> Response:
