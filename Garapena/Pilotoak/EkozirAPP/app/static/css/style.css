@@ -116,3 +116,52 @@ textarea {
   font-size: 0.85rem;
 }
 
+/* User banner displayed when logged in */
+.user-banner {
+  background: linear-gradient(135deg, #2a5298, #1e3c72);
+  color: #ffffff;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+}
+
+.banner-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.banner-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.copy-button {
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  margin-top: 0;
+}
+
+.copy-button:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Auth buttons shown when not logged in */
+.auth-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.auth-buttons button {
+  margin-top: 0;
+  min-width: 120px;
+}
+

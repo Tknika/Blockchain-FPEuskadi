@@ -12,37 +12,37 @@
 
   const ui = {
     walletInfo: document.getElementById("walletInfo"),
+    userBanner: document.getElementById("userBanner"),
+    bannerUsername: document.getElementById("bannerUsername"),
+    copyPublicKeyButton: document.getElementById("copyPublicKeyButton"),
+    logoutButtonBanner: document.getElementById("logoutButtonBanner"),
+    authButtons: document.getElementById("authButtons"),
+    showLoginButton: document.getElementById("showLoginButton"),
+    showSignUpButton: document.getElementById("showSignUpButton"),
     loginSection: document.getElementById("loginSection"),
-    loginUsername: document.getElementById("loginUsername"),
     loginPassword: document.getElementById("loginPassword"),
     loginButton: document.getElementById("loginButton"),
+    cancelLoginButton: document.getElementById("cancelLoginButton"),
     loginStatus: document.getElementById("loginStatus"),
-    showSignUpButton: document.getElementById("showSignUpButton"),
     signUpSection: document.getElementById("signUpSection"),
     signUp: document.getElementById("signUp"),
-    backToLoginButton: document.getElementById("backToLoginButton"),
+    cancelSignUpButton: document.getElementById("cancelSignUpButton"),
     userNameInput: document.getElementById("userNameInput"),
     passwordInput: document.getElementById("passwordInput"),
     signInStatus: document.getElementById("signInStatus"),
     signedInSections: document.querySelectorAll("[data-requires-signin]"),
-    userInfoSection: document.getElementById("userInfoSection"),
-    displayUsername: document.getElementById("displayUsername"),
-    displayPublicKey: document.getElementById("displayPublicKey"),
-    logoutButtonTop: document.getElementById("logoutButtonTop"),
     createGroup: document.getElementById("createGroup"),
     groupName: document.getElementById("groupName"),
-    groupMembers: document.getElementById("groupMembers"),
     addMember: document.getElementById("addMember"),
     removeMember: document.getElementById("removeMember"),
     memberGroupSelect: document.getElementById("memberGroupSelect"),
-    memberUsername: document.getElementById("memberUsername"),
+    memberPublicKey: document.getElementById("memberPublicKey"),
     sendMessage: document.getElementById("sendMessage"),
     messageGroupSelect: document.getElementById("messageGroupSelect"),
     recipientSelection: document.getElementById("recipientSelection"),
     recipientCheckboxes: document.getElementById("recipientCheckboxes"),
     messageContent: document.getElementById("messageContent"),
     refreshGroups: document.getElementById("refreshGroups"),
-    logoutButton: document.getElementById("logoutButton"),
     groupsList: document.getElementById("groupsList"),
     messagesList: document.getElementById("messagesList"),
   };
@@ -401,14 +401,13 @@
   }
 
   /**
-   * Login with username and password
+   * Login with password only (username is retrieved from blockchain)
    */
   async function handleLogin() {
-    const username = ui.loginUsername.value.trim();
     const password = ui.loginPassword.value;
     
-    if (!username || !password) {
-      ui.loginStatus.textContent = "Please enter username and password.";
+    if (!password) {
+      ui.loginStatus.textContent = "Please enter your password.";
       return;
     }
     
@@ -417,18 +416,18 @@
       const publicKeyDict = await derivePublicKeyFromPassword(password);
       const publicKeyJson = JSON.stringify(publicKeyDict);
       
-      // Try to login
+      // Try to login (backend will retrieve username from blockchain)
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ password })
       });
       
       const { data } = await response.json();
       
       if (response.ok && data.authenticated) {
         state.isLoggedIn = true;
-        state.username = username;
+        state.username = data.username; // Retrieved from blockchain
         state.password = password; // Store temporarily for decryption
         state.publicKey = publicKeyJson;
         state.ecdhKeyPair = await generateECDHKeyPairFromPassword(password);
@@ -439,9 +438,8 @@
       } else if (data.needsSignup) {
         // User not registered, show signup option
         ui.loginStatus.textContent = "User not registered. Please sign up.";
-        ui.signUpSection.style.display = "";
-        ui.userNameInput.value = username;
-        ui.passwordInput.value = password;
+        hideLoginSection();
+        showSignUpSection();
       } else {
         ui.loginStatus.textContent = data.error || "Login failed.";
       }
@@ -464,6 +462,14 @@
     }
     
     try {
+      // First check if public key already exists
+      const publicKeyDict = await derivePublicKeyFromPassword(password);
+      const publicKeyJson = JSON.stringify(publicKeyDict);
+      
+      // Check if this public key is already registered
+      const checkResponse = await fetch("/api/auth/status");
+      // We'll check via the signup endpoint which validates this
+      
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -483,7 +489,11 @@
         updateSignedInUI();
         await refreshGroups();
       } else {
-        ui.signInStatus.textContent = data.error || "Sign up failed.";
+        if (data.publicKeyExists) {
+          ui.signInStatus.textContent = "A user with this password already exists. Please use a different password.";
+        } else {
+          ui.signInStatus.textContent = data.error || "Sign up failed.";
+        }
       }
     } catch (error) {
       ui.signInStatus.textContent = `Sign up error: ${error.message}`;
@@ -523,6 +533,9 @@
     if (ui.signUpSection) {
       ui.signUpSection.style.display = "";
     }
+    if (ui.authButtons) {
+      ui.authButtons.style.display = "none";
+    }
   }
 
   /**
@@ -534,6 +547,58 @@
     }
     if (ui.loginSection) {
       ui.loginSection.style.display = "";
+    }
+    if (ui.authButtons) {
+      ui.authButtons.style.display = "none";
+    }
+  }
+
+  /**
+   * Hide login section and show auth buttons
+   */
+  function hideLoginSection() {
+    if (ui.loginSection) {
+      ui.loginSection.style.display = "none";
+    }
+    if (ui.authButtons) {
+      ui.authButtons.style.display = "";
+    }
+  }
+
+  /**
+   * Hide sign-up section and show auth buttons
+   */
+  function hideSignUpSection() {
+    if (ui.signUpSection) {
+      ui.signUpSection.style.display = "none";
+    }
+    if (ui.authButtons) {
+      ui.authButtons.style.display = "";
+    }
+  }
+
+  /**
+   * Copy public key to clipboard
+   */
+  async function copyPublicKeyToClipboard() {
+    if (!state.publicKey) {
+      updateStatus("No public key available to copy.");
+      return;
+    }
+    
+    try {
+      await navigator.clipboard.writeText(state.publicKey);
+      updateStatus("Public key copied to clipboard!");
+      
+      // Show temporary feedback on button
+      const originalText = ui.copyPublicKeyButton.textContent;
+      ui.copyPublicKeyButton.textContent = "Copied!";
+      setTimeout(() => {
+        ui.copyPublicKeyButton.textContent = originalText;
+      }, 2000);
+    } catch (error) {
+      updateStatus("Failed to copy public key to clipboard.");
+      console.error("Copy failed:", error);
     }
   }
 
@@ -548,17 +613,22 @@
       }
     });
     
+    // Hide login and signup sections
     if (ui.loginSection) {
-      ui.loginSection.style.display = shouldDisplay ? "none" : "";
+      ui.loginSection.style.display = "none";
     }
-    
     if (ui.signUpSection) {
       ui.signUpSection.style.display = "none";
     }
     
-    // Update user info section
-    if (ui.userInfoSection) {
-      ui.userInfoSection.style.display = shouldDisplay ? "" : "none";
+    // Show/hide auth buttons (only when not logged in)
+    if (ui.authButtons) {
+      ui.authButtons.style.display = shouldDisplay ? "none" : "";
+    }
+    
+    // Show/hide user banner (only when logged in)
+    if (ui.userBanner) {
+      ui.userBanner.style.display = shouldDisplay ? "" : "none";
     }
     
     if (!shouldDisplay) {
@@ -567,18 +637,9 @@
       ui.messagesList.innerHTML = '<p class="muted">Login to view group messages.</p>';
       updateStatus("Not logged in");
     } else {
-      // Display username and public key
-      if (ui.displayUsername && state.username) {
-        ui.displayUsername.textContent = state.username;
-      }
-      if (ui.displayPublicKey && state.publicKey) {
-        // Format public key JSON for display
-        try {
-          const publicKeyObj = JSON.parse(state.publicKey);
-          ui.displayPublicKey.textContent = JSON.stringify(publicKeyObj, null, 2);
-        } catch (e) {
-          ui.displayPublicKey.textContent = state.publicKey;
-        }
+      // Display username in banner
+      if (ui.bannerUsername && state.username) {
+        ui.bannerUsername.textContent = state.username;
       }
       updateStatus(`Logged in as ${state.username}`);
     }
@@ -700,7 +761,7 @@
   }
 
   /**
-   * Create group
+   * Create group (simplified - only requires name)
    */
   async function handleCreateGroup() {
     const name = ui.groupName.value.trim();
@@ -709,22 +770,13 @@
       return;
     }
 
-    const rawMembers = ui.groupMembers.value
-      .split(",")
-      .map((entry) => entry.trim())
-      .filter(Boolean);
-
-    // For now, we'll need to look up public keys by username
-    // This is a simplified version - in production, you'd have a username->publicKey mapping
-    const initialMemberPublicKeys = []; // TODO: Resolve usernames to public keys
-
     try {
       const response = await fetch("/api/transactions/createGroup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
-          initialMemberPublicKeys
+          initialMemberPublicKeys: [] // No initial members - add them later via Manage Membership
         })
       });
 
@@ -732,6 +784,7 @@
       
       if (response.ok) {
         updateStatus("Group created.", { txHash: data.txHash });
+        ui.groupName.value = ""; // Clear the input
         await refreshGroups();
       } else {
         updateStatus("Failed to create group.", { error: data.error });
@@ -742,22 +795,148 @@
   }
 
   /**
+   * Parse and validate public key from pasted text
+   * Handles JSON string format (as copied from clipboard)
+   * Removes any extra whitespace and newlines
+   */
+  function parsePublicKey(inputText) {
+    if (!inputText || !inputText.trim()) {
+      return null;
+    }
+    
+    // Remove all whitespace and newlines, then try to parse
+    const trimmed = inputText.trim().replace(/\s+/g, ' ').replace(/\n/g, '').replace(/\r/g, '');
+    
+    try {
+      // Try to parse as JSON
+      let publicKeyObj;
+      
+      // If it starts with {, it's likely a JSON object
+      if (trimmed.startsWith('{')) {
+        publicKeyObj = JSON.parse(trimmed);
+      } else {
+        // Try parsing anyway (might be a string representation)
+        publicKeyObj = JSON.parse(trimmed);
+      }
+      
+      // Validate it's a proper public key object with required fields
+      if (publicKeyObj && 
+          typeof publicKeyObj === 'object' &&
+          publicKeyObj.kty === "EC" && 
+          publicKeyObj.crv === "P-256" && 
+          typeof publicKeyObj.x === "string" &&
+          typeof publicKeyObj.y === "string" &&
+          publicKeyObj.x.length > 0 &&
+          publicKeyObj.y.length > 0) {
+        // Return as JSON string (the format expected by the backend)
+        // Use JSON.stringify to ensure consistent formatting
+        return JSON.stringify(publicKeyObj);
+      }
+      
+      return null;
+    } catch (e) {
+      // If parsing fails, return null
+      console.warn("Failed to parse public key:", e);
+      return null;
+    }
+  }
+
+  /**
    * Add member to group
    */
-  async function buildMembershipHandler(methodName) {
-    return async () => {
-      const groupId = parseInt(ui.memberGroupSelect.value, 10);
-      const username = ui.memberUsername.value.trim();
+  async function handleAddMember() {
+    const groupId = parseInt(ui.memberGroupSelect.value, 10);
+    const publicKeyInput = ui.memberPublicKey.value.trim();
 
-      if (!groupId || !username) {
-        updateStatus("Select a group and provide a username.");
-        return;
+    if (!groupId) {
+      updateStatus("Please select a group.");
+      return;
+    }
+
+    if (!publicKeyInput) {
+      updateStatus("Please paste the public key (JSON format) of the member you want to add.");
+      return;
+    }
+
+    // Parse and validate the public key
+    const memberPublicKey = parsePublicKey(publicKeyInput);
+    
+    if (!memberPublicKey) {
+      updateStatus("Invalid public key format. Please paste a valid JSON public key (e.g., copied from another user's 'Copy Public Key' button).");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/transactions/addMember", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          groupId,
+          memberPublicKey
+        })
+      });
+
+      const { data } = await response.json();
+      
+      if (response.ok) {
+        updateStatus("Member added successfully.", { txHash: data.txHash });
+        ui.memberPublicKey.value = ""; // Clear the input
+        await refreshGroups();
+      } else {
+        updateStatus("Failed to add member.", { error: data.error });
       }
+    } catch (error) {
+      updateStatus("Failed to add member.", { error: error.message });
+    }
+  }
 
-      // TODO: Resolve username to public key
-      // For now, this is a placeholder
-      updateStatus("Username to public key resolution not yet implemented.");
-    };
+  /**
+   * Remove member from group
+   */
+  async function handleRemoveMember() {
+    const groupId = parseInt(ui.memberGroupSelect.value, 10);
+    const publicKeyInput = ui.memberPublicKey.value.trim();
+
+    if (!groupId) {
+      updateStatus("Please select a group.");
+      return;
+    }
+
+    if (!publicKeyInput) {
+      updateStatus("Please paste the public key (JSON format) of the member you want to remove.");
+      return;
+    }
+
+    // Parse and validate the public key
+    const memberPublicKey = parsePublicKey(publicKeyInput);
+    
+    if (!memberPublicKey) {
+      updateStatus("Invalid public key format. Please paste a valid JSON public key.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/transactions/removeMember", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          groupId,
+          memberPublicKey
+        })
+      });
+
+      const { data } = await response.json();
+      
+      if (response.ok) {
+        updateStatus("Member removed successfully.", { txHash: data.txHash });
+        ui.memberPublicKey.value = ""; // Clear the input
+        await refreshGroups();
+      } else {
+        updateStatus("Failed to remove member.", { error: data.error });
+      }
+    } catch (error) {
+      updateStatus("Failed to remove member.", { error: error.message });
+    }
   }
 
   // ==================== Message Functions ====================
@@ -1118,32 +1297,38 @@
   // ==================== Event Listeners ====================
 
   function registerEventListeners() {
-    if (ui.loginButton) {
-      ui.loginButton.addEventListener("click", handleLogin);
+    if (ui.showLoginButton) {
+      ui.showLoginButton.addEventListener("click", showLoginSection);
     }
     if (ui.showSignUpButton) {
       ui.showSignUpButton.addEventListener("click", showSignUpSection);
     }
-    if (ui.backToLoginButton) {
-      ui.backToLoginButton.addEventListener("click", showLoginSection);
+    if (ui.loginButton) {
+      ui.loginButton.addEventListener("click", handleLogin);
+    }
+    if (ui.cancelLoginButton) {
+      ui.cancelLoginButton.addEventListener("click", hideLoginSection);
+    }
+    if (ui.cancelSignUpButton) {
+      ui.cancelSignUpButton.addEventListener("click", hideSignUpSection);
     }
     if (ui.signUp) {
       ui.signUp.addEventListener("click", handleSignUp);
     }
-    if (ui.logoutButton) {
-      ui.logoutButton.addEventListener("click", handleLogout);
+    if (ui.logoutButtonBanner) {
+      ui.logoutButtonBanner.addEventListener("click", handleLogout);
     }
-    if (ui.logoutButtonTop) {
-      ui.logoutButtonTop.addEventListener("click", handleLogout);
+    if (ui.copyPublicKeyButton) {
+      ui.copyPublicKeyButton.addEventListener("click", copyPublicKeyToClipboard);
     }
     if (ui.createGroup) {
       ui.createGroup.addEventListener("click", handleCreateGroup);
     }
     if (ui.addMember) {
-      ui.addMember.addEventListener("click", buildMembershipHandler("addMember"));
+      ui.addMember.addEventListener("click", handleAddMember);
     }
     if (ui.removeMember) {
-      ui.removeMember.addEventListener("click", buildMembershipHandler("removeMember"));
+      ui.removeMember.addEventListener("click", handleRemoveMember);
     }
     if (ui.sendMessage) {
       ui.sendMessage.addEventListener("click", handleSendMessage);
@@ -1188,3 +1373,4 @@
     updateStatus("Failed to bootstrap application.", { error: error.message });
   });
 })();
+

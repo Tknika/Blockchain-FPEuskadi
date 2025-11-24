@@ -31,6 +31,22 @@ def is_public_key_registered(public_key: str) -> bool:
     )
 
 
+def get_username_from_public_key(public_key: str) -> str:
+    """
+    Get the username associated with a public key.
+    
+    Args:
+        public_key: Public key as JSON string
+    
+    Returns:
+        Username string, or empty string if not found
+    """
+    contract = get_contract()
+    return contract.functions.getUserName(public_key).call(
+        build_default_call_args()
+    )
+
+
 def get_user_groups(public_key: str) -> List[int]:
     """
     Fetch the identifiers of the groups the user belongs to.

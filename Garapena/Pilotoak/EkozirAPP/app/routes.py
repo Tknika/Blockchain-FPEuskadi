@@ -64,24 +64,24 @@ def contract_metadata() -> Response:
 @bp.route("/api/auth/login", methods=["POST"])
 def auth_login() -> Response:
     """
-    Login with username and password.
+    Login with password only.
     
     Derives public key from password and checks if user is registered.
+    Retrieves username from blockchain using the public key.
     Stores public key and username in session if authenticated.
     """
     data = request.get_json()
     if not data:
         return _json_response({"error": "JSON body required"}, status=400)
     
-    username = data.get("username", "").strip()
     password = data.get("password", "")
     
-    if not username or not password:
-        return _json_response({"error": "Username and password are required"}, status=400)
+    if not password:
+        return _json_response({"error": "Password is required"}, status=400)
     
     try:
-        # Derive public key from password
-        public_key_dict = derive_public_key_from_password(password, username)
+        # Derive public key from password (username not used in key derivation)
+        public_key_dict = derive_public_key_from_password(password, "")
         public_key_json = json.dumps(public_key_dict)
         
         # Check if public key is registered
@@ -92,6 +92,14 @@ def auth_login() -> Response:
                 "error": "User not registered",
                 "publicKey": public_key_json,
                 "needsSignup": True
+            }, status=401)
+        
+        # Get username from blockchain using public key
+        username = ekozir_service.get_username_from_public_key(public_key_json)
+        
+        if not username:
+            return _json_response({
+                "error": "Username not found for this public key"
             }, status=401)
         
         # Store in session
@@ -150,13 +158,16 @@ def auth_signup() -> Response:
         return _json_response({"error": "Username and password are required"}, status=400)
     
     try:
-        # Derive public key from password
-        public_key_dict = derive_public_key_from_password(password, username)
+        # Derive public key from password (username not used in key derivation)
+        public_key_dict = derive_public_key_from_password(password, "")
         public_key_json = json.dumps(public_key_dict)
         
-        # Check if already registered
+        # Check if public key already exists (prevent duplicate public keys)
         if ekozir_service.is_public_key_registered(public_key_json):
-            return _json_response({"error": "User already registered"}, status=400)
+            return _json_response({
+                "error": "A user with this password already exists. Please use a different password.",
+                "publicKeyExists": True
+            }, status=400)
         
         # Execute signUp transaction
         receipt = ekozir_service.sign_up_transaction(public_key_json, username)
