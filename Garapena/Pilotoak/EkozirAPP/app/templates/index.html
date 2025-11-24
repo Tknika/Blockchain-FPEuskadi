@@ -6,6 +6,20 @@
 
 <pre id="walletInfo" class="info-panel">Not logged in</pre>
 
+<!-- User info section displayed when logged in -->
+<section class="card" id="userInfoSection" style="display: none;" data-requires-signin>
+  <h2>Your Account Information</h2>
+  <p>
+    Share your username and public key with others so they can add you to groups.
+  </p>
+  <div id="userInfoContent">
+    <p><strong>Username:</strong> <span id="displayUsername"></span></p>
+    <p><strong>Public Key:</strong></p>
+    <pre id="displayPublicKey" class="info-panel" style="word-break: break-all; white-space: pre-wrap;"></pre>
+  </div>
+  <button id="logoutButtonTop" style="margin-top: 10px;">Logout</button>
+</section>
+
 <section class="card" id="loginSection">
   <h2>Login</h2>
   <p>
@@ -15,6 +29,7 @@
   <input id="loginPassword" type="password" placeholder="Password"/>
   <div class="button-row">
     <button id="loginButton">Login</button>
+    <button id="showSignUpButton">Sign Up</button>
   </div>
   <p id="loginStatus" class="muted"></p>
 </section>
@@ -27,7 +42,10 @@
   <p id="signInStatus" class="muted">Enter username and password to sign up.</p>
   <input id="userNameInput" type="text" placeholder="Your username"/>
   <input id="passwordInput" type="password" placeholder="Your password"/>
-  <button id="signUp">Sign Up</button>
+  <div class="button-row">
+    <button id="signUp">Sign Up</button>
+    <button id="backToLoginButton">Back to Login</button>
+  </div>
 </section>
 
 <section class="card" data-requires-signin>

@@ -17,12 +17,18 @@
     loginPassword: document.getElementById("loginPassword"),
     loginButton: document.getElementById("loginButton"),
     loginStatus: document.getElementById("loginStatus"),
+    showSignUpButton: document.getElementById("showSignUpButton"),
     signUpSection: document.getElementById("signUpSection"),
     signUp: document.getElementById("signUp"),
+    backToLoginButton: document.getElementById("backToLoginButton"),
     userNameInput: document.getElementById("userNameInput"),
     passwordInput: document.getElementById("passwordInput"),
     signInStatus: document.getElementById("signInStatus"),
     signedInSections: document.querySelectorAll("[data-requires-signin]"),
+    userInfoSection: document.getElementById("userInfoSection"),
+    displayUsername: document.getElementById("displayUsername"),
+    displayPublicKey: document.getElementById("displayPublicKey"),
+    logoutButtonTop: document.getElementById("logoutButtonTop"),
     createGroup: document.getElementById("createGroup"),
     groupName: document.getElementById("groupName"),
     groupMembers: document.getElementById("groupMembers"),
@@ -508,6 +514,30 @@
   }
 
   /**
+   * Show sign-up section and hide login section
+   */
+  function showSignUpSection() {
+    if (ui.loginSection) {
+      ui.loginSection.style.display = "none";
+    }
+    if (ui.signUpSection) {
+      ui.signUpSection.style.display = "";
+    }
+  }
+
+  /**
+   * Show login section and hide sign-up section
+   */
+  function showLoginSection() {
+    if (ui.signUpSection) {
+      ui.signUpSection.style.display = "none";
+    }
+    if (ui.loginSection) {
+      ui.loginSection.style.display = "";
+    }
+  }
+
+  /**
    * Update UI based on signed-in status
    */
   function updateSignedInUI() {
@@ -526,11 +556,30 @@
       ui.signUpSection.style.display = "none";
     }
     
+    // Update user info section
+    if (ui.userInfoSection) {
+      ui.userInfoSection.style.display = shouldDisplay ? "" : "none";
+    }
+    
     if (!shouldDisplay) {
       clearGroupSelectors();
       ui.groupsList.innerHTML = '<p class="muted">Login to view your groups.</p>';
       ui.messagesList.innerHTML = '<p class="muted">Login to view group messages.</p>';
+      updateStatus("Not logged in");
     } else {
+      // Display username and public key
+      if (ui.displayUsername && state.username) {
+        ui.displayUsername.textContent = state.username;
+      }
+      if (ui.displayPublicKey && state.publicKey) {
+        // Format public key JSON for display
+        try {
+          const publicKeyObj = JSON.parse(state.publicKey);
+          ui.displayPublicKey.textContent = JSON.stringify(publicKeyObj, null, 2);
+        } catch (e) {
+          ui.displayPublicKey.textContent = state.publicKey;
+        }
+      }
       updateStatus(`Logged in as ${state.username}`);
     }
   }
@@ -1072,11 +1121,20 @@
     if (ui.loginButton) {
       ui.loginButton.addEventListener("click", handleLogin);
     }
+    if (ui.showSignUpButton) {
+      ui.showSignUpButton.addEventListener("click", showSignUpSection);
+    }
+    if (ui.backToLoginButton) {
+      ui.backToLoginButton.addEventListener("click", showLoginSection);
+    }
     if (ui.signUp) {
       ui.signUp.addEventListener("click", handleSignUp);
     }
     if (ui.logoutButton) {
       ui.logoutButton.addEventListener("click", handleLogout);
+    }
+    if (ui.logoutButtonTop) {
+      ui.logoutButtonTop.addEventListener("click", handleLogout);
     }
     if (ui.createGroup) {
       ui.createGroup.addEventListener("click", handleCreateGroup);
