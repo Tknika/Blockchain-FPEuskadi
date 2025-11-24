@@ -1,5 +1,10 @@
 [
     {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
       "anonymous": false,
       "inputs": [
         {
@@ -16,9 +21,9 @@
         },
         {
           "indexed": true,
-          "internalType": "address",
+          "internalType": "string",
           "name": "creator",
-          "type": "address"
+          "type": "string"
         },
         {
           "indexed": false,
@@ -41,15 +46,15 @@
         },
         {
           "indexed": true,
-          "internalType": "address",
+          "internalType": "string",
           "name": "member",
-          "type": "address"
+          "type": "string"
         },
         {
           "indexed": true,
-          "internalType": "address",
+          "internalType": "string",
           "name": "addedBy",
-          "type": "address"
+          "type": "string"
         }
       ],
       "name": "MemberAdded",
@@ -66,15 +71,15 @@
         },
         {
           "indexed": true,
-          "internalType": "address",
+          "internalType": "string",
           "name": "member",
-          "type": "address"
+          "type": "string"
         },
         {
           "indexed": true,
-          "internalType": "address",
+          "internalType": "string",
           "name": "removedBy",
-          "type": "address"
+          "type": "string"
         }
       ],
       "name": "MemberRemoved",
@@ -97,9 +102,9 @@
         },
         {
           "indexed": true,
-          "internalType": "address",
+          "internalType": "string",
           "name": "recipient",
-          "type": "address"
+          "type": "string"
         },
         {
           "indexed": false,
@@ -128,15 +133,15 @@
         },
         {
           "indexed": true,
-          "internalType": "address",
+          "internalType": "string",
           "name": "sender",
-          "type": "address"
+          "type": "string"
         },
         {
           "indexed": false,
-          "internalType": "address",
+          "internalType": "string",
           "name": "recipient",
-          "type": "address"
+          "type": "string"
         },
         {
           "indexed": false,
@@ -153,31 +158,6 @@
       "inputs": [
         {
           "indexed": true,
-          "internalType": "address",
-          "name": "user",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "string",
-          "name": "publicKey",
-          "type": "string"
-        }
-      ],
-      "name": "PublicKeyUpdated",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "user",
-          "type": "address"
-        },
-        {
-          "indexed": false,
           "internalType": "string",
           "name": "publicKey",
           "type": "string"
@@ -200,9 +180,14 @@
           "type": "uint256"
         },
         {
-          "internalType": "address",
-          "name": "_member",
-          "type": "address"
+          "internalType": "string",
+          "name": "_creatorPublicKey",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_memberPublicKey",
+          "type": "string"
         }
       ],
       "name": "addMember",
@@ -216,6 +201,11 @@
           "internalType": "uint256",
           "name": "_messageId",
           "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_recipientPublicKey",
+          "type": "string"
         }
       ],
       "name": "confirmMessageReception",
@@ -231,9 +221,14 @@
           "type": "string"
         },
         {
-          "internalType": "address[]",
-          "name": "_initialMembers",
-          "type": "address[]"
+          "internalType": "string",
+          "name": "_creatorPublicKey",
+          "type": "string"
+        },
+        {
+          "internalType": "string[]",
+          "name": "_initialMemberPublicKeys",
+          "type": "string[]"
         }
       ],
       "name": "createGroup",
@@ -268,14 +263,14 @@
           "type": "string"
         },
         {
-          "internalType": "address",
+          "internalType": "string",
           "name": "creator",
-          "type": "address"
+          "type": "string"
         },
         {
-          "internalType": "address[]",
+          "internalType": "string[]",
           "name": "members",
-          "type": "address[]"
+          "type": "string[]"
         },
         {
           "internalType": "uint256",
@@ -297,14 +292,19 @@
           "internalType": "uint256",
           "name": "_groupId",
           "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_callerPublicKey",
+          "type": "string"
         }
       ],
       "name": "getGroupMemberInfo",
       "outputs": [
         {
-          "internalType": "address[]",
+          "internalType": "string[]",
           "name": "members",
-          "type": "address[]"
+          "type": "string[]"
         },
         {
           "internalType": "string[]",
@@ -326,6 +326,11 @@
           "internalType": "uint256",
           "name": "_groupId",
           "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_callerPublicKey",
+          "type": "string"
         }
       ],
       "name": "getGroupMessageIds",
@@ -347,14 +352,19 @@
           "type": "uint256"
         },
         {
-          "internalType": "address",
-          "name": "_sender",
-          "type": "address"
+          "internalType": "string",
+          "name": "_senderPublicKey",
+          "type": "string"
         },
         {
-          "internalType": "address",
-          "name": "_recipient",
-          "type": "address"
+          "internalType": "string",
+          "name": "_recipientPublicKey",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_callerPublicKey",
+          "type": "string"
         }
       ],
       "name": "getGroupMessagesBetween",
@@ -376,9 +386,14 @@
           "type": "uint256"
         },
         {
-          "internalType": "address",
-          "name": "_recipient",
-          "type": "address"
+          "internalType": "string",
+          "name": "_recipientPublicKey",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_callerPublicKey",
+          "type": "string"
         }
       ],
       "name": "getGroupMessagesReceivedBy",
@@ -400,9 +415,14 @@
           "type": "uint256"
         },
         {
-          "internalType": "address",
-          "name": "_sender",
-          "type": "address"
+          "internalType": "string",
+          "name": "_senderPublicKey",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_callerPublicKey",
+          "type": "string"
         }
       ],
       "name": "getGroupMessagesSentBy",
@@ -422,6 +442,11 @@
           "internalType": "uint256",
           "name": "_messageId",
           "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_callerPublicKey",
+          "type": "string"
         }
       ],
       "name": "getMessage",
@@ -437,14 +462,14 @@
           "type": "uint256"
         },
         {
-          "internalType": "address",
+          "internalType": "string",
           "name": "sender",
-          "type": "address"
+          "type": "string"
         },
         {
-          "internalType": "address",
+          "internalType": "string",
           "name": "recipient",
-          "type": "address"
+          "type": "string"
         },
         {
           "internalType": "string",
@@ -476,6 +501,11 @@
           "internalType": "uint256",
           "name": "_messageId",
           "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_callerPublicKey",
+          "type": "string"
         }
       ],
       "name": "getMessageConfirmation",
@@ -523,9 +553,9 @@
     {
       "inputs": [
         {
-          "internalType": "address",
-          "name": "_user",
-          "type": "address"
+          "internalType": "string",
+          "name": "_publicKey",
+          "type": "string"
         }
       ],
       "name": "getUserGroups",
@@ -542,9 +572,9 @@
     {
       "inputs": [
         {
-          "internalType": "address",
-          "name": "_user",
-          "type": "address"
+          "internalType": "string",
+          "name": "_publicKey",
+          "type": "string"
         }
       ],
       "name": "getUserName",
@@ -603,9 +633,9 @@
           "type": "string"
         },
         {
-          "internalType": "address",
+          "internalType": "string",
           "name": "creator",
-          "type": "address"
+          "type": "string"
         },
         {
           "internalType": "uint256",
@@ -634,12 +664,31 @@
           "type": "uint256"
         },
         {
-          "internalType": "address",
-          "name": "_user",
-          "type": "address"
+          "internalType": "string",
+          "name": "_publicKey",
+          "type": "string"
         }
       ],
       "name": "isGroupMember",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "_publicKey",
+          "type": "string"
+        }
+      ],
+      "name": "isPublicKeyRegistered",
       "outputs": [
         {
           "internalType": "bool",
@@ -671,14 +720,14 @@
           "type": "uint256"
         },
         {
-          "internalType": "address",
+          "internalType": "string",
           "name": "sender",
-          "type": "address"
+          "type": "string"
         },
         {
-          "internalType": "address",
+          "internalType": "string",
           "name": "recipient",
-          "type": "address"
+          "type": "string"
         },
         {
           "internalType": "string",
@@ -688,6 +737,11 @@
         {
           "internalType": "string",
           "name": "encryptedKey",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "encryptedKeyForSender",
           "type": "string"
         },
         {
@@ -715,6 +769,38 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "registeredPublicKeys",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -722,9 +808,14 @@
           "type": "uint256"
         },
         {
-          "internalType": "address",
-          "name": "_member",
-          "type": "address"
+          "internalType": "string",
+          "name": "_creatorPublicKey",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_memberPublicKey",
+          "type": "string"
         }
       ],
       "name": "removeMember",
@@ -740,9 +831,14 @@
           "type": "uint256"
         },
         {
-          "internalType": "address",
-          "name": "_recipient",
-          "type": "address"
+          "internalType": "string",
+          "name": "_senderPublicKey",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_recipientPublicKey",
+          "type": "string"
         },
         {
           "internalType": "string",
@@ -755,25 +851,17 @@
           "type": "string"
         },
         {
+          "internalType": "string",
+          "name": "_encryptedKeyForSender",
+          "type": "string"
+        },
+        {
           "internalType": "bytes32",
           "name": "_messageHash",
           "type": "bytes32"
         }
       ],
       "name": "sendMessage",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "string",
-          "name": "_publicKey",
-          "type": "string"
-        }
-      ],
-      "name": "setPublicKey",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -799,9 +887,9 @@
     {
       "inputs": [
         {
-          "internalType": "address",
+          "internalType": "string",
           "name": "",
-          "type": "address"
+          "type": "string"
         },
         {
           "internalType": "uint256",
@@ -823,31 +911,12 @@
     {
       "inputs": [
         {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "userNames",
-      "outputs": [
-        {
           "internalType": "string",
           "name": "",
           "type": "string"
         }
       ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "userPublicKeys",
+      "name": "userNames",
       "outputs": [
         {
           "internalType": "string",
