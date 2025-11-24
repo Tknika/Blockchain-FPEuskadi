@@ -114,6 +114,7 @@ def load_config() -> Dict[str, Any]:
         "BESU_RPC_URL": rpc_urls[0],
         "BESU_CHAIN_ID": int(os.getenv("BESU_CHAIN_ID", "1337")),
         "SECRET_KEY": os.getenv("FLASK_SECRET_KEY", "change-me"),
+        "EKOZIR_PRIVATE_KEY": os.getenv("EKOZIR_PRIVATE_KEY", ""),
     }
 
     # Contract address is optional during development; the UI handles the fallback.

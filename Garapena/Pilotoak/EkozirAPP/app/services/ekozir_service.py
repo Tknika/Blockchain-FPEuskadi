@@ -2,105 +2,154 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple
+import json
+from typing import Any, Dict, List
 
-from eth_typing import ChecksumAddress
-from web3 import Web3
+from web3.types import TxReceipt
 
-from .web3_service import build_default_call_args, get_contract, get_web3
+from .web3_service import (
+    build_default_call_args,
+    get_contract,
+    get_web3,
+    send_transaction,
+)
 
 
-def _checksum(address: str) -> ChecksumAddress:
-    """Convert the supplied address to EIP-55 checksum format."""
-    return get_web3().to_checksum_address(address)
-
-
-def get_user_groups(user_address: str) -> List[int]:
+def is_public_key_registered(public_key: str) -> bool:
     """
-    Fetch the identifiers of the groups the user belongs to.
-
-    The contract returns a list of ``uint256`` values which Web3.py converts to
-    Python integers automatically.
+    Check if a public key is registered in the contract.
+    
+    Args:
+        public_key: Public key as JSON string
+    
+    Returns:
+        True if the public key is registered
     """
     contract = get_contract()
-    checksum = _checksum(user_address)
-    return list(contract.functions.getUserGroups(checksum).call())
+    return contract.functions.isPublicKeyRegistered(public_key).call(
+        build_default_call_args()
+    )
+
+
+def get_user_groups(public_key: str) -> List[int]:
+    """
+    Fetch the identifiers of the groups the user belongs to.
+    
+    Args:
+        public_key: User's public key as JSON string
+    
+    Returns:
+        List of group IDs
+    """
+    contract = get_contract()
+    return list(contract.functions.getUserGroups(public_key).call(
+        build_default_call_args()
+    ))
 
 
 def get_group(group_id: int) -> Dict[str, Any]:
     """
     Retrieve basic group information.
-
+    
     The view exposes the group's name, creator, members and metadata. Values are
     converted to plain Python types to simplify JSON serialisation.
+    
+    Args:
+        group_id: The ID of the group
+    
+    Returns:
+        Dictionary containing group information
     """
     contract = get_contract()
-    group_tuple = contract.functions.getGroup(group_id).call()
+    group_tuple = contract.functions.getGroup(group_id).call(
+        build_default_call_args()
+    )
 
     return {
         "id": group_tuple[0],
         "name": group_tuple[1],
-        "creator": group_tuple[2],
-        "members": group_tuple[3],
+        "creator": group_tuple[2],  # Public key (JSON string)
+        "members": group_tuple[3],  # List of public keys (JSON strings)
         "messageCount": group_tuple[4],
         "createdAt": group_tuple[5],
     }
 
 
-def get_group_member_public_keys(group_id: int, caller: str) -> List[Dict[str, str]]:
+def get_group_member_public_keys(group_id: int, caller_public_key: str) -> List[Dict[str, str]]:
     """
-    Obtain each group member's published encryption key and name.
-
-    The contract returns three parallel arrays (addresses, names, and keys). They are
-    zipped into a list of dictionaries for ease of use on the client side.
+    Obtain each group member's public key and name.
+    
+    The contract returns three parallel arrays (public keys, names, and public keys again).
+    They are zipped into a list of dictionaries for ease of use on the client side.
+    
+    Args:
+        group_id: The ID of the group
+        caller_public_key: Public key (JSON string) of the caller (for authorization)
+    
+    Returns:
+        List of dictionaries with publicKey and name
     """
     contract = get_contract()
-    result = contract.functions.getGroupMemberInfo(group_id).call(
-        build_default_call_args(caller)
+    result = contract.functions.getGroupMemberInfo(group_id, caller_public_key).call(
+        build_default_call_args()
     )
 
-    members: List[str] = result[0]
+    members: List[str] = result[0]  # Public keys (JSON strings)
     names: List[str] = result[1]
-    keys: List[str] = result[2]
+    keys: List[str] = result[2]  # Same as members, for compatibility
+    
     return [
-        {"address": members[i], "name": names[i], "publicKey": keys[i]}
+        {"publicKey": members[i], "name": names[i]}
         for i in range(len(members))
     ]
 
 
-def get_group_message_ids(group_id: int, caller: str) -> List[int]:
+def get_group_message_ids(group_id: int, caller_public_key: str) -> List[int]:
     """
     Return message identifiers for a group.
-
+    
     The call requires the caller to be a registered group member.
+    
+    Args:
+        group_id: The ID of the group
+        caller_public_key: Public key (JSON string) of the caller (for authorization)
+    
+    Returns:
+        List of message IDs
     """
     contract = get_contract()
     return list(
-        contract.functions.getGroupMessageIds(group_id).call(
-            build_default_call_args(caller)
+        contract.functions.getGroupMessageIds(group_id, caller_public_key).call(
+            build_default_call_args()
         )
     )
 
 
-def get_user_messages_in_group(group_id: int, caller: str) -> List[int]:
+def get_user_messages_in_group(group_id: int, caller_public_key: str) -> List[int]:
     """
     Return all message IDs for a user in a group (both sent and received).
-
+    
     This combines sent and received messages to show all messages relevant to the user.
+    
+    Args:
+        group_id: The ID of the group
+        caller_public_key: Public key (JSON string) of the caller
+    
+    Returns:
+        List of message IDs
     """
     contract = get_contract()
-    checksum = _checksum(caller)
     
     sent_messages = list(
-        contract.functions.getGroupMessagesSentBy(group_id, checksum).call(
-            build_default_call_args(caller)
-        )
+        contract.functions.getGroupMessagesSentBy(
+            group_id, caller_public_key, caller_public_key
+        ).call(build_default_call_args())
     )
     
     received_messages = list(
-        contract.functions.getGroupMessagesReceivedBy(group_id, checksum).call(
-            build_default_call_args(caller)
-        )
+        contract.functions.getGroupMessagesReceivedBy(
+            group_id, caller_public_key, caller_public_key
+        ).call(build_default_call_args())
     )
     
     # Combine and deduplicate (in case there are duplicates, though there shouldn't be)
@@ -111,43 +160,89 @@ def get_user_messages_in_group(group_id: int, caller: str) -> List[int]:
     return all_messages
 
 
-def get_message(message_id: int, caller: str) -> Dict[str, Any]:
+def get_message(message_id: int, caller_public_key: str) -> Dict[str, Any]:
     """
     Fetch a single message scoped to the caller (sender or recipient).
-
+    
     The encrypted symmetric key is returned for the recipient, mirroring the
     smart contract implementation.
+    
+    Args:
+        message_id: The ID of the message
+        caller_public_key: Public key (JSON string) of the caller (for authorization)
+    
+    Returns:
+        Dictionary containing message information
     """
     contract = get_contract()
-    message = contract.functions.getMessage(message_id).call(
-        build_default_call_args(caller)
+    message = contract.functions.getMessage(message_id, caller_public_key).call(
+        build_default_call_args()
     )
 
     return {
         "id": message[0],
         "groupId": message[1],
-        "sender": message[2],
-        "recipient": message[3],
+        "sender": message[2],  # Public key (JSON string)
+        "recipient": message[3],  # Public key (JSON string)
         "encryptedContent": message[4],
         "encryptedKey": message[5],
         "timestamp": message[6],
-        "messageHash": message[7].hex(),
+        "messageHash": message[7].hex() if hasattr(message[7], 'hex') else message[7],
     }
 
 
-def get_message_confirmations(message_id: int, caller: str) -> List[Dict[str, Any]]:
+def get_sent_messages(group_id: int, sender_public_key: str) -> List[Dict[str, Any]]:
+    """
+    Get all sent messages for a sender in a group.
+    
+    This allows senders to see their own sent messages.
+    
+    Args:
+        group_id: The ID of the group
+        sender_public_key: Public key (JSON string) of the sender
+    
+    Returns:
+        List of SentMessage dictionaries
+    """
+    contract = get_contract()
+    sent_messages = contract.functions.getSentMessages(group_id, sender_public_key).call(
+        build_default_call_args()
+    )
+    
+    # Convert SentMessage structs to dictionaries
+    result = []
+    for sent_msg in sent_messages:
+        result.append({
+            "messageId": sent_msg[0],
+            "groupId": sent_msg[1],
+            "sender": sent_msg[2],  # Public key (JSON string)
+            "recipient": sent_msg[3],  # Public key (JSON string)
+            "timestamp": sent_msg[4],
+        })
+    
+    return result
+
+
+def get_message_confirmations(message_id: int, caller_public_key: str) -> List[Dict[str, Any]]:
     """
     Return confirmation status for the message.
-
+    
     Only the sender or recipient can check the confirmation status.
+    
+    Args:
+        message_id: The ID of the message
+        caller_public_key: Public key (JSON string) of the caller (for authorization)
+    
+    Returns:
+        List containing confirmation information
     """
     contract = get_contract()
     confirmed, timestamp = contract.functions.getMessageConfirmation(
-        message_id
-    ).call(build_default_call_args(caller))
+        message_id, caller_public_key
+    ).call(build_default_call_args())
 
     # Get message details to know who the recipient is
-    message = get_message(message_id, caller)
+    message = get_message(message_id, caller_public_key)
     
     return [
         {
@@ -158,23 +253,30 @@ def get_message_confirmations(message_id: int, caller: str) -> List[Dict[str, An
     ]
 
 
-def get_message_stats(message_id: int, caller: str) -> Dict[str, int]:
+def get_message_stats(message_id: int, caller_public_key: str) -> Dict[str, int]:
     """
     Return confirmation statistics for the message.
-
+    
     Since messages are now individual (one recipient per message), we return
     simple stats. Only the sender can see these stats.
+    
+    Args:
+        message_id: The ID of the message
+        caller_public_key: Public key (JSON string) of the caller (for authorization)
+    
+    Returns:
+        Dictionary containing statistics
     """
     try:
         contract = get_contract()
         confirmed, timestamp = contract.functions.getMessageConfirmation(
-            message_id
-        ).call(build_default_call_args(caller))
+            message_id, caller_public_key
+        ).call(build_default_call_args())
         
-        message = get_message(message_id, caller)
+        message = get_message(message_id, caller_public_key)
         
         # Only sender can see stats
-        if message["sender"].lower() != caller.lower():
+        if message["sender"] != caller_public_key:
             return {}
         
         return {
@@ -187,4 +289,150 @@ def get_message_stats(message_id: int, caller: str) -> Dict[str, int]:
         return {}
 
 
+# Transaction execution functions
 
+def sign_up_transaction(public_key: str, name: str) -> TxReceipt:
+    """
+    Execute signUp transaction on the blockchain.
+    
+    Args:
+        public_key: Public key as JSON string
+        name: User's name
+    
+    Returns:
+        Transaction receipt
+    """
+    contract = get_contract()
+    function_call = contract.functions.signUp(public_key, name)
+    return send_transaction(function_call)
+
+
+def create_group_transaction(
+    name: str,
+    creator_public_key: str,
+    initial_member_public_keys: List[str]
+) -> TxReceipt:
+    """
+    Execute createGroup transaction on the blockchain.
+    
+    Args:
+        name: Name of the group
+        creator_public_key: Public key (JSON string) of the creator
+        initial_member_public_keys: List of public keys (JSON strings) for initial members
+    
+    Returns:
+        Transaction receipt
+    """
+    contract = get_contract()
+    function_call = contract.functions.createGroup(
+        name,
+        creator_public_key,
+        initial_member_public_keys
+    )
+    return send_transaction(function_call)
+
+
+def add_member_transaction(
+    group_id: int,
+    creator_public_key: str,
+    member_public_key: str
+) -> TxReceipt:
+    """
+    Execute addMember transaction on the blockchain.
+    
+    Args:
+        group_id: The ID of the group
+        creator_public_key: Public key (JSON string) of the creator (for authorization)
+        member_public_key: Public key (JSON string) of the member to add
+    
+    Returns:
+        Transaction receipt
+    """
+    contract = get_contract()
+    function_call = contract.functions.addMember(
+        group_id,
+        creator_public_key,
+        member_public_key
+    )
+    return send_transaction(function_call)
+
+
+def remove_member_transaction(
+    group_id: int,
+    creator_public_key: str,
+    member_public_key: str
+) -> TxReceipt:
+    """
+    Execute removeMember transaction on the blockchain.
+    
+    Args:
+        group_id: The ID of the group
+        creator_public_key: Public key (JSON string) of the creator (for authorization)
+        member_public_key: Public key (JSON string) of the member to remove
+    
+    Returns:
+        Transaction receipt
+    """
+    contract = get_contract()
+    function_call = contract.functions.removeMember(
+        group_id,
+        creator_public_key,
+        member_public_key
+    )
+    return send_transaction(function_call)
+
+
+def send_message_transaction(
+    group_id: int,
+    sender_public_key: str,
+    recipient_public_key: str,
+    encrypted_content: str,
+    encrypted_key: str,
+    message_hash: bytes
+) -> TxReceipt:
+    """
+    Execute sendMessage transaction on the blockchain.
+    
+    Args:
+        group_id: The ID of the group
+        sender_public_key: Public key (JSON string) of the sender
+        recipient_public_key: Public key (JSON string) of the recipient
+        encrypted_content: Encrypted message content
+        encrypted_key: Encrypted symmetric key for the recipient
+        message_hash: Hash of the original message (bytes32)
+    
+    Returns:
+        Transaction receipt
+    """
+    contract = get_contract()
+    function_call = contract.functions.sendMessage(
+        group_id,
+        sender_public_key,
+        recipient_public_key,
+        encrypted_content,
+        encrypted_key,
+        message_hash
+    )
+    return send_transaction(function_call)
+
+
+def confirm_message_transaction(
+    message_id: int,
+    recipient_public_key: str
+) -> TxReceipt:
+    """
+    Execute confirmMessageReception transaction on the blockchain.
+    
+    Args:
+        message_id: The ID of the message
+        recipient_public_key: Public key (JSON string) of the recipient (for authorization)
+    
+    Returns:
+        Transaction receipt
+    """
+    contract = get_contract()
+    function_call = contract.functions.confirmMessageReception(
+        message_id,
+        recipient_public_key
+    )
+    return send_transaction(function_call)

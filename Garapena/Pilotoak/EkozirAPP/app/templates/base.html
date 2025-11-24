@@ -11,17 +11,14 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/style.css') }}"
     />
-    <!-- Ethers.js powers MetaMask interactions -->
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-    <!-- Load eth-sig-util bundle (created with browserify) -->
-    <!-- The bundle exports @metamask/eth-sig-util as EthSigUtil global -->
-    <script src="{{ url_for('static', filename='js/eth-sig-util.umd.js') }}"></script>
+    <!-- Load elliptic library for ECDH encryption -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.6.1/elliptic.min.js"></script>
   </head>
   <body>
     <header class="app-header">
       <h1>Ekozir Encrypted Groups</h1>
       <p class="subtitle">
-        Besu-powered private messaging — connect with MetaMask to get started.
+        Besu-powered private messaging — login with username and password to get started.
       </p>
     </header>
     <main class="app-body">

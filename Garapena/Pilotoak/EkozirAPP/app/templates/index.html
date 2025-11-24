@@ -4,39 +4,42 @@
 
 {% block content %}
 
-<pre id="walletInfo" class="info-panel">Not connected</pre>
-<section class="card">
-  <h2>Wallet Connection</h2>
+<pre id="walletInfo" class="info-panel">Not logged in</pre>
+
+<section class="card" id="loginSection">
+  <h2>Login</h2>
   <p>
-    Connect your MetaMask account to sign transactions against the Besu network.
+    Enter your username and password to access your groups and messages.
   </p>
-  <button id="connectWallet">Connect MetaMask</button>
+  <input id="loginUsername" type="text" placeholder="Username"/>
+  <input id="loginPassword" type="password" placeholder="Password"/>
+  <div class="button-row">
+    <button id="loginButton">Login</button>
+  </div>
+  <p id="loginStatus" class="muted"></p>
 </section>
 
 <section class="card" id="signUpSection" style="display: none;">
   <h2>Sign Up</h2>
   <p>
-    Publish your encryption public key and name so other group members can share secrets.
+    Create a new account. Your password will be used to derive your encryption key.
   </p>
-  <p id="signInStatus" class="muted">Connect your wallet to check registration status.</p>
-  <input id="userNameInput" type="text" placeholder="Your name"/>
-  <textarea id="publicKeyInput" rows="3" placeholder="Public key" readonly></textarea>
-  <div class="button-row">
-    <button id="autoRegisterPublicKey">Get public key from MetaMask</button>
-    <button id="signUp">Sign Up</button>
-  </div>
+  <p id="signInStatus" class="muted">Enter username and password to sign up.</p>
+  <input id="userNameInput" type="text" placeholder="Your username"/>
+  <input id="passwordInput" type="password" placeholder="Your password"/>
+  <button id="signUp">Sign Up</button>
 </section>
 
 <section class="card" data-requires-signin>
   <h2>Create Group</h2>
   <p>
-    Define a group name and optional comma-separated initial members.
+    Define a group name and optional comma-separated initial member usernames (they must be registered).
   </p>
   <input id="groupName" type="text" placeholder="Group name" />
   <input
     id="groupMembers"
     type="text"
-    placeholder="0x123...,0x456..."
+    placeholder="username1,username2..."
     value=""
   />
   <button id="createGroup">Create Group</button>
@@ -50,7 +53,7 @@
   <select id="memberGroupSelect">
     <option value="">Select one of your groups</option>
   </select>
-  <input id="memberAddress" type="text" placeholder="0x..." value=""/>
+  <input id="memberUsername" type="text" placeholder="Username" value=""/>
   <div class="button-row">
     <button id="addMember">Add Member</button>
     <button id="removeMember">Remove Member</button>
@@ -84,6 +87,7 @@
     Select a group to inspect members and messages.
   </p>
   <button id="refreshGroups">Refresh Groups</button>
+  <button id="logoutButton" style="margin-left: 10px;">Logout</button>
   <div id="groupsList" class="list-panel"></div>
 </section>
 
@@ -104,4 +108,3 @@
   };
 </script>
 {% endblock %}
-
