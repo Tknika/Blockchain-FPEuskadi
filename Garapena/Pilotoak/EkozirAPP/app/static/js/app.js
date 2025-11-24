@@ -934,7 +934,17 @@
           await loadMessages(groupId);
         }
       } else {
-        updateStatus("Failed to add member.", { error: data.error });
+        // Show specific error message from backend
+        const errorMsg = data.error || "Failed to add member.";
+        if (data.memberNotRegistered) {
+          updateStatus(`Error: ${errorMsg} Make sure the user has signed up first.`);
+        } else if (data.notCreator) {
+          updateStatus(`Error: ${errorMsg}`);
+        } else if (data.alreadyMember) {
+          updateStatus(`Error: ${errorMsg}`);
+        } else {
+          updateStatus(`Failed to add member: ${errorMsg}`);
+        }
       }
     } catch (error) {
       updateStatus("Failed to add member.", { error: error.message });

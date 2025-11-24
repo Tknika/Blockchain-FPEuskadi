@@ -181,5 +181,27 @@ def send_transaction(function_call, *args, **kwargs) -> TxReceipt:
     # Wait for the transaction to be mined
     receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
     
+    # Check if transaction was successful
+    if receipt.status == 0:
+        # Transaction failed/reverted
+        # Try to get revert reason from transaction receipt logs if available
+        error_msg = "Transaction reverted"
+        try:
+            # Check if there are any logs that might indicate the revert reason
+            if receipt.logs:
+                # Try to decode revert reason from logs if possible
+                pass
+            # Try to get the revert reason by attempting to call the function
+            # Note: This might not always work, but it's worth trying
+            try:
+                # Build a call to see what error we get
+                function_call.call()
+            except Exception as call_error:
+                error_msg = str(call_error)
+        except Exception:
+            pass
+        
+        raise RuntimeError(f"Transaction reverted: {error_msg}. Transaction hash: {tx_hash.hex()}")
+    
     return receipt
 

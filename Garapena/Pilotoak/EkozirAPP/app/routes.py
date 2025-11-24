@@ -279,6 +279,29 @@ def transaction_add_member() -> Response:
     
     try:
         creator_public_key = get_current_user_public_key()
+        
+        # Validate that the member is registered before attempting to add
+        if not ekozir_service.is_public_key_registered(member_public_key):
+            return _json_response({
+                "error": "Member must be registered before they can be added to a group. Please ensure the user has signed up first.",
+                "memberNotRegistered": True
+            }, status=400)
+        
+        # Validate that the creator matches the group creator
+        group = ekozir_service.get_group(group_id)
+        if group.get("creator") != creator_public_key:
+            return _json_response({
+                "error": "Only the group creator can add members to this group.",
+                "notCreator": True
+            }, status=403)
+        
+        # Check if member is already in the group
+        if member_public_key in group.get("members", []):
+            return _json_response({
+                "error": "This member is already in the group.",
+                "alreadyMember": True
+            }, status=400)
+        
         receipt = ekozir_service.add_member_transaction(
             group_id,
             creator_public_key,
@@ -290,7 +313,25 @@ def transaction_add_member() -> Response:
             "blockNumber": receipt['blockNumber']
         })
     except Exception as e:
-        return _json_response({"error": str(e)}, status=500)
+        error_msg = str(e)
+        # Provide more user-friendly error messages
+        if "reverted" in error_msg.lower():
+            if "Member must be registered" in error_msg:
+                return _json_response({
+                    "error": "Member must be registered before they can be added to a group. Please ensure the user has signed up first.",
+                    "memberNotRegistered": True
+                }, status=400)
+            elif "already a member" in error_msg:
+                return _json_response({
+                    "error": "This member is already in the group.",
+                    "alreadyMember": True
+                }, status=400)
+            elif "Only group creator" in error_msg:
+                return _json_response({
+                    "error": "Only the group creator can add members to this group.",
+                    "notCreator": True
+                }, status=403)
+        return _json_response({"error": error_msg}, status=500)
 
 
 @bp.route("/api/transactions/removeMember", methods=["POST"])
