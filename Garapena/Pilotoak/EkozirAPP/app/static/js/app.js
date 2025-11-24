@@ -358,13 +358,38 @@
   }
 
   /**
+   * Normalize a public key JSON string to ensure consistent formatting
+   * This matches the backend normalization (sorted keys, no spaces)
+   */
+  function normalizePublicKeyJson(publicKeyObj) {
+    if (typeof publicKeyObj === 'string') {
+      // If it's already a string, parse it first
+      try {
+        publicKeyObj = JSON.parse(publicKeyObj);
+      } catch (e) {
+        return publicKeyObj; // Return as-is if parsing fails
+      }
+    }
+    
+    // Create normalized object with keys in sorted order
+    return {
+      alg: publicKeyObj.alg,
+      crv: publicKeyObj.crv,
+      ext: publicKeyObj.ext,
+      kty: publicKeyObj.kty,
+      x: publicKeyObj.x,
+      y: publicKeyObj.y
+    };
+  }
+
+  /**
    * Derive public key JSON from password
    */
   async function derivePublicKeyFromPassword(password) {
     const keyPair = await generateECDHKeyPairFromPassword(password);
     const publicKeyJwk = await crypto.subtle.exportKey('jwk', keyPair.publicKey);
     
-    return {
+    const publicKeyObj = {
       kty: publicKeyJwk.kty,
       crv: publicKeyJwk.crv,
       x: publicKeyJwk.x,
@@ -372,6 +397,9 @@
       alg: 'ECDH-P256',
       ext: true
     };
+    
+    // Return normalized object
+    return normalizePublicKeyJson(publicKeyObj);
   }
 
   // ==================== Authentication Functions ====================
@@ -387,7 +415,11 @@
       if (data.authenticated) {
         state.isLoggedIn = true;
         state.username = data.username;
-        state.publicKey = data.publicKey;
+        // Normalize public key from backend response to ensure consistency
+        const backendPublicKey = typeof data.publicKey === 'string' 
+          ? JSON.parse(data.publicKey) 
+          : data.publicKey;
+        state.publicKey = JSON.stringify(normalizePublicKeyJson(backendPublicKey));
         // Store password temporarily for decryption (in a real app, use secure storage)
         // For now, we'll prompt when needed
         updateSignedInUI();
@@ -412,7 +444,7 @@
     }
     
     try {
-      // Derive public key from password
+      // Derive public key from password (already normalized)
       const publicKeyDict = await derivePublicKeyFromPassword(password);
       const publicKeyJson = JSON.stringify(publicKeyDict);
       
@@ -429,7 +461,11 @@
         state.isLoggedIn = true;
         state.username = data.username; // Retrieved from blockchain
         state.password = password; // Store temporarily for decryption
-        state.publicKey = publicKeyJson;
+        // Normalize public key from backend response to ensure consistency
+        const backendPublicKey = typeof data.publicKey === 'string' 
+          ? JSON.parse(data.publicKey) 
+          : data.publicKey;
+        state.publicKey = JSON.stringify(normalizePublicKeyJson(backendPublicKey));
         state.ecdhKeyPair = await generateECDHKeyPairFromPassword(password);
         
         ui.loginStatus.textContent = "Login successful!";
@@ -462,7 +498,7 @@
     }
     
     try {
-      // First check if public key already exists
+      // Derive public key (already normalized)
       const publicKeyDict = await derivePublicKeyFromPassword(password);
       const publicKeyJson = JSON.stringify(publicKeyDict);
       
@@ -482,7 +518,11 @@
         state.isLoggedIn = true;
         state.username = username;
         state.password = password;
-        state.publicKey = data.publicKey;
+        // Normalize public key from backend response to ensure consistency
+        const backendPublicKey = typeof data.publicKey === 'string' 
+          ? JSON.parse(data.publicKey) 
+          : data.publicKey;
+        state.publicKey = JSON.stringify(normalizePublicKeyJson(backendPublicKey));
         state.ecdhKeyPair = await generateECDHKeyPairFromPassword(password);
         
         ui.signInStatus.textContent = "Sign up successful!";
@@ -868,9 +908,10 @@
           typeof publicKeyObj.y === "string" &&
           publicKeyObj.x.length > 0 &&
           publicKeyObj.y.length > 0) {
-        // Return as JSON string (the format expected by the backend)
-        // Use JSON.stringify to ensure consistent formatting
-        return JSON.stringify(publicKeyObj);
+        // Normalize and return as JSON string
+        // This ensures consistent formatting that matches the backend
+        const normalizedObj = normalizePublicKeyJson(publicKeyObj);
+        return JSON.stringify(normalizedObj);
       }
       
       return null;

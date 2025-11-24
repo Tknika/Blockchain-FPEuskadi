@@ -15,9 +15,36 @@ from .web3_service import (
 )
 
 
+def normalize_public_key_json(public_key_json: str) -> str:
+    """
+    Normalize a public key JSON string to ensure consistent formatting.
+    
+    This parses and re-stringifies the JSON to ensure:
+    - Consistent key ordering
+    - No extra whitespace
+    - Consistent formatting
+    
+    Args:
+        public_key_json: Public key as JSON string
+    
+    Returns:
+        Normalized JSON string
+    """
+    try:
+        # Parse the JSON to normalize it
+        public_key_obj = json.loads(public_key_json)
+        # Re-stringify with consistent formatting (sorted keys, no extra spaces)
+        return json.dumps(public_key_obj, sort_keys=True, separators=(',', ':'))
+    except (json.JSONDecodeError, TypeError):
+        # If parsing fails, return as-is (might not be JSON)
+        return public_key_json.strip()
+
+
 def is_public_key_registered(public_key: str) -> bool:
     """
     Check if a public key is registered in the contract.
+    
+    Normalizes the public key JSON before checking to ensure consistent comparison.
     
     Args:
         public_key: Public key as JSON string
@@ -25,8 +52,11 @@ def is_public_key_registered(public_key: str) -> bool:
     Returns:
         True if the public key is registered
     """
+    # Normalize the public key JSON before checking
+    normalized_key = normalize_public_key_json(public_key)
+    
     contract = get_contract()
-    return contract.functions.isPublicKeyRegistered(public_key).call(
+    return contract.functions.isPublicKeyRegistered(normalized_key).call(
         build_default_call_args()
     )
 
@@ -279,6 +309,8 @@ def sign_up_transaction(public_key: str, name: str) -> TxReceipt:
     """
     Execute signUp transaction on the blockchain.
     
+    Normalizes the public key JSON before storing to ensure consistent formatting.
+    
     Args:
         public_key: Public key as JSON string
         name: User's name
@@ -286,8 +318,11 @@ def sign_up_transaction(public_key: str, name: str) -> TxReceipt:
     Returns:
         Transaction receipt
     """
+    # Normalize the public key JSON before storing
+    normalized_key = normalize_public_key_json(public_key)
+    
     contract = get_contract()
-    function_call = contract.functions.signUp(public_key, name)
+    function_call = contract.functions.signUp(normalized_key, name)
     return send_transaction(function_call)
 
 
@@ -324,6 +359,8 @@ def add_member_transaction(
     """
     Execute addMember transaction on the blockchain.
     
+    Normalizes public keys before sending to ensure consistent comparison.
+    
     Args:
         group_id: The ID of the group
         creator_public_key: Public key (JSON string) of the creator (for authorization)
@@ -332,11 +369,15 @@ def add_member_transaction(
     Returns:
         Transaction receipt
     """
+    # Normalize public keys before sending
+    normalized_creator_key = normalize_public_key_json(creator_public_key)
+    normalized_member_key = normalize_public_key_json(member_public_key)
+    
     contract = get_contract()
     function_call = contract.functions.addMember(
         group_id,
-        creator_public_key,
-        member_public_key
+        normalized_creator_key,
+        normalized_member_key
     )
     return send_transaction(function_call)
 

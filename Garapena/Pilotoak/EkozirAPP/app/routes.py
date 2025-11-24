@@ -82,9 +82,10 @@ def auth_login() -> Response:
     try:
         # Derive public key from password (username not used in key derivation)
         public_key_dict = derive_public_key_from_password(password, "")
-        public_key_json = json.dumps(public_key_dict)
+        # Normalize JSON by using sort_keys and consistent separators
+        public_key_json = json.dumps(public_key_dict, sort_keys=True, separators=(',', ':'))
         
-        # Check if public key is registered
+        # Check if public key is registered (normalization happens inside the function too)
         is_registered = ekozir_service.is_public_key_registered(public_key_json)
         
         if not is_registered:
@@ -160,7 +161,8 @@ def auth_signup() -> Response:
     try:
         # Derive public key from password (username not used in key derivation)
         public_key_dict = derive_public_key_from_password(password, "")
-        public_key_json = json.dumps(public_key_dict)
+        # Normalize JSON by using sort_keys and consistent separators
+        public_key_json = json.dumps(public_key_dict, sort_keys=True, separators=(',', ':'))
         
         # Check if public key already exists (prevent duplicate public keys)
         if ekozir_service.is_public_key_registered(public_key_json):
@@ -169,7 +171,7 @@ def auth_signup() -> Response:
                 "publicKeyExists": True
             }, status=400)
         
-        # Execute signUp transaction
+        # Execute signUp transaction (normalization happens inside the function too)
         receipt = ekozir_service.sign_up_transaction(public_key_json, username)
         
         # Store in session
@@ -280,8 +282,13 @@ def transaction_add_member() -> Response:
     try:
         creator_public_key = get_current_user_public_key()
         
+        # Normalize public keys for consistent comparison
+        from .services.ekozir_service import normalize_public_key_json
+        normalized_creator_key = normalize_public_key_json(creator_public_key)
+        normalized_member_key = normalize_public_key_json(member_public_key)
+        
         # Validate that the member is registered before attempting to add
-        if not ekozir_service.is_public_key_registered(member_public_key):
+        if not ekozir_service.is_public_key_registered(normalized_member_key):
             return _json_response({
                 "error": "Member must be registered before they can be added to a group. Please ensure the user has signed up first.",
                 "memberNotRegistered": True
@@ -289,14 +296,18 @@ def transaction_add_member() -> Response:
         
         # Validate that the creator matches the group creator
         group = ekozir_service.get_group(group_id)
-        if group.get("creator") != creator_public_key:
+        # Normalize the group creator's key for comparison
+        normalized_group_creator = normalize_public_key_json(group.get("creator", ""))
+        if normalized_group_creator != normalized_creator_key:
             return _json_response({
                 "error": "Only the group creator can add members to this group.",
                 "notCreator": True
             }, status=403)
         
-        # Check if member is already in the group
-        if member_public_key in group.get("members", []):
+        # Check if member is already in the group (normalize all member keys for comparison)
+        group_members = group.get("members", [])
+        normalized_group_members = [normalize_public_key_json(m) for m in group_members]
+        if normalized_member_key in normalized_group_members:
             return _json_response({
                 "error": "This member is already in the group.",
                 "alreadyMember": True
@@ -304,8 +315,8 @@ def transaction_add_member() -> Response:
         
         receipt = ekozir_service.add_member_transaction(
             group_id,
-            creator_public_key,
-            member_public_key
+            normalized_creator_key,
+            normalized_member_key
         )
         
         return _json_response({
