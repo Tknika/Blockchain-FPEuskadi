@@ -231,10 +231,16 @@ def send_transaction(function_call, *args, **kwargs) -> TxReceipt:
     # IMPORTANT: Don't include 'from' in transaction_params initially
     # Some web3 versions have issues when 'from' is explicitly set
     # We'll verify and set it after building if needed
+    
+    # For private Besu networks (gas-free), use a very high gas limit
+    # to ensure transactions never fail due to gas limits
+    # Using 50 million gas (well above any normal transaction requirement)
+    gas_limit = 50000000
+    
     transaction_params = {
         "nonce": nonce,
-        "gas": 1000000,  # Adjust as needed
-        "gasPrice": web3.eth.gas_price,
+        "gas": gas_limit,
+        "gasPrice": web3.eth.gas_price,  # Keep network's gas price (may be 0 for gas-free networks)
     }
     
     # Add chain ID if available (some networks require this)
