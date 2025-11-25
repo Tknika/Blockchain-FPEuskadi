@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
@@ -201,7 +202,6 @@ def send_transaction(function_call, *args, **kwargs) -> TxReceipt:
                 )
         except Exception as e:
             # If we can't verify, log a warning but continue (might be a view function issue)
-            import logging
             logging.warning(f"Could not verify contract ownership: {e}")
     
     # CRITICAL: Verify contract owner RIGHT BEFORE building transaction
@@ -250,7 +250,6 @@ def send_transaction(function_call, *args, **kwargs) -> TxReceipt:
     # This avoids potential issues with web3's handling of 'from' field
     
     # Log transaction parameters before building
-    import logging
     contract_address = None
     if _resources.contract is not None:
         contract_address = _resources.contract.address if hasattr(_resources.contract, 'address') else 'N/A'
@@ -335,7 +334,6 @@ def send_transaction(function_call, *args, **kwargs) -> TxReceipt:
     logging.info(f"Transaction sent, hash: {tx_hash.hex()}")
     
     # Log transaction details for debugging
-    import logging
     logging.info(
         f"Transaction sent: hash={tx_hash.hex()}, from={server_account}, "
         f"nonce={nonce}, gas={function_txn.get('gas')}"
