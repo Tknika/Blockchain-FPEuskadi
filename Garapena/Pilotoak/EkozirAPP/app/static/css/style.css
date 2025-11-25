@@ -165,3 +165,43 @@ textarea {
   min-width: 120px;
 }
 
+/* Messages grid layout - responsive two columns */
+.messages-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.messages-column {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  background-color: #f9f9f9;
+}
+
+.messages-column h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #1e3c72;
+}
+
+.messages-column .list-item {
+  background-color: white;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.messages-column .list-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Responsive: stack columns on smaller screens */
+@media (max-width: 768px) {
+  .messages-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

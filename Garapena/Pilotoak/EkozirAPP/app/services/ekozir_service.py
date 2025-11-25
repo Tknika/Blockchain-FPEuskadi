@@ -450,24 +450,6 @@ def send_message_transaction(
         message_hash
     )
     
-    # Log for debugging
-    import logging
-    from .web3_service import get_signer_account
-    try:
-        server_account = get_signer_account()
-        contract = get_contract()  # Already imported at module level
-        contract_address = contract.address if hasattr(contract, 'address') else 'N/A'
-        contract_owner = contract.functions.owner().call()
-        logging.info(
-            f"sendMessage: Server account = {server_account}, "
-            f"Contract address = {contract_address}, "
-            f"Contract owner = {contract_owner}, "
-            f"Group ID = {group_id}, "
-            f"Match = {server_account.lower() == contract_owner.lower()}"
-        )
-    except Exception as e:
-        logging.error(f"Error in sendMessage logging: {e}")
-    
     return send_transaction(function_call)
 
 

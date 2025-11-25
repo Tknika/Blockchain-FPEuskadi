@@ -1293,10 +1293,67 @@
   }
 
   /**
+   * Decrypt a message automatically
+   */
+  async function decryptMessage(message) {
+    try {
+      if (!message.encryptedKey || !message.encryptedContent) {
+        return null;
+      }
+      
+      // Parse encrypted key package (encryptedKeyForSender for sender, encryptedKey for recipient)
+      const encryptedKeyPackage = JSON.parse(message.encryptedKey);
+      
+      // Extract encrypted content (first 12 bytes are IV, rest is encrypted data)
+      const encryptedContentBytes = base64ToArrayBuffer(message.encryptedContent);
+      const iv = new Uint8Array(encryptedContentBytes.slice(0, 12));
+      const encryptedData = encryptedContentBytes.slice(12);
+      
+      // Decrypt symmetric key using the appropriate encrypted key (for sender or recipient)
+      const symmetricKeyBase64 = await decryptWithPrivateKey(encryptedKeyPackage, state.password);
+      
+      // Import symmetric key
+      const symmetricKeyData = base64ToArrayBuffer(symmetricKeyBase64);
+      const symmetricKey = await crypto.subtle.importKey(
+        "raw",
+        symmetricKeyData,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["decrypt"]
+      );
+      
+      // Decrypt message content
+      const decryptedContent = await crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: iv },
+        symmetricKey,
+        encryptedData
+      );
+      
+      const decryptedText = new TextDecoder().decode(decryptedContent);
+      return decryptedText;
+    } catch (error) {
+      console.warn(`Failed to decrypt message ${message.id}: ${error.message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Get member name from public key
+   */
+  function getMemberName(publicKey, members) {
+    const member = members.find(m => m.publicKey === publicKey);
+    return member ? (member.name || "Unknown") : "Unknown";
+  }
+
+  /**
    * Load messages for a group
    */
   async function loadMessages(groupId) {
     try {
+      // Load group data to get member names
+      const groupData = await loadGroup(groupId);
+      const members = groupData.members || [];
+      
       const response = await fetch(`/api/groups/${groupId}/messages`);
       const { data } = await response.json();
       const messageIds = data.messageIds || [];
@@ -1322,9 +1379,27 @@
         return;
       }
       
+      // Separate messages into sent and received
+      const sentMessages = [];
+      const receivedMessages = [];
+      
       for (const details of loadedMessages) {
-        await renderMessage(details);
+        const msg = details.message;
+        const isSender = msg.sender === state.publicKey;
+        
+        // Automatically decrypt the message
+        const decryptedText = await decryptMessage(msg);
+        details.decryptedText = decryptedText;
+        
+        if (isSender) {
+          sentMessages.push(details);
+        } else {
+          receivedMessages.push(details);
+        }
       }
+      
+      // Render messages in two columns
+      renderMessagesInColumns(sentMessages, receivedMessages, members);
     } catch (error) {
       updateStatus("Failed to load messages.", { error: error.message });
     }
@@ -1340,103 +1415,97 @@
   }
 
   /**
-   * Render message in UI
+   * Render messages in two columns (sent and received)
    */
-  async function renderMessage(messageData) {
+  function renderMessagesInColumns(sentMessages, receivedMessages, members) {
+    // Create container with two columns using CSS class
+    const container = document.createElement("div");
+    container.className = "messages-grid";
+
+    // Create sent messages column
+    const sentColumn = document.createElement("div");
+    sentColumn.className = "messages-column";
+    
+    const sentHeader = document.createElement("h3");
+    sentHeader.textContent = `Sent Messages (${sentMessages.length})`;
+    sentColumn.appendChild(sentHeader);
+    
+    const sentList = document.createElement("div");
+    if (sentMessages.length === 0) {
+      sentList.innerHTML = '<p class="muted">No sent messages</p>';
+    } else {
+      sentMessages.forEach(details => {
+        const messageElement = renderMessageItem(details, members, true);
+        sentList.appendChild(messageElement);
+      });
+    }
+    sentColumn.appendChild(sentList);
+    
+    // Create received messages column
+    const receivedColumn = document.createElement("div");
+    receivedColumn.className = "messages-column";
+    
+    const receivedHeader = document.createElement("h3");
+    receivedHeader.textContent = `Received Messages (${receivedMessages.length})`;
+    receivedColumn.appendChild(receivedHeader);
+    
+    const receivedList = document.createElement("div");
+    if (receivedMessages.length === 0) {
+      receivedList.innerHTML = '<p class="muted">No received messages</p>';
+    } else {
+      receivedMessages.forEach(details => {
+        const messageElement = renderMessageItem(details, members, false);
+        receivedList.appendChild(messageElement);
+      });
+    }
+    receivedColumn.appendChild(receivedList);
+    
+    container.appendChild(sentColumn);
+    container.appendChild(receivedColumn);
+    
+    ui.messagesList.appendChild(container);
+  }
+
+  /**
+   * Render a single message item
+   */
+  function renderMessageItem(messageData, members, isSent) {
     const wrapper = document.createElement("div");
     wrapper.className = "list-item";
+    wrapper.style.marginBottom = "1rem";
+    wrapper.style.padding = "0.75rem";
+    wrapper.style.backgroundColor = "white";
+    wrapper.style.borderRadius = "4px";
+    wrapper.style.border = "1px solid #e0e0e0";
 
     const msg = messageData.message;
-    const isSender = msg.sender === state.publicKey;
+    const senderName = getMemberName(msg.sender, members);
+    const recipientName = getMemberName(msg.recipient, members);
+    const decryptedText = messageData.decryptedText;
     const isRecipient = msg.recipient === state.publicKey;
 
+    // Display decrypted content or error message
     let contentDisplay = "";
-    if (isRecipient) {
-      contentDisplay = `<p class="muted">Encrypted content</p>
-        <div id="decrypted-content-${msg.id}" style="display: none;"></div>`;
-    } else if (isSender) {
-      contentDisplay = `<p class="muted">Encrypted content (you sent this message)</p>
-        <div id="decrypted-content-${msg.id}" style="display: none;"></div>`;
+    if (decryptedText !== null) {
+      contentDisplay = `<p style="margin: 0.5rem 0; padding: 0.5rem; background-color: #f0f0f0; border-radius: 4px; word-wrap: break-word;">${decryptedText}</p>`;
     } else {
-      contentDisplay = `<p class="muted">Encrypted content (not addressed to you)</p>`;
+      contentDisplay = `<p class="muted" style="margin: 0.5rem 0;">Failed to decrypt message</p>`;
     }
 
     wrapper.innerHTML = `
-      <strong>Message #${msg.id}</strong>
-      <p class="muted">Sender: ${msg.sender.substring(0, 20)}...</p>
-      ${msg.recipient ? `<p class="muted">Recipient: ${msg.recipient.substring(0, 20)}...</p>` : ""}
+      <div style="margin-bottom: 0.5rem;">
+        <strong>${isSent ? `To: ${recipientName}` : `From: ${senderName}`}</strong>
+      </div>
       ${contentDisplay}
-      <p class="muted">Timestamp: ${new Date(msg.timestamp * 1000).toLocaleString()}</p>
-      ${(isRecipient || isSender) && msg.encryptedKey 
-        ? `<button class="decrypt-message" data-message-id="${msg.id}">Decrypt Message</button>` 
-        : ""}
+      <p class="muted" style="font-size: 0.85rem; margin-top: 0.5rem;">
+        ${new Date(msg.timestamp * 1000).toLocaleString()}
+      </p>
       ${isRecipient && !messageData.confirmations[0]?.confirmed 
-        ? `<button class="confirm-message" data-message="${msg.id}">Confirm Reception</button>` 
+        ? `<button class="confirm-message" data-message="${msg.id}" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.85rem;">Confirm Reception</button>` 
         : ""}
     `;
 
-    const decryptButton = wrapper.querySelector(".decrypt-message");
-    if (decryptButton) {
-      decryptButton.addEventListener("click", async () => {
-        const messageId = parseInt(decryptButton.dataset.messageId, 10);
-        
-        try {
-          decryptButton.disabled = true;
-          decryptButton.textContent = "Decrypting...";
-          
-          const messageData = await loadMessage(messageId);
-          const message = messageData.message;
-          
-          if (!message.encryptedKey || !message.encryptedContent) {
-            throw new Error("Message data is missing encrypted key or content");
-          }
-          
-          // Parse encrypted key package (encryptedKeyForSender for sender, encryptedKey for recipient)
-          const encryptedKeyPackage = JSON.parse(message.encryptedKey);
-          
-          // Extract encrypted content (first 12 bytes are IV, rest is encrypted data)
-          const encryptedContentBytes = base64ToArrayBuffer(message.encryptedContent);
-          const iv = new Uint8Array(encryptedContentBytes.slice(0, 12));
-          const encryptedData = encryptedContentBytes.slice(12);
-          
-          // Decrypt symmetric key using the appropriate encrypted key (for sender or recipient)
-          const symmetricKeyBase64 = await decryptWithPrivateKey(encryptedKeyPackage, state.password);
-          
-          // Import symmetric key
-          const symmetricKeyData = base64ToArrayBuffer(symmetricKeyBase64);
-          const symmetricKey = await crypto.subtle.importKey(
-            "raw",
-            symmetricKeyData,
-            { name: "AES-GCM", length: 256 },
-            false,
-            ["decrypt"]
-          );
-          
-          // Decrypt message content
-          const decryptedContent = await crypto.subtle.decrypt(
-            { name: "AES-GCM", iv: iv },
-            symmetricKey,
-            encryptedData
-          );
-          
-          const decryptedText = new TextDecoder().decode(decryptedContent);
-          
-          const decryptedContentDiv = wrapper.querySelector(`#decrypted-content-${messageId}`);
-          if (decryptedContentDiv) {
-            decryptedContentDiv.innerHTML = `<p><strong>Decrypted message:</strong> ${decryptedText}</p>`;
-            decryptedContentDiv.style.display = "block";
-          }
-          
-          decryptButton.style.display = "none";
-          updateStatus(`Message #${messageId} decrypted successfully.`);
-        } catch (error) {
-          decryptButton.disabled = false;
-          decryptButton.textContent = "Decrypt Message";
-          updateStatus(`Failed to decrypt message #${messageId}: ${error.message}`);
-        }
-      });
-    }
-
+    // Add confirm button event listener
     const confirmButton = wrapper.querySelector(".confirm-message");
     if (confirmButton) {
       confirmButton.addEventListener("click", async () => {
@@ -1463,7 +1532,7 @@
       });
     }
 
-    ui.messagesList.appendChild(wrapper);
+    return wrapper;
   }
 
   // ==================== Event Listeners ====================

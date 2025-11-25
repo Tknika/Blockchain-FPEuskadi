@@ -190,7 +190,7 @@ def send_transaction(function_call, *args, **kwargs) -> TxReceipt:
             f"does not match private key account {account_from_key.address}"
         )
     
-    # Verify the server account is the contract owner (for debugging)
+    # Verify the server account is the contract owner
     if _resources.contract is not None:
         try:
             contract_owner = _resources.contract.functions.owner().call()
@@ -203,24 +203,6 @@ def send_transaction(function_call, *args, **kwargs) -> TxReceipt:
         except Exception as e:
             # If we can't verify, log a warning but continue (might be a view function issue)
             logging.warning(f"Could not verify contract ownership: {e}")
-    
-    # CRITICAL: Verify contract owner RIGHT BEFORE building transaction
-    # This ensures we have the most up-to-date owner address
-    if _resources.contract is not None:
-        try:
-            current_owner = _resources.contract.functions.owner().call()
-            if current_owner.lower() != server_account.lower():
-                logging.error(
-                    f"CRITICAL: Server account {server_account} is NOT the contract owner! "
-                    f"Current owner is {current_owner}. This transaction will fail."
-                )
-                raise RuntimeError(
-                    f"Server account {server_account} is not the contract owner. "
-                    f"Current owner is {current_owner}. Cannot execute onlyOwner function."
-                )
-            logging.info(f"Verified contract owner before transaction: {current_owner} matches server account")
-        except Exception as e:
-            logging.warning(f"Could not verify contract owner before transaction: {e}")
     
     # Get nonce for the transaction (use 'pending' to include pending transactions)
     nonce = web3.eth.get_transaction_count(server_account, 'pending')
@@ -252,56 +234,18 @@ def send_transaction(function_call, *args, **kwargs) -> TxReceipt:
         if key not in ["from", "chainId", "nonce"]:  # Never allow these to be overridden
             transaction_params[key] = value
     
-    # Build transaction WITHOUT 'from' first, then we'll verify and set it
-    # This avoids potential issues with web3's handling of 'from' field
-    
-    # Log transaction parameters before building
-    contract_address = None
-    if _resources.contract is not None:
-        contract_address = _resources.contract.address if hasattr(_resources.contract, 'address') else 'N/A'
-    logging.info(
-        f"Building transaction: function={function_call.fn_name if hasattr(function_call, 'fn_name') else 'unknown'}, "
-        f"from={server_account}, nonce={nonce}, chainId={chain_id}, "
-        f"contract_address={contract_address}"
-    )
-    
-    # Build the transaction WITHOUT 'from' field initially
-    # The 'from' field in the transaction dict doesn't actually matter for execution
-    # What matters is which private key we use to sign it
+    # Build the transaction
     try:
         function_txn = function_call.build_transaction(transaction_params)
-        txn_to = function_txn.get('to', '')
-        expected_contract_address = None
-        if _resources.contract is not None:
-            expected_contract_address = _resources.contract.address if hasattr(_resources.contract, 'address') else None
-        
-        # The 'from' field in the transaction dict is informational only
-        # The actual sender is determined by the signature
-        # But we'll set it for consistency and logging
+        # Ensure 'from' field is set correctly
         txn_from_built = function_txn.get('from', '')
         if not txn_from_built or txn_from_built.lower() != server_account.lower():
-            # Set it explicitly for logging/consistency, but remember:
-            # The actual sender is determined by the private key used to sign
             function_txn["from"] = server_account
-            logging.info(f"Set transaction 'from' field to: {server_account} (actual sender determined by signature)")
-        
-        logging.info(
-            f"Transaction built successfully: from={function_txn.get('from')}, "
-            f"to={txn_to}, expected_contract={expected_contract_address}, "
-            f"match={txn_to.lower() == expected_contract_address.lower() if expected_contract_address and txn_to else False}"
-        )
-        
-        # Verify the transaction is going to the correct contract
-        if expected_contract_address and txn_to and txn_to.lower() != expected_contract_address.lower():
-            logging.error(
-                f"Transaction target mismatch: transaction going to {txn_to}, "
-                f"but expected contract at {expected_contract_address}"
-            )
     except Exception as e:
         logging.error(f"Failed to build transaction: {e}")
         raise RuntimeError(
             f"Failed to build transaction: {str(e)}. "
-            f"Server account: {server_account}, Transaction params: {transaction_params}"
+            f"Server account: {server_account}"
         )
     
     # Verify the transaction is from the correct account
@@ -317,33 +261,20 @@ def send_transaction(function_call, *args, **kwargs) -> TxReceipt:
             f"got {txn_from}. Transaction params: {transaction_params}"
         )
     
-    # Sign the transaction with the server's private key
-    logging.info(f"Signing transaction with private key for account: {server_account}")
+    # Sign and send the transaction
     signed_txn = web3.eth.account.sign_transaction(function_txn, private_key=private_key)
     
     # Verify the signed transaction's sender matches our account
     recovered_sender = web3.eth.account.recover_transaction(signed_txn.rawTransaction)
-    logging.info(f"Recovered sender from signed transaction: {recovered_sender}")
     if recovered_sender.lower() != server_account.lower():
-        logging.error(
-            f"Signed transaction sender mismatch: expected {server_account}, "
-            f"got {recovered_sender}"
-        )
         raise RuntimeError(
             f"Signed transaction sender mismatch: expected {server_account}, "
             f"got {recovered_sender}. This means the transaction was signed with a different private key."
         )
     
     # Send the transaction
-    logging.info(f"Sending transaction to blockchain...")
     tx_hash = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
-    logging.info(f"Transaction sent, hash: {tx_hash.hex()}")
-    
-    # Log transaction details for debugging
-    logging.info(
-        f"Transaction sent: hash={tx_hash.hex()}, from={server_account}, "
-        f"nonce={nonce}, gas={function_txn.get('gas')}"
-    )
+    logging.info(f"Transaction sent: hash={tx_hash.hex()}")
     
     # Wait for the transaction to be mined
     receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
@@ -352,26 +283,6 @@ def send_transaction(function_call, *args, **kwargs) -> TxReceipt:
     receipt_from = receipt.get('from', '')
     if receipt_from:
         receipt_from = web3.to_checksum_address(receipt_from)
-    
-    # Double-check contract owner at the time of receipt (in case it changed)
-    contract_owner_at_receipt = None
-    if _resources.contract is not None:
-        try:
-            contract_owner_at_receipt = _resources.contract.functions.owner().call()
-            logging.info(
-                f"Contract owner at receipt time: {contract_owner_at_receipt}, "
-                f"Transaction sender: {receipt_from}, Match: {contract_owner_at_receipt.lower() == receipt_from.lower() if receipt_from else False}"
-            )
-        except Exception as e:
-            logging.warning(f"Could not get contract owner at receipt time: {e}")
-    
-    # Log receipt details
-    logging.info(
-        f"Transaction receipt: status={receipt.status}, "
-        f"from={receipt_from}, expected={server_account}, "
-        f"to={receipt.get('to', 'N/A')}, "
-        f"contract_owner={contract_owner_at_receipt}"
-    )
     
     # Verify the receipt shows the transaction was sent from our account
     if receipt_from and receipt_from.lower() != server_account.lower():
@@ -382,60 +293,27 @@ def send_transaction(function_call, *args, **kwargs) -> TxReceipt:
     
     # Check if transaction was successful
     if receipt.status == 0:
-        # Transaction failed/reverted
+        # Transaction failed/reverted - try to get revert reason
         error_msg = "Transaction reverted"
-        
-        # Try to get the revert reason
         try:
-            # Get the original transaction to see what was sent
-            original_tx = web3.eth.get_transaction(tx_hash)
-            logging.error(
-                f"Transaction reverted. Original tx from: {original_tx.get('from')}, "
-                f"to: {original_tx.get('to')}, input length: {len(original_tx.get('input', ''))}"
+            # Try to get revert reason from transaction trace
+            trace_result = web3.manager.request_blocking(
+                "debug_traceTransaction",
+                [tx_hash.hex(), {"tracer": "callTracer", "timeout": "10s"}]
             )
-            
-            # Try to trace the transaction to get the revert reason (Besu supports this)
+            if trace_result and isinstance(trace_result, dict) and "error" in trace_result:
+                error_info = trace_result.get("error", {})
+                error_msg = error_info.get("message", error_msg)
+        except Exception:
+            # If tracing fails, try simulation
             try:
-                # Use debug_traceTransaction if available
-                trace_result = web3.manager.request_blocking(
-                    "debug_traceTransaction",
-                    [tx_hash.hex(), {"tracer": "callTracer", "timeout": "10s"}]
-                )
-                if trace_result:
-                    if isinstance(trace_result, dict) and "error" in trace_result:
-                        error_info = trace_result.get("error", {})
-                        error_msg = error_info.get("message", "Unknown error from trace")
-                        logging.error(f"Transaction trace error: {error_info}")
-                    else:
-                        logging.info(f"Transaction trace result: {trace_result}")
-            except Exception as trace_error:
-                logging.warning(f"Could not trace transaction (this is normal if debug_traceTransaction is not available): {trace_error}")
-            
-            # Try alternative: use eth_call to simulate and see the error
-            try:
-                # Rebuild the function call and try to simulate it
-                # This might give us the revert reason
-                logging.info("Attempting to simulate transaction to get revert reason...")
                 function_call.call({"from": server_account})
             except Exception as call_error:
-                # This is expected to fail, but the error message might be helpful
                 error_str = str(call_error)
-                if "revert" in error_str.lower() or "only" in error_str.lower():
+                if "revert" in error_str.lower():
                     error_msg = error_str
-                    logging.error(f"Simulation error (this shows the revert reason): {error_str}")
-            
-        except Exception as e:
-            logging.error(f"Error getting revert reason: {e}")
         
-        # Log detailed information about the failed transaction
-        logging.error(
-            f"Transaction failed - Hash: {tx_hash.hex()}, "
-            f"From (receipt): {receipt_from}, "
-            f"Expected: {server_account}, "
-            f"Status: {receipt.status}, "
-            f"Contract owner: {contract_owner_at_receipt}"
-        )
-        
+        logging.error(f"Transaction reverted: {error_msg}. Hash: {tx_hash.hex()}")
         raise RuntimeError(f"Transaction reverted: {error_msg}. Transaction hash: {tx_hash.hex()}")
     
     return receipt
