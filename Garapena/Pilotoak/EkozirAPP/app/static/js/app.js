@@ -855,10 +855,10 @@
     // Show the selected section
     const selectedSection = document.querySelector(`[data-section="${sectionName}"]`);
     if (selectedSection) {
-      // Remove inline style to use default CSS display
-      selectedSection.style.display = "";
+      // Explicitly set display to block to ensure it's visible
+      selectedSection.style.display = "block";
     } else {
-      console.warn(`Section with data-section="${sectionName}" not found`);
+      console.error(`Section with data-section="${sectionName}" not found`);
     }
     
     // Update navigation button states
@@ -893,7 +893,7 @@
     
     // Show/hide navigation menu (only when logged in)
     if (ui.mainNavigation) {
-      ui.mainNavigation.style.display = shouldDisplay ? "" : "none";
+      ui.mainNavigation.style.display = shouldDisplay ? "flex" : "none";
     }
     
     // Show/hide user banner (only when logged in)
@@ -1764,6 +1764,8 @@
     // Navigation button event listeners using event delegation
     if (ui.mainNavigation) {
       ui.mainNavigation.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         // Check if the clicked element is a nav button or inside one
         const button = e.target.closest('.nav-button');
         if (button) {
