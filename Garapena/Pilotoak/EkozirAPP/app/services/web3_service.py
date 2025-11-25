@@ -230,15 +230,35 @@ def send_transaction(function_call, *args, **kwargs) -> TxReceipt:
     
     # Log transaction parameters before building
     import logging
+    contract_address = None
+    if _resources.contract is not None:
+        contract_address = _resources.contract.address if hasattr(_resources.contract, 'address') else 'N/A'
     logging.info(
         f"Building transaction: function={function_call.fn_name if hasattr(function_call, 'fn_name') else 'unknown'}, "
-        f"from={server_account}, nonce={nonce}, chainId={chain_id}"
+        f"from={server_account}, nonce={nonce}, chainId={chain_id}, "
+        f"contract_address={contract_address}"
     )
     
     # Build the transaction - web3 should use our explicit 'from' field
     try:
         function_txn = function_call.build_transaction(transaction_params)
-        logging.info(f"Transaction built successfully: from={function_txn.get('from')}, to={function_txn.get('to')}")
+        txn_to = function_txn.get('to', '')
+        expected_contract_address = None
+        if _resources.contract is not None:
+            expected_contract_address = _resources.contract.address if hasattr(_resources.contract, 'address') else None
+        
+        logging.info(
+            f"Transaction built successfully: from={function_txn.get('from')}, "
+            f"to={txn_to}, expected_contract={expected_contract_address}, "
+            f"match={txn_to.lower() == expected_contract_address.lower() if expected_contract_address and txn_to else False}"
+        )
+        
+        # Verify the transaction is going to the correct contract
+        if expected_contract_address and txn_to and txn_to.lower() != expected_contract_address.lower():
+            logging.error(
+                f"Transaction target mismatch: transaction going to {txn_to}, "
+                f"but expected contract at {expected_contract_address}"
+            )
     except Exception as e:
         logging.error(f"Failed to build transaction: {e}")
         raise RuntimeError(
@@ -301,11 +321,24 @@ def send_transaction(function_call, *args, **kwargs) -> TxReceipt:
     if receipt_from:
         receipt_from = web3.to_checksum_address(receipt_from)
     
+    # Double-check contract owner at the time of receipt (in case it changed)
+    contract_owner_at_receipt = None
+    if _resources.contract is not None:
+        try:
+            contract_owner_at_receipt = _resources.contract.functions.owner().call()
+            logging.info(
+                f"Contract owner at receipt time: {contract_owner_at_receipt}, "
+                f"Transaction sender: {receipt_from}, Match: {contract_owner_at_receipt.lower() == receipt_from.lower() if receipt_from else False}"
+            )
+        except Exception as e:
+            logging.warning(f"Could not get contract owner at receipt time: {e}")
+    
     # Log receipt details
     logging.info(
         f"Transaction receipt: status={receipt.status}, "
         f"from={receipt_from}, expected={server_account}, "
-        f"to={receipt.get('to', 'N/A')}"
+        f"to={receipt.get('to', 'N/A')}, "
+        f"contract_owner={contract_owner_at_receipt}"
     )
     
     # Verify the receipt shows the transaction was sent from our account
@@ -318,22 +351,42 @@ def send_transaction(function_call, *args, **kwargs) -> TxReceipt:
     # Check if transaction was successful
     if receipt.status == 0:
         # Transaction failed/reverted
-        # Try to get revert reason from transaction receipt logs if available
         error_msg = "Transaction reverted"
+        
+        # Try to get the revert reason by simulating the transaction
         try:
-            # Check if there are any logs that might indicate the revert reason
-            if receipt.logs:
-                # Try to decode revert reason from logs if possible
-                pass
-            # Try to get the revert reason by attempting to call the function
-            # Note: This might not always work, but it's worth trying
+            # Get the original transaction to see what was sent
+            original_tx = web3.eth.get_transaction(tx_hash)
+            logging.error(
+                f"Transaction reverted. Original tx from: {original_tx.get('from')}, "
+                f"to: {original_tx.get('to')}, input: {original_tx.get('input', '')[:100]}..."
+            )
+            
+            # Try to trace the transaction to get the revert reason
             try:
-                # Build a call to see what error we get
-                function_call.call()
-            except Exception as call_error:
-                error_msg = str(call_error)
-        except Exception:
-            pass
+                # Use debug_traceTransaction if available (Besu supports this)
+                trace = web3.manager.request_blocking("debug_traceTransaction", [tx_hash.hex(), {"tracer": "callTracer"}])
+                if trace and "error" in trace:
+                    error_msg = f"Transaction reverted: {trace.get('error', {}).get('message', 'Unknown error')}"
+                    logging.error(f"Transaction trace error: {trace.get('error')}")
+            except Exception as trace_error:
+                logging.warning(f"Could not trace transaction: {trace_error}")
+            
+            # Also try to decode the revert reason from the receipt
+            # Some networks include revert reason in the receipt
+            if receipt.get("revertReason"):
+                error_msg = f"Transaction reverted: {receipt['revertReason']}"
+            
+        except Exception as e:
+            logging.error(f"Error getting revert reason: {e}")
+        
+        # Log detailed information about the failed transaction
+        logging.error(
+            f"Transaction failed - Hash: {tx_hash.hex()}, "
+            f"From (receipt): {receipt_from}, "
+            f"Expected: {server_account}, "
+            f"Status: {receipt.status}"
+        )
         
         raise RuntimeError(f"Transaction reverted: {error_msg}. Transaction hash: {tx_hash.hex()}")
     
