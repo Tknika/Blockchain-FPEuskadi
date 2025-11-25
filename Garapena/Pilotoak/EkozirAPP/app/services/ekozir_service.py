@@ -450,14 +450,21 @@ def send_message_transaction(
         message_hash
     )
     
-    # Log for debugging (can be removed later)
+    # Log for debugging
     import logging
-    from .web3_service import get_signer_account
+    from .web3_service import get_signer_account, get_contract
     try:
         server_account = get_signer_account()
-        logging.info(f"sendMessage: Server account = {server_account}, Group ID = {group_id}")
-    except Exception:
-        pass
+        contract = get_contract()
+        contract_owner = contract.functions.owner().call()
+        logging.info(
+            f"sendMessage: Server account = {server_account}, "
+            f"Contract owner = {contract_owner}, "
+            f"Group ID = {group_id}, "
+            f"Match = {server_account.lower() == contract_owner.lower()}"
+        )
+    except Exception as e:
+        logging.error(f"Error in sendMessage logging: {e}")
     
     return send_transaction(function_call)
 

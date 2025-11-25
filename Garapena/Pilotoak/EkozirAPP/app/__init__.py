@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import logging
+import sys
+
 from flask import Flask
 
 from .config import load_config
@@ -16,6 +19,18 @@ def create_app() -> Flask:
     and registers the HTTP routes defined in the package.
     """
     app = Flask(__name__)
+
+    # Configure logging to stdout so it appears in console/docker logs
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.StreamHandler(sys.stdout)
+        ]
+    )
+    
+    # Set logging level for our modules
+    logging.getLogger('app').setLevel(logging.INFO)
 
     # Load environment-aware configuration (Besu RPC, contract metadata, etc.)
     config = load_config()

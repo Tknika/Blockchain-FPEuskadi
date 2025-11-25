@@ -228,45 +228,63 @@ def send_transaction(function_call, *args, **kwargs) -> TxReceipt:
         if key not in ["from", "chainId"]:  # Never allow these to be overridden
             transaction_params[key] = value
     
+    # Log transaction parameters before building
+    import logging
+    logging.info(
+        f"Building transaction: function={function_call.fn_name if hasattr(function_call, 'fn_name') else 'unknown'}, "
+        f"from={server_account}, nonce={nonce}, chainId={chain_id}"
+    )
+    
     # Build the transaction - web3 should use our explicit 'from' field
     try:
         function_txn = function_call.build_transaction(transaction_params)
+        logging.info(f"Transaction built successfully: from={function_txn.get('from')}, to={function_txn.get('to')}")
     except Exception as e:
+        logging.error(f"Failed to build transaction: {e}")
         raise RuntimeError(
             f"Failed to build transaction: {str(e)}. "
             f"Server account: {server_account}, Transaction params: {transaction_params}"
         )
     
+    # CRITICAL: Explicitly set the 'from' field after building, in case web3 changed it
+    # This ensures the transaction is definitely from the server account
+    function_txn["from"] = server_account
+    logging.info(f"Explicitly set 'from' field to: {server_account}")
+    
     # Verify the transaction is from the correct account
     txn_from = function_txn.get("from", "")
     if not txn_from or txn_from.lower() != server_account.lower():
+        logging.error(
+            f"Transaction 'from' field mismatch: expected {server_account}, "
+            f"got {txn_from}. Transaction params: {transaction_params}, "
+            f"Built transaction: {function_txn}"
+        )
         raise RuntimeError(
             f"Transaction 'from' field mismatch: expected {server_account}, "
             f"got {txn_from}. Transaction params: {transaction_params}"
         )
     
     # Sign the transaction with the server's private key
+    logging.info(f"Signing transaction with private key for account: {server_account}")
     signed_txn = web3.eth.account.sign_transaction(function_txn, private_key=private_key)
     
     # Verify the signed transaction's sender matches our account
     recovered_sender = web3.eth.account.recover_transaction(signed_txn.rawTransaction)
+    logging.info(f"Recovered sender from signed transaction: {recovered_sender}")
     if recovered_sender.lower() != server_account.lower():
+        logging.error(
+            f"Signed transaction sender mismatch: expected {server_account}, "
+            f"got {recovered_sender}"
+        )
         raise RuntimeError(
             f"Signed transaction sender mismatch: expected {server_account}, "
             f"got {recovered_sender}. This means the transaction was signed with a different private key."
         )
     
-    # Double-check: verify the transaction's 'from' field one more time
-    # Decode the transaction to verify
-    decoded_txn = web3.eth.account.recover_transaction(signed_txn.rawTransaction)
-    if decoded_txn.lower() != server_account.lower():
-        raise RuntimeError(
-            f"Transaction recovery mismatch: expected {server_account}, "
-            f"got {decoded_txn}"
-        )
-    
     # Send the transaction
+    logging.info(f"Sending transaction to blockchain...")
     tx_hash = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+    logging.info(f"Transaction sent, hash: {tx_hash.hex()}")
     
     # Log transaction details for debugging
     import logging
