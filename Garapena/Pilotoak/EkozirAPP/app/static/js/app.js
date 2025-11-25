@@ -845,11 +845,8 @@
    * Show a specific section and hide others
    */
   function showSection(sectionName) {
-    console.log('showSection called with:', sectionName);
-    
     // Get all sections fresh from the DOM
     const allSections = document.querySelectorAll("[data-requires-signin]");
-    console.log('Found sections:', allSections.length);
     
     // Hide all sections
     allSections.forEach((section) => {
@@ -858,30 +855,16 @@
       }
     });
     
-    // Show the selected section - try multiple selectors
-    let selectedSection = document.querySelector(`[data-section="${sectionName}"]`);
+    // Show the selected section - must have data-requires-signin to avoid matching buttons
+    const selectedSection = document.querySelector(`[data-requires-signin][data-section="${sectionName}"]`);
     
-    // If not found, try with data-requires-signin as well
-    if (!selectedSection) {
-      selectedSection = document.querySelector(`[data-requires-signin][data-section="${sectionName}"]`);
-    }
-    
-    console.log('Selected section:', selectedSection);
     if (selectedSection) {
       // Remove any inline display style first, then set to block
       selectedSection.style.removeProperty('display');
       // Force display to block
       selectedSection.style.setProperty('display', 'block', 'important');
-      console.log('Section displayed, computed style:', window.getComputedStyle(selectedSection).display);
     } else {
       console.error(`Section with data-section="${sectionName}" not found`);
-      // Try to find all sections with data-section to debug
-      const allDataSections = document.querySelectorAll("[data-section]");
-      console.log('All sections with data-section:', Array.from(allDataSections).map(s => ({
-        section: s.dataset.section,
-        display: s.style.display,
-        computedDisplay: window.getComputedStyle(s).display
-      })));
     }
     
     // Update navigation button states
@@ -1786,28 +1769,18 @@
   function registerEventListeners() {
     // Navigation button event listeners using event delegation
     if (ui.mainNavigation) {
-      console.log('Registering navigation event listener'); // Debug
       ui.mainNavigation.addEventListener("click", (e) => {
-        console.log('Navigation clicked:', e.target); // Debug
         e.preventDefault();
         e.stopPropagation();
         // Check if the clicked element is a nav button or inside one
         const button = e.target.closest('.nav-button');
-        console.log('Closest button:', button); // Debug
         if (button) {
           const sectionName = button.dataset.section;
-          console.log('Section name from button:', sectionName); // Debug
           if (sectionName) {
             showSection(sectionName);
-          } else {
-            console.warn('Button has no data-section attribute');
           }
-        } else {
-          console.warn('No nav-button found for click target');
         }
       });
-    } else {
-      console.error('mainNavigation element not found in DOM');
     }
     
     if (ui.showLoginButton) {
