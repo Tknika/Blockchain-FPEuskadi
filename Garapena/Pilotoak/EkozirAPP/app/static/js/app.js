@@ -1483,6 +1483,8 @@
     const recipientName = getMemberName(msg.recipient, members);
     const decryptedText = messageData.decryptedText;
     const isRecipient = msg.recipient === state.publicKey;
+    const confirmation = messageData.confirmations && messageData.confirmations[0];
+    const isConfirmed = confirmation?.confirmed || false;
 
     // Display decrypted content or error message
     let contentDisplay = "";
@@ -1490,6 +1492,29 @@
       contentDisplay = `<p style="margin: 0.5rem 0; padding: 0.5rem; background-color: #f0f0f0; border-radius: 4px; word-wrap: break-word;">${decryptedText}</p>`;
     } else {
       contentDisplay = `<p class="muted" style="margin: 0.5rem 0;">Failed to decrypt message</p>`;
+    }
+
+    // Confirmation status for sent messages
+    let confirmationStatus = "";
+    if (isSent) {
+      if (isConfirmed) {
+        const confirmedDate = confirmation.timestamp 
+          ? new Date(confirmation.timestamp * 1000).toLocaleString()
+          : "Unknown";
+        confirmationStatus = `
+          <div style="margin-top: 0.5rem; padding: 0.5rem; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724;">
+            <span style="font-weight: 600;">✓ Confirmed</span>
+            <span class="muted" style="font-size: 0.8rem; margin-left: 0.5rem;">by ${recipientName} on ${confirmedDate}</span>
+          </div>
+        `;
+      } else {
+        confirmationStatus = `
+          <div style="margin-top: 0.5rem; padding: 0.5rem; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; color: #856404;">
+            <span style="font-weight: 600;">⏳ Pending confirmation</span>
+            <span class="muted" style="font-size: 0.8rem; margin-left: 0.5rem;">from ${recipientName}</span>
+          </div>
+        `;
+      }
     }
 
     wrapper.innerHTML = `
@@ -1500,7 +1525,8 @@
       <p class="muted" style="font-size: 0.85rem; margin-top: 0.5rem;">
         ${new Date(msg.timestamp * 1000).toLocaleString()}
       </p>
-      ${isRecipient && !messageData.confirmations[0]?.confirmed 
+      ${confirmationStatus}
+      ${isRecipient && !isConfirmed 
         ? `<button class="confirm-message" data-message="${msg.id}" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.85rem;">Confirm Reception</button>` 
         : ""}
     `;
