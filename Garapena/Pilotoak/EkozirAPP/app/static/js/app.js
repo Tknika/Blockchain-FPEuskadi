@@ -855,7 +855,10 @@
     // Show the selected section
     const selectedSection = document.querySelector(`[data-section="${sectionName}"]`);
     if (selectedSection) {
+      // Remove inline style to use default CSS display
       selectedSection.style.display = "";
+    } else {
+      console.warn(`Section with data-section="${sectionName}" not found`);
     }
     
     // Update navigation button states
@@ -921,8 +924,17 @@
       if (ui.bannerUsername && state.username) {
         ui.bannerUsername.textContent = state.username;
       }
-      // Show the first section by default (Create Group)
-      showSection('createGroup');
+      // Hide all sections by default - user must click a navigation button
+      ui.signedInSections.forEach((section) => {
+        if (section) {
+          section.style.display = "none";
+        }
+      });
+      // Clear active state from all navigation buttons
+      const navButtons = document.querySelectorAll('.nav-button');
+      navButtons.forEach(button => {
+        button.classList.remove('active');
+      });
       updateStatus(`Logged in as ${state.username}`);
     }
   }
@@ -1749,16 +1761,19 @@
   // ==================== Event Listeners ====================
 
   function registerEventListeners() {
-    // Navigation button event listeners
-    const navButtons = document.querySelectorAll('.nav-button');
-    navButtons.forEach(button => {
-      button.addEventListener("click", (e) => {
-        const sectionName = e.target.dataset.section;
-        if (sectionName) {
-          showSection(sectionName);
+    // Navigation button event listeners using event delegation
+    if (ui.mainNavigation) {
+      ui.mainNavigation.addEventListener("click", (e) => {
+        // Check if the clicked element is a nav button or inside one
+        const button = e.target.closest('.nav-button');
+        if (button) {
+          const sectionName = button.dataset.section;
+          if (sectionName) {
+            showSection(sectionName);
+          }
         }
       });
-    });
+    }
     
     if (ui.showLoginButton) {
       ui.showLoginButton.addEventListener("click", showLoginSection);
