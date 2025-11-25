@@ -438,6 +438,8 @@ def send_message_transaction(
     normalized_recipient_key = normalize_public_key_json(recipient_public_key)
     
     contract = get_contract()
+    
+    # Build the function call
     function_call = contract.functions.sendMessage(
         group_id,
         normalized_sender_key,
@@ -447,6 +449,16 @@ def send_message_transaction(
         encrypted_key_for_sender,
         message_hash
     )
+    
+    # Log for debugging (can be removed later)
+    import logging
+    from .web3_service import get_signer_account
+    try:
+        server_account = get_signer_account()
+        logging.info(f"sendMessage: Server account = {server_account}, Group ID = {group_id}")
+    except Exception:
+        pass
+    
     return send_transaction(function_call)
 
 

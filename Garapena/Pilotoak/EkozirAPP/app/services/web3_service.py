@@ -204,33 +204,98 @@ def send_transaction(function_call, *args, **kwargs) -> TxReceipt:
             import logging
             logging.warning(f"Could not verify contract ownership: {e}")
     
-    # Get nonce for the transaction
-    nonce = web3.eth.get_transaction_count(server_account)
+    # Get nonce for the transaction (use 'pending' to include pending transactions)
+    nonce = web3.eth.get_transaction_count(server_account, 'pending')
     
-    # Build the transaction
-    function_txn = function_call.build_transaction({
-        "from": server_account,
+    # Get chain ID from config (should be set during init)
+    chain_id = current_app.config.get("WEB3_CHAIN_ID")
+    
+    # Build the transaction with explicit 'from' field
+    # Ensure we're using the server account explicitly - this is critical for onlyOwner functions
+    transaction_params = {
+        "from": server_account,  # Explicitly set the sender - CRITICAL for onlyOwner functions
         "nonce": nonce,
         "gas": 1000000,  # Adjust as needed
         "gasPrice": web3.eth.gas_price,
-        **kwargs
-    })
+    }
     
-    # Verify the transaction is from the correct account
-    if function_txn.get("from", "").lower() != server_account.lower():
+    # Add chain ID if available (some networks require this)
+    if chain_id:
+        transaction_params["chainId"] = chain_id
+    
+    # Merge any additional kwargs (but don't let them override 'from' or 'chainId')
+    for key, value in kwargs.items():
+        if key not in ["from", "chainId"]:  # Never allow these to be overridden
+            transaction_params[key] = value
+    
+    # Build the transaction - web3 should use our explicit 'from' field
+    try:
+        function_txn = function_call.build_transaction(transaction_params)
+    except Exception as e:
         raise RuntimeError(
-            f"Transaction 'from' field mismatch: expected {server_account}, "
-            f"got {function_txn.get('from')}"
+            f"Failed to build transaction: {str(e)}. "
+            f"Server account: {server_account}, Transaction params: {transaction_params}"
         )
     
-    # Sign the transaction
+    # Verify the transaction is from the correct account
+    txn_from = function_txn.get("from", "")
+    if not txn_from or txn_from.lower() != server_account.lower():
+        raise RuntimeError(
+            f"Transaction 'from' field mismatch: expected {server_account}, "
+            f"got {txn_from}. Transaction params: {transaction_params}"
+        )
+    
+    # Sign the transaction with the server's private key
     signed_txn = web3.eth.account.sign_transaction(function_txn, private_key=private_key)
+    
+    # Verify the signed transaction's sender matches our account
+    recovered_sender = web3.eth.account.recover_transaction(signed_txn.rawTransaction)
+    if recovered_sender.lower() != server_account.lower():
+        raise RuntimeError(
+            f"Signed transaction sender mismatch: expected {server_account}, "
+            f"got {recovered_sender}. This means the transaction was signed with a different private key."
+        )
+    
+    # Double-check: verify the transaction's 'from' field one more time
+    # Decode the transaction to verify
+    decoded_txn = web3.eth.account.recover_transaction(signed_txn.rawTransaction)
+    if decoded_txn.lower() != server_account.lower():
+        raise RuntimeError(
+            f"Transaction recovery mismatch: expected {server_account}, "
+            f"got {decoded_txn}"
+        )
     
     # Send the transaction
     tx_hash = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
     
+    # Log transaction details for debugging
+    import logging
+    logging.info(
+        f"Transaction sent: hash={tx_hash.hex()}, from={server_account}, "
+        f"nonce={nonce}, gas={function_txn.get('gas')}"
+    )
+    
     # Wait for the transaction to be mined
     receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+    
+    # Get the actual sender from the receipt
+    receipt_from = receipt.get('from', '')
+    if receipt_from:
+        receipt_from = web3.to_checksum_address(receipt_from)
+    
+    # Log receipt details
+    logging.info(
+        f"Transaction receipt: status={receipt.status}, "
+        f"from={receipt_from}, expected={server_account}, "
+        f"to={receipt.get('to', 'N/A')}"
+    )
+    
+    # Verify the receipt shows the transaction was sent from our account
+    if receipt_from and receipt_from.lower() != server_account.lower():
+        raise RuntimeError(
+            f"Transaction receipt shows different sender: expected {server_account}, "
+            f"got {receipt_from}. This indicates the transaction was sent from a different account."
+        )
     
     # Check if transaction was successful
     if receipt.status == 0:
