@@ -419,6 +419,8 @@ def send_message_transaction(
     """
     Execute sendMessage transaction on the blockchain.
     
+    Normalizes public keys before sending to ensure consistent comparison.
+    
     Args:
         group_id: The ID of the group
         sender_public_key: Public key (JSON string) of the sender
@@ -431,11 +433,15 @@ def send_message_transaction(
     Returns:
         Transaction receipt
     """
+    # Normalize public keys before sending
+    normalized_sender_key = normalize_public_key_json(sender_public_key)
+    normalized_recipient_key = normalize_public_key_json(recipient_public_key)
+    
     contract = get_contract()
     function_call = contract.functions.sendMessage(
         group_id,
-        sender_public_key,
-        recipient_public_key,
+        normalized_sender_key,
+        normalized_recipient_key,
         encrypted_content,
         encrypted_key,
         encrypted_key_for_sender,

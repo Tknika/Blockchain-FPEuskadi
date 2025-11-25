@@ -458,6 +458,9 @@
       const { data } = await response.json();
       
       if (response.ok && data.authenticated) {
+        // Clear all previous user data before setting new user data
+        clearAllCardData();
+        
         state.isLoggedIn = true;
         state.username = data.username; // Retrieved from blockchain
         state.password = password; // Store temporarily for decryption
@@ -515,6 +518,9 @@
       const { data } = await response.json();
       
       if (response.ok) {
+        // Clear all previous user data before setting new user data
+        clearAllCardData();
+        
         state.isLoggedIn = true;
         state.username = username;
         state.password = password;
@@ -542,6 +548,69 @@
   }
 
   /**
+   * Clear all card data from the UI
+   */
+  function clearAllCardData() {
+    // Clear Create Group card
+    if (ui.groupName) {
+      ui.groupName.value = "";
+    }
+    
+    // Clear Manage Membership card
+    if (ui.memberGroupSelect) {
+      ui.memberGroupSelect.innerHTML = '<option value="">Select one of your groups</option>';
+    }
+    if (ui.memberPublicKey) {
+      ui.memberPublicKey.value = "";
+    }
+    
+    // Clear Send Message card
+    if (ui.messageGroupSelect) {
+      ui.messageGroupSelect.innerHTML = '<option value="">Select one of your groups</option>';
+    }
+    if (ui.recipientSelection) {
+      ui.recipientSelection.style.display = "none";
+    }
+    if (ui.recipientCheckboxes) {
+      ui.recipientCheckboxes.innerHTML = "";
+    }
+    if (ui.messageContent) {
+      ui.messageContent.value = "";
+      ui.messageContent.style.display = "none";
+    }
+    if (ui.sendMessage) {
+      ui.sendMessage.style.display = "none";
+    }
+    
+    // Clear Your Groups card
+    if (ui.groupsList) {
+      ui.groupsList.innerHTML = "";
+    }
+    
+    // Clear Group Messages card
+    if (ui.messagesList) {
+      ui.messagesList.innerHTML = "";
+    }
+    
+    // Clear login/signup form fields
+    if (ui.loginPassword) {
+      ui.loginPassword.value = "";
+    }
+    if (ui.loginStatus) {
+      ui.loginStatus.textContent = "";
+    }
+    if (ui.userNameInput) {
+      ui.userNameInput.value = "";
+    }
+    if (ui.passwordInput) {
+      ui.passwordInput.value = "";
+    }
+    if (ui.signInStatus) {
+      ui.signInStatus.textContent = "Enter username and password to sign up.";
+    }
+  }
+
+  /**
    * Logout
    */
   async function handleLogout() {
@@ -554,14 +623,10 @@
       state.ecdhKeyPair = null;
       state.selectedGroupId = null;
       
+      // Clear all card data
+      clearAllCardData();
+      
       updateSignedInUI();
-      // Clear login form fields if they exist
-      if (ui.loginPassword) {
-        ui.loginPassword.value = "";
-      }
-      if (ui.loginStatus) {
-        ui.loginStatus.textContent = "";
-      }
     } catch (error) {
       updateStatus("Logout error", { error: error.message });
     }
@@ -676,9 +741,15 @@
     }
     
     if (!shouldDisplay) {
+      // Clear all card data when logging out
+      clearAllCardData();
       clearGroupSelectors();
-      ui.groupsList.innerHTML = '<p class="muted">Login to view your groups.</p>';
-      ui.messagesList.innerHTML = '<p class="muted">Login to view group messages.</p>';
+      if (ui.groupsList) {
+        ui.groupsList.innerHTML = '<p class="muted">Login to view your groups.</p>';
+      }
+      if (ui.messagesList) {
+        ui.messagesList.innerHTML = '<p class="muted">Login to view group messages.</p>';
+      }
       updateStatus("Not logged in");
     } else {
       // Display username in banner
@@ -791,7 +862,6 @@
     wrapper.innerHTML = `
       <strong>#${group.id} — ${group.name}</strong>
       <span class="muted">Members: ${group.members.length}, Messages: ${group.messageCount}</span>
-      <p class="muted">Creator: ${group.creator ? group.creator.substring(0, 20) + "..." : "Unknown"}</p>
       <ul>${memberList}</ul>
       <button class="view-group" data-group="${group.id}">View messages</button>
     `;

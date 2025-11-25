@@ -121,6 +121,24 @@ def get_signer_account() -> ChecksumAddress:
     return _resources.server_account
 
 
+def verify_owner_account() -> bool:
+    """
+    Verify that the server account is the contract owner.
+    
+    Returns:
+        True if the server account is the contract owner, False otherwise
+    """
+    if _resources is None or _resources.contract is None:
+        return False
+    
+    try:
+        server_account = get_signer_account()
+        contract_owner = _resources.contract.functions.owner().call()
+        return server_account.lower() == contract_owner.lower()
+    except Exception:
+        return False
+
+
 def build_default_call_args(from_address: Optional[str] = None) -> Dict[str, Any]:
     """
     Prepare the call dictionary passed to view functions.
@@ -163,14 +181,47 @@ def send_transaction(function_call, *args, **kwargs) -> TxReceipt:
     if private_key.startswith("0x"):
         private_key = private_key[2:]
     
+    # Verify the server account matches the account derived from the private key
+    account_from_key = web3.eth.account.from_key(private_key)
+    if account_from_key.address.lower() != server_account.lower():
+        raise RuntimeError(
+            f"Server account mismatch: configured account {server_account} "
+            f"does not match private key account {account_from_key.address}"
+        )
+    
+    # Verify the server account is the contract owner (for debugging)
+    if _resources.contract is not None:
+        try:
+            contract_owner = _resources.contract.functions.owner().call()
+            if server_account.lower() != contract_owner.lower():
+                raise RuntimeError(
+                    f"Server account {server_account} is not the contract owner. "
+                    f"Contract owner is {contract_owner}. "
+                    f"Please ensure EKOZIR_PRIVATE_KEY corresponds to the contract owner's private key."
+                )
+        except Exception as e:
+            # If we can't verify, log a warning but continue (might be a view function issue)
+            import logging
+            logging.warning(f"Could not verify contract ownership: {e}")
+    
+    # Get nonce for the transaction
+    nonce = web3.eth.get_transaction_count(server_account)
+    
     # Build the transaction
     function_txn = function_call.build_transaction({
         "from": server_account,
-        "nonce": web3.eth.get_transaction_count(server_account),
+        "nonce": nonce,
         "gas": 1000000,  # Adjust as needed
         "gasPrice": web3.eth.gas_price,
         **kwargs
     })
+    
+    # Verify the transaction is from the correct account
+    if function_txn.get("from", "").lower() != server_account.lower():
+        raise RuntimeError(
+            f"Transaction 'from' field mismatch: expected {server_account}, "
+            f"got {function_txn.get('from')}"
+        )
     
     # Sign the transaction
     signed_txn = web3.eth.account.sign_transaction(function_txn, private_key=private_key)
