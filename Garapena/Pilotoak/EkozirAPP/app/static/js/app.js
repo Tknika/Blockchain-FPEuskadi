@@ -17,6 +17,7 @@
     copyPublicKeyButton: document.getElementById("copyPublicKeyButton"),
     logoutButtonBanner: document.getElementById("logoutButtonBanner"),
     authButtons: document.getElementById("authButtons"),
+    mainNavigation: document.getElementById("mainNavigation"),
     showLoginButton: document.getElementById("showLoginButton"),
     showSignUpButton: document.getElementById("showSignUpButton"),
     loginSection: document.getElementById("loginSection"),
@@ -30,6 +31,12 @@
     userNameInput: document.getElementById("userNameInput"),
     passwordInput: document.getElementById("passwordInput"),
     signInStatus: document.getElementById("signInStatus"),
+    passwordRequirements: document.getElementById("passwordRequirements"),
+    reqLength: document.getElementById("req-length"),
+    reqUppercase: document.getElementById("req-uppercase"),
+    reqLowercase: document.getElementById("req-lowercase"),
+    reqNumber: document.getElementById("req-number"),
+    reqSpecial: document.getElementById("req-special"),
     signedInSections: document.querySelectorAll("[data-requires-signin]"),
     createGroup: document.getElementById("createGroup"),
     groupName: document.getElementById("groupName"),
@@ -45,7 +52,30 @@
     refreshGroups: document.getElementById("refreshGroups"),
     groupsList: document.getElementById("groupsList"),
     messagesList: document.getElementById("messagesList"),
+    loadingOverlay: document.getElementById("loadingOverlay"),
   };
+
+  /**
+   * Show loading indicator for blockchain transactions
+   */
+  function showLoading(message = "Processing blockchain transaction...") {
+    if (ui.loadingOverlay) {
+      const loadingText = ui.loadingOverlay.querySelector('.loading-text');
+      if (loadingText) {
+        loadingText.textContent = message;
+      }
+      ui.loadingOverlay.style.display = "flex";
+    }
+  }
+
+  /**
+   * Hide loading indicator
+   */
+  function hideLoading() {
+    if (ui.loadingOverlay) {
+      ui.loadingOverlay.style.display = "none";
+    }
+  }
 
   /**
    * Display status updates inside the wallet info panel.
@@ -57,6 +87,18 @@
     }
     ui.walletInfo.textContent = lines.join("\n");
     console.info("[Ekozir]", message, payload || "");
+    
+    // Scroll to top of the page
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Highlight the info panel
+    if (ui.walletInfo) {
+      ui.walletInfo.classList.add('highlight');
+      // Remove highlight class after animation completes
+      setTimeout(() => {
+        ui.walletInfo.classList.remove('highlight');
+      }, 2000);
+    }
   }
 
   // ==================== ECDH Encryption Functions ====================
@@ -444,6 +486,7 @@
     }
     
     try {
+      showLoading("Logging in...");
       // Derive public key from password (already normalized)
       const publicKeyDict = await derivePublicKeyFromPassword(password);
       const publicKeyJson = JSON.stringify(publicKeyDict);
@@ -456,6 +499,7 @@
       });
       
       const { data } = await response.json();
+      hideLoading();
       
       if (response.ok && data.authenticated) {
         // Clear all previous user data before setting new user data
@@ -483,8 +527,69 @@
         ui.loginStatus.textContent = data.error || "Login failed.";
       }
     } catch (error) {
+      hideLoading();
       ui.loginStatus.textContent = `Login error: ${error.message}`;
       updateStatus("Login failed", { error: error.message });
+    }
+  }
+
+  /**
+   * Validate password complexity
+   * Returns an object with validation results
+   */
+  function validatePassword(password) {
+    const requirements = {
+      length: password.length >= 12,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /[0-9]/.test(password),
+      special: /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password)
+    };
+    
+    // Check if all requirements are met (excluding the valid property itself)
+    requirements.valid = requirements.length && 
+                         requirements.uppercase && 
+                         requirements.lowercase && 
+                         requirements.number && 
+                         requirements.special;
+    return requirements;
+  }
+
+  /**
+   * Update password requirements visual feedback
+   */
+  function updatePasswordRequirements(password) {
+    if (!ui.passwordRequirements) return;
+    
+    const validation = validatePassword(password);
+    
+    if (password.length === 0) {
+      ui.passwordRequirements.style.display = "none";
+      return;
+    }
+    
+    ui.passwordRequirements.style.display = "block";
+    
+    // Update each requirement indicator
+    if (ui.reqLength) {
+      ui.reqLength.style.color = validation.length ? "green" : "red";
+      ui.reqLength.style.textDecoration = validation.length ? "line-through" : "none";
+    }
+    if (ui.reqUppercase) {
+      ui.reqUppercase.style.color = validation.uppercase ? "green" : "red";
+      ui.reqUppercase.style.textDecoration = validation.uppercase ? "line-through" : "none";
+    }
+    if (ui.reqLowercase) {
+      ui.reqLowercase.style.color = validation.lowercase ? "green" : "red";
+      ui.reqLowercase.style.textDecoration = validation.lowercase ? "line-through" : "none";
+    }
+    if (ui.reqNumber) {
+      ui.reqNumber.style.color = validation.number ? "green" : "red";
+      ui.reqNumber.style.textDecoration = validation.number ? "line-through" : "none";
+    }
+    if (ui.reqSpecial) {
+      ui.reqSpecial.style.color = validation.special ? "green" : "red";
+      ui.reqSpecial.style.textDecoration = validation.special ? "line-through" : "none";
     }
   }
 
@@ -500,7 +605,16 @@
       return;
     }
     
+    // Validate password complexity
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      ui.signInStatus.textContent = "Password does not meet complexity requirements. Please check the requirements above.";
+      updatePasswordRequirements(password);
+      return;
+    }
+    
     try {
+      showLoading("Creating account and registering on blockchain...");
       // Derive public key (already normalized)
       const publicKeyDict = await derivePublicKeyFromPassword(password);
       const publicKeyJson = JSON.stringify(publicKeyDict);
@@ -516,6 +630,7 @@
       });
       
       const { data } = await response.json();
+      hideLoading();
       
       if (response.ok) {
         // Clear all previous user data before setting new user data
@@ -542,6 +657,7 @@
         }
       }
     } catch (error) {
+      hideLoading();
       ui.signInStatus.textContent = `Sign up error: ${error.message}`;
       updateStatus("Sign up failed", { error: error.message });
     }
@@ -645,6 +761,10 @@
     if (ui.authButtons) {
       ui.authButtons.style.display = "none";
     }
+    // Show password requirements when sign-up section is displayed
+    if (ui.passwordRequirements && ui.passwordInput && ui.passwordInput.value.length > 0) {
+      updatePasswordRequirements(ui.passwordInput.value);
+    }
   }
 
   /**
@@ -684,6 +804,16 @@
     if (ui.authButtons) {
       ui.authButtons.style.display = "";
     }
+    // Clear password input and hide requirements when canceling
+    if (ui.passwordInput) {
+      ui.passwordInput.value = "";
+    }
+    if (ui.passwordRequirements) {
+      ui.passwordRequirements.style.display = "none";
+    }
+    if (ui.signInStatus) {
+      ui.signInStatus.textContent = "Enter username and password to sign up.";
+    }
   }
 
   /**
@@ -712,15 +842,38 @@
   }
 
   /**
+   * Show a specific section and hide others
+   */
+  function showSection(sectionName) {
+    // Hide all sections
+    ui.signedInSections.forEach((section) => {
+      if (section) {
+        section.style.display = "none";
+      }
+    });
+    
+    // Show the selected section
+    const selectedSection = document.querySelector(`[data-section="${sectionName}"]`);
+    if (selectedSection) {
+      selectedSection.style.display = "";
+    }
+    
+    // Update navigation button states
+    const navButtons = document.querySelectorAll('.nav-button');
+    navButtons.forEach(button => {
+      if (button.dataset.section === sectionName) {
+        button.classList.add('active');
+      } else {
+        button.classList.remove('active');
+      }
+    });
+  }
+
+  /**
    * Update UI based on signed-in status
    */
   function updateSignedInUI() {
     const shouldDisplay = state.isLoggedIn;
-    ui.signedInSections.forEach((section) => {
-      if (section) {
-        section.style.display = shouldDisplay ? "" : "none";
-      }
-    });
     
     // Hide login and signup sections
     if (ui.loginSection) {
@@ -735,12 +888,24 @@
       ui.authButtons.style.display = shouldDisplay ? "none" : "";
     }
     
+    // Show/hide navigation menu (only when logged in)
+    if (ui.mainNavigation) {
+      ui.mainNavigation.style.display = shouldDisplay ? "" : "none";
+    }
+    
     // Show/hide user banner (only when logged in)
     if (ui.userBanner) {
       ui.userBanner.style.display = shouldDisplay ? "" : "none";
     }
     
     if (!shouldDisplay) {
+      // Hide all sections when logged out
+      ui.signedInSections.forEach((section) => {
+        if (section) {
+          section.style.display = "none";
+        }
+      });
+      
       // Clear all card data when logging out
       clearAllCardData();
       clearGroupSelectors();
@@ -756,6 +921,8 @@
       if (ui.bannerUsername && state.username) {
         ui.bannerUsername.textContent = state.username;
       }
+      // Show the first section by default (Create Group)
+      showSection('createGroup');
       updateStatus(`Logged in as ${state.username}`);
     }
   }
@@ -874,6 +1041,8 @@
         if (ui.messageGroupSelect && !ui.messageGroupSelect.value) {
           ui.messageGroupSelect.value = String(targetGroupId);
         }
+        // Switch to the Groups and Messages section
+        showSection('groupsAndMessages');
         await loadMessages(targetGroupId);
       });
 
@@ -921,6 +1090,7 @@
     }
 
     try {
+      showLoading("Creating group on blockchain...");
       const response = await fetch("/api/transactions/createGroup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -931,6 +1101,7 @@
       });
 
       const { data } = await response.json();
+      hideLoading();
       
       if (response.ok) {
         updateStatus("Group created.", { txHash: data.txHash });
@@ -940,6 +1111,7 @@
         updateStatus("Failed to create group.", { error: data.error });
       }
     } catch (error) {
+      hideLoading();
       updateStatus("Failed to create group.", { error: error.message });
     }
   }
@@ -1018,6 +1190,7 @@
     }
 
     try {
+      showLoading("Adding member to group on blockchain...");
       const response = await fetch("/api/transactions/addMember", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1028,6 +1201,7 @@
       });
 
       const { data } = await response.json();
+      hideLoading();
       
       if (response.ok) {
         updateStatus("Member added successfully.", { txHash: data.txHash });
@@ -1058,6 +1232,7 @@
         }
       }
     } catch (error) {
+      hideLoading();
       updateStatus("Failed to add member.", { error: error.message });
     }
   }
@@ -1088,6 +1263,7 @@
     }
 
     try {
+      showLoading("Removing member from group on blockchain...");
       const response = await fetch("/api/transactions/removeMember", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1098,6 +1274,7 @@
       });
 
       const { data } = await response.json();
+      hideLoading();
       
       if (response.ok) {
         updateStatus("Member removed successfully.", { txHash: data.txHash });
@@ -1107,6 +1284,7 @@
         updateStatus("Failed to remove member.", { error: data.error });
       }
     } catch (error) {
+      hideLoading();
       updateStatus("Failed to remove member.", { error: error.message });
     }
   }
@@ -1204,6 +1382,7 @@
     const messageHashBytes32 = messageHashHex.padEnd(64, '0').substring(0, 64);
 
     try {
+      showLoading("Encrypting message and preparing to send...");
       const groupData = await loadGroup(groupId);
       
       // Generate symmetric key and encrypt content once
@@ -1245,6 +1424,7 @@
         }
         
         try {
+          showLoading(`Sending message ${i + 1}/${recipients.length} to blockchain...`);
           // Encrypt symmetric key with recipient's public key
           const encryptedKeyPackage = await encryptWithPublicKey(symmetricKeyBase64, recipientPublicKey);
           const encryptedKey = JSON.stringify(encryptedKeyPackage);
@@ -1277,6 +1457,7 @@
         }
       }
 
+      hideLoading();
       if (successCount > 0) {
         updateStatus(`Successfully sent ${successCount} out of ${recipients.length} message(s).`);
       }
@@ -1288,6 +1469,7 @@
         await loadMessages(groupId);
       }
     } catch (error) {
+      hideLoading();
       updateStatus(`Failed to send message: ${error.message}`);
     }
   }
@@ -1536,6 +1718,7 @@
     if (confirmButton) {
       confirmButton.addEventListener("click", async () => {
         try {
+          showLoading("Confirming message reception on blockchain...");
           const response = await fetch("/api/transactions/confirmMessage", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1543,6 +1726,7 @@
           });
 
           const { data } = await response.json();
+          hideLoading();
           
           if (response.ok) {
             updateStatus("Message confirmed.", { txHash: data.txHash });
@@ -1553,6 +1737,7 @@
             updateStatus("Failed to confirm message.", { error: data.error });
           }
         } catch (error) {
+          hideLoading();
           updateStatus("Failed to confirm message.", { error: error.message });
         }
       });
@@ -1564,6 +1749,17 @@
   // ==================== Event Listeners ====================
 
   function registerEventListeners() {
+    // Navigation button event listeners
+    const navButtons = document.querySelectorAll('.nav-button');
+    navButtons.forEach(button => {
+      button.addEventListener("click", (e) => {
+        const sectionName = e.target.dataset.section;
+        if (sectionName) {
+          showSection(sectionName);
+        }
+      });
+    });
+    
     if (ui.showLoginButton) {
       ui.showLoginButton.addEventListener("click", showLoginSection);
     }
@@ -1581,6 +1777,50 @@
     }
     if (ui.signUp) {
       ui.signUp.addEventListener("click", handleSignUp);
+    }
+    // Add real-time password validation feedback
+    if (ui.passwordInput) {
+      ui.passwordInput.addEventListener("input", (e) => {
+        updatePasswordRequirements(e.target.value);
+      });
+      ui.passwordInput.addEventListener("focus", (e) => {
+        // Show requirements when focused, even if empty
+        if (ui.passwordRequirements) {
+          if (e.target.value.length === 0) {
+            // Show requirements but don't update colors yet
+            ui.passwordRequirements.style.display = "block";
+            // Reset all requirements to default (red)
+            if (ui.reqLength) {
+              ui.reqLength.style.color = "red";
+              ui.reqLength.style.textDecoration = "none";
+            }
+            if (ui.reqUppercase) {
+              ui.reqUppercase.style.color = "red";
+              ui.reqUppercase.style.textDecoration = "none";
+            }
+            if (ui.reqLowercase) {
+              ui.reqLowercase.style.color = "red";
+              ui.reqLowercase.style.textDecoration = "none";
+            }
+            if (ui.reqNumber) {
+              ui.reqNumber.style.color = "red";
+              ui.reqNumber.style.textDecoration = "none";
+            }
+            if (ui.reqSpecial) {
+              ui.reqSpecial.style.color = "red";
+              ui.reqSpecial.style.textDecoration = "none";
+            }
+          } else {
+            updatePasswordRequirements(e.target.value);
+          }
+        }
+      });
+      ui.passwordInput.addEventListener("blur", (e) => {
+        // Hide requirements when not focused and empty
+        if (e.target.value.length === 0 && ui.passwordRequirements) {
+          ui.passwordRequirements.style.display = "none";
+        }
+      });
     }
     if (ui.logoutButtonBanner) {
       ui.logoutButtonBanner.addEventListener("click", handleLogout);

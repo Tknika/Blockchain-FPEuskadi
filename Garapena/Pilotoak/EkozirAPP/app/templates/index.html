@@ -17,11 +17,27 @@
 
 <pre id="walletInfo" class="info-panel">Not logged in</pre>
 
+<!-- Loading indicator overlay -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+  <div class="loading-spinner">
+    <div class="spinner"></div>
+    <p class="loading-text">Processing blockchain transaction...</p>
+  </div>
+</div>
+
 <!-- Login/Signup buttons shown outside cards when not logged in -->
 <div id="authButtons" class="auth-buttons">
   <button id="showLoginButton">Login</button>
   <button id="showSignUpButton">Sign Up</button>
 </div>
+
+<!-- Navigation menu shown when logged in -->
+<nav id="mainNavigation" class="main-navigation" style="display: none;">
+  <button class="nav-button active" data-section="createGroup">Create Group</button>
+  <button class="nav-button" data-section="manageMembership">Manage Membership</button>
+  <button class="nav-button" data-section="sendMessage">Send Message</button>
+  <button class="nav-button" data-section="groupsAndMessages">Your Groups and Messages</button>
+</nav>
 
 <section class="card" id="loginSection" style="display: none;">
   <h2>Login</h2>
@@ -39,7 +55,9 @@
 <section class="card" id="signUpSection" style="display: none;">
   <h2>Sign Up</h2>
   <p>
-    Create a new account. Your password will be used to derive your encryption key.
+    Create a new account. <strong>Your username will be permanently associated with your account and cannot be changed.</strong> 
+    <br>
+    <strong>Your password must be complex</strong> because it is used to generate your encryption keys for accessing all your data. Choose a strong password and remember it—if you lose it, you will lose access to your account and data.
   </p>
   <p id="signInStatus" class="muted">Enter username and password to sign up.</p>
   <input id="userNameInput" type="text" placeholder="Your username"/>
@@ -50,7 +68,7 @@
   </div>
 </section>
 
-<section class="card" data-requires-signin>
+<section class="card" data-requires-signin data-section="createGroup">
   <h2>Create Group</h2>
   <p>
     Define a group name. You can add members later in the Manage Membership section.
@@ -59,7 +77,7 @@
   <button id="createGroup">Create Group</button>
 </section>
 
-<section class="card" data-requires-signin>
+<section class="card" data-requires-signin data-section="manageMembership">
   <h2>Manage Membership</h2>
   <p>
     Add or remove participants when you are the group creator. Paste the public key (JSON format) of the member you want to add.
@@ -74,7 +92,7 @@
   </div>
 </section>
 
-<section class="card" data-requires-signin>
+<section class="card" data-requires-signin data-section="sendMessage">
   <h2>Send Message</h2>
   <p>
     Select a group and choose recipients. Messages are stored encrypted.
@@ -95,21 +113,23 @@
   <button id="sendMessage" style="display: none;">Send Message</button>
 </section>
 
-<section class="card" data-requires-signin>
-  <h2>Your Groups</h2>
-  <p>
-    Select a group to inspect members and messages.
-  </p>
-  <button id="refreshGroups">Refresh Groups</button>
-  <div id="groupsList" class="list-panel"></div>
-</section>
-
-<section class="card" data-requires-signin>
-  <h2>Group Messages</h2>
-  <p>
-    View encrypted content, keys, and confirmation status.
-  </p>
-  <div id="messagesList" class="list-panel"></div>
+<section class="card" data-requires-signin data-section="groupsAndMessages">
+  <h2>Your Groups and Messages</h2>
+  <div style="margin-bottom: 1rem;">
+    <h3 style="margin-top: 0;">Your Groups</h3>
+    <p>
+      Select a group to inspect members and messages.
+    </p>
+    <button id="refreshGroups">Refresh Groups</button>
+    <div id="groupsList" class="list-panel"></div>
+  </div>
+  <div>
+    <h3>Group Messages</h3>
+    <p>
+      View encrypted content, keys, and confirmation status.
+    </p>
+    <div id="messagesList" class="list-panel"></div>
+  </div>
 </section>
 
 <script>
