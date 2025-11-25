@@ -452,10 +452,10 @@ def send_message_transaction(
     
     # Log for debugging
     import logging
-    from .web3_service import get_signer_account, get_contract
+    from .web3_service import get_signer_account
     try:
         server_account = get_signer_account()
-        contract = get_contract()
+        contract = get_contract()  # Already imported at module level
         contract_owner = contract.functions.owner().call()
         logging.info(
             f"sendMessage: Server account = {server_account}, "
