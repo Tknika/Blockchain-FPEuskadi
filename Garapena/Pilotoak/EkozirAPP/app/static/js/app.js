@@ -543,7 +543,7 @@
     }
     
     try {
-      showLoading("Logging in...");
+      showLoading(t('loggingIn'));
       // Derive public key from password (already normalized)
       const publicKeyDict = await derivePublicKeyFromPassword(password);
       const publicKeyJson = JSON.stringify(publicKeyDict);
@@ -760,7 +760,7 @@
         
         // Reset to normal styling for success message
         resetSignInStatusStyle();
-        ui.signInStatus.textContent = "Sign up successful!";
+        ui.signInStatus.textContent = t('signUpSuccessful');
         updateSignedInUI();
         await refreshGroups();
       } else {
@@ -1169,13 +1169,13 @@
             return `<li>${displayName}${!entry.name ? ` (${truncatedKey})` : ""}</li>`;
           })
           .join("")
-      : "<li class='muted'>No members yet</li>";
+      : `<li class='muted'>${t('noMembersYet')}</li>`;
 
     wrapper.innerHTML = `
       <strong>#${group.id} — ${group.name}</strong>
-      <span class="muted">Members: ${group.members.length}, Messages: ${group.messageCount}</span>
+      <span class="muted">${t('membersCount', { count: group.members.length })} ${t('messagesCount', { count: group.messageCount })}</span>
       <ul>${memberList}</ul>
-      <button class="view-group" data-group="${group.id}">View messages</button>
+      <button class="view-group" data-group="${group.id}">${t('viewMessages')}</button>
     `;
 
     wrapper
@@ -1214,7 +1214,7 @@
       .map((group) => `<option value="${group.id}">#${group.id} — ${group.name}</option>`)
       .join("");
 
-    const defaultOption = '<option value="">Select one of your groups</option>';
+    const defaultOption = `<option value="">${t('selectOneOfYourGroups')}</option>`;
 
     if (ui.memberGroupSelect) {
       ui.memberGroupSelect.innerHTML = `${defaultOption}${options}`;
@@ -1235,7 +1235,7 @@
     }
 
     try {
-      showLoading("Creating group on blockchain...");
+      showLoading(t('creatingGroup'));
       const response = await fetch("/api/transactions/createGroup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1335,7 +1335,7 @@
     }
 
     try {
-      showLoading("Adding member to group on blockchain...");
+      showLoading(t('addingMember'));
       const response = await fetch("/api/transactions/addMember", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1408,7 +1408,7 @@
     }
 
     try {
-      showLoading("Removing member from group on blockchain...");
+      showLoading(t('removingMember'));
       const response = await fetch("/api/transactions/removeMember", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1527,7 +1527,7 @@
     const messageHashBytes32 = messageHashHex.padEnd(64, '0').substring(0, 64);
 
     try {
-      showLoading("Encrypting message and preparing to send...");
+      showLoading(t('encryptingMessage'));
       const groupData = await loadGroup(groupId);
       
       // Generate symmetric key and encrypt content once
@@ -1569,7 +1569,7 @@
         }
         
         try {
-          showLoading(`Sending message ${i + 1}/${recipients.length} to blockchain...`);
+          showLoading(t('sendingMessage', { current: i + 1, total: recipients.length }));
           // Encrypt symmetric key with recipient's public key
           const encryptedKeyPackage = await encryptWithPublicKey(symmetricKeyBase64, recipientPublicKey);
           const encryptedKey = JSON.stringify(encryptedKeyPackage);
@@ -2004,7 +2004,7 @@
           ui.recipientSelection.style.display = "none";
           ui.messageContent.style.display = "none";
           ui.sendMessage.style.display = "none";
-          ui.messagesList.innerHTML = '<p class="muted">Select a group to view its messages.</p>';
+          ui.messagesList.innerHTML = `<p class="muted">${t('selectGroupToViewMessages')}</p>`;
         }
       });
     }

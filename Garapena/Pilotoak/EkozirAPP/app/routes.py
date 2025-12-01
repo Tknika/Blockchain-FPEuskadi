@@ -570,6 +570,12 @@ def get_translations() -> Response:
         "passwordComplexityError": _("Password does not meet complexity requirements. Please check the requirements above."),
         "creatingAccount": _("Creating account and registering on blockchain..."),
         "processingTransaction": _("Processing blockchain transaction..."),
+        "loggingIn": _("Logging in..."),
+        "creatingGroup": _("Creating group on blockchain..."),
+        "addingMember": _("Adding member to group on blockchain..."),
+        "removingMember": _("Removing member from group on blockchain..."),
+        "encryptingMessage": _("Encrypting message and preparing to send..."),
+        "sendingMessage": _("Sending message %(current)s/%(total)s to blockchain..."),
         
         # Groups
         "selectOneOfYourGroups": _("Select one of your groups"),
@@ -649,6 +655,36 @@ def get_translations() -> Response:
         "loading": _("Loading..."),
         "welcomeBack": _("Welcome back, %(username)s!"),
         "failedToBootstrap": _("Failed to bootstrap application."),
+        
+        # Group display
+        "noMembersYet": _("No members yet"),
+        "membersCount": _("Members: %(count)s"),
+        "messagesCount": _("Messages: %(count)s"),
+        "viewMessages": _("View messages"),
+        
+        # Debug page
+        "groupDebug": _("Group Debug"),
+        "group": _("Group"),
+        "groupDebugInformation": _("Group Debug Information"),
+        "groupID": _("Group ID"),
+        "rawGroupData": _("Raw Group Data from Smart Contract"),
+        "basicInformation": _("Basic Information"),
+        "messageCount": _("Message Count"),
+        "createdAt": _("Created At"),
+        "unixTimestamp": _("Unix timestamp"),
+        "creatorPublicKey": _("Creator Public Key"),
+        "membersArray": _("Members Array (from getGroup)"),
+        "totalMembers": _("Total Members:"),
+        "index": _("Index"),
+        "publicKeyJson": _("Public Key (JSON)"),
+        "noMembersFound": _("No members found in the members array."),
+        "memberInfo": _("Member Info (with Names)"),
+        "name": _("Name"),
+        "publicKey": _("Public Key"),
+        "noName": _("(no name)"),
+        "rawJsonData": _("Raw JSON Data"),
+        "noGroupDataAvailable": _("No group data available."),
+        "backToDashboard": _("← Back to Dashboard"),
     }
     
     return _json_response(translations)

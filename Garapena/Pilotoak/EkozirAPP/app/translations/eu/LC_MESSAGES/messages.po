@@ -11,7 +11,7 @@ msgid "Ekozir Private Messaging"
 msgstr "Ekozir Mezu Pribatuak"
 
 msgid "Encrypted Group Messages for a Circular Economy — sign up with username and password to get started."
-msgstr "Ekonomia Zirkularrerako Mezu Talde Zifratuak — hasi erabiltzaile-izena eta pasahitza erabiliz."
+msgstr "Ekonomia Zirkularrerako Talde Mezu Zifratuak — hasi erabiltzaile-izena eta pasahitza erabiliz."
 
 msgid "Ekozir Dashboard"
 msgstr "Ekozir Aire-panel"
@@ -147,6 +147,24 @@ msgstr "Kontua sortzen eta blockchain-ean erregistratzen..."
 
 msgid "Processing blockchain transaction..."
 msgstr "Blockchain transakzioa prozesatzen..."
+
+msgid "Logging in..."
+msgstr "Saioa hasten..."
+
+msgid "Creating group on blockchain..."
+msgstr "Blockchain-ean taldea sortzen..."
+
+msgid "Adding member to group on blockchain..."
+msgstr "Blockchain-ean kidea taldera gehitzen..."
+
+msgid "Removing member from group on blockchain..."
+msgstr "Blockchain-ean kidea taldetik kentzen..."
+
+msgid "Encrypting message and preparing to send..."
+msgstr "Mezua zifratzen eta bidaltzeko prestatzen..."
+
+msgid "Sending message %(current)s/%(total)s to blockchain..."
+msgstr "%(current)s/%(total)s mezua blockchain-era bidaltzen..."
 
 msgid "No groups found."
 msgstr "Ez da talderik aurkitu."
@@ -312,4 +330,67 @@ msgstr "Ongi etorri berriro, %(username)s!"
 
 msgid "Failed to bootstrap application."
 msgstr "Aplikazioa abiaraztea huts egin du."
+
+msgid "No members yet"
+msgstr "Oraindik ez dago kiderik"
+
+msgid "Members: %(count)s"
+msgstr "Kideak: %(count)s"
+
+msgid "Messages: %(count)s"
+msgstr "Mezuak: %(count)s"
+
+msgid "View messages"
+msgstr "Mezuak ikusi"
+
+msgid "Group Debug"
+msgstr "Talde Arazketa"
+
+msgid "Group"
+msgstr "Taldea"
+
+msgid "Group Debug Information"
+msgstr "Talde Arazketa Informazioa"
+
+msgid "Group ID"
+msgstr "Talde ID"
+
+msgid "Raw Group Data from Smart Contract"
+msgstr "Talde Datu Gordinak Smart Contract-etik"
+
+msgid "Message Count"
+msgstr "Mezu Kopurua"
+
+msgid "Created At"
+msgstr "Sortze Data"
+
+msgid "Unix timestamp"
+msgstr "Unix denbora-marka"
+
+msgid "Total Members:"
+msgstr "Kide Guztiak:"
+
+msgid "Index"
+msgstr "Indizea"
+
+msgid "Public Key (JSON)"
+msgstr "Gako Publikoa (JSON)"
+
+msgid "No members found in the members array."
+msgstr "Ez da kiderik aurkitu kideen array-ean."
+
+msgid "Member Info (with Names)"
+msgstr "Kide Informazioa (Izenekin)"
+
+msgid "Public Key"
+msgstr "Gako Publikoa"
+
+msgid "Raw JSON Data"
+msgstr "JSON Datu Gordina"
+
+msgid "No group data available."
+msgstr "Ez dago talde daturik eskuragarri."
+
+msgid "← Back to Dashboard"
+msgstr "← Aire-panela itzuli"
 

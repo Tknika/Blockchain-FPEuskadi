@@ -148,6 +148,24 @@ msgstr "Creating account and registering on blockchain..."
 msgid "Processing blockchain transaction..."
 msgstr "Processing blockchain transaction..."
 
+msgid "Logging in..."
+msgstr "Logging in..."
+
+msgid "Creating group on blockchain..."
+msgstr "Creating group on blockchain..."
+
+msgid "Adding member to group on blockchain..."
+msgstr "Adding member to group on blockchain..."
+
+msgid "Removing member from group on blockchain..."
+msgstr "Removing member from group on blockchain..."
+
+msgid "Encrypting message and preparing to send..."
+msgstr "Encrypting message and preparing to send..."
+
+msgid "Sending message %(current)s/%(total)s to blockchain..."
+msgstr "Sending message %(current)s/%(total)s to blockchain..."
+
 msgid "No groups found."
 msgstr "No groups found."
 
@@ -312,4 +330,67 @@ msgstr "Welcome back, %(username)s!"
 
 msgid "Failed to bootstrap application."
 msgstr "Failed to bootstrap application."
+
+msgid "No members yet"
+msgstr "No members yet"
+
+msgid "Members: %(count)s"
+msgstr "Members: %(count)s"
+
+msgid "Messages: %(count)s"
+msgstr "Messages: %(count)s"
+
+msgid "View messages"
+msgstr "View messages"
+
+msgid "Group Debug"
+msgstr "Group Debug"
+
+msgid "Group"
+msgstr "Group"
+
+msgid "Group Debug Information"
+msgstr "Group Debug Information"
+
+msgid "Group ID"
+msgstr "Group ID"
+
+msgid "Raw Group Data from Smart Contract"
+msgstr "Raw Group Data from Smart Contract"
+
+msgid "Message Count"
+msgstr "Message Count"
+
+msgid "Created At"
+msgstr "Created At"
+
+msgid "Unix timestamp"
+msgstr "Unix timestamp"
+
+msgid "Total Members:"
+msgstr "Total Members:"
+
+msgid "Index"
+msgstr "Index"
+
+msgid "Public Key (JSON)"
+msgstr "Public Key (JSON)"
+
+msgid "No members found in the members array."
+msgstr "No members found in the members array."
+
+msgid "Member Info (with Names)"
+msgstr "Member Info (with Names)"
+
+msgid "Public Key"
+msgstr "Public Key"
+
+msgid "Raw JSON Data"
+msgstr "Raw JSON Data"
+
+msgid "No group data available."
+msgstr "No group data available."
+
+msgid "← Back to Dashboard"
+msgstr "← Back to Dashboard"
 

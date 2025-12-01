@@ -148,6 +148,24 @@ msgstr "Creando cuenta y registrando en blockchain..."
 msgid "Processing blockchain transaction..."
 msgstr "Procesando transacción de blockchain..."
 
+msgid "Logging in..."
+msgstr "Iniciando sesión..."
+
+msgid "Creating group on blockchain..."
+msgstr "Creando grupo en blockchain..."
+
+msgid "Adding member to group on blockchain..."
+msgstr "Agregando miembro al grupo en blockchain..."
+
+msgid "Removing member from group on blockchain..."
+msgstr "Eliminando miembro del grupo en blockchain..."
+
+msgid "Encrypting message and preparing to send..."
+msgstr "Cifrando mensaje y preparando para enviar..."
+
+msgid "Sending message %(current)s/%(total)s to blockchain..."
+msgstr "Enviando mensaje %(current)s/%(total)s a blockchain..."
+
 msgid "No groups found."
 msgstr "No se encontraron grupos."
 
@@ -312,4 +330,67 @@ msgstr "¡Bienvenido de nuevo, %(username)s!"
 
 msgid "Failed to bootstrap application."
 msgstr "Error al iniciar la aplicación."
+
+msgid "No members yet"
+msgstr "Aún no hay miembros"
+
+msgid "Members: %(count)s"
+msgstr "Miembros: %(count)s"
+
+msgid "Messages: %(count)s"
+msgstr "Mensajes: %(count)s"
+
+msgid "View messages"
+msgstr "Ver mensajes"
+
+msgid "Group Debug"
+msgstr "Depuración de Grupo"
+
+msgid "Group"
+msgstr "Grupo"
+
+msgid "Group Debug Information"
+msgstr "Información de Depuración de Grupo"
+
+msgid "Group ID"
+msgstr "ID de Grupo"
+
+msgid "Raw Group Data from Smart Contract"
+msgstr "Datos Crudos del Grupo desde Smart Contract"
+
+msgid "Message Count"
+msgstr "Cantidad de Mensajes"
+
+msgid "Created At"
+msgstr "Creado En"
+
+msgid "Unix timestamp"
+msgstr "Marca de tiempo Unix"
+
+msgid "Total Members:"
+msgstr "Total de Miembros:"
+
+msgid "Index"
+msgstr "Índice"
+
+msgid "Public Key (JSON)"
+msgstr "Clave Pública (JSON)"
+
+msgid "No members found in the members array."
+msgstr "No se encontraron miembros en el array de miembros."
+
+msgid "Member Info (with Names)"
+msgstr "Información de Miembros (con Nombres)"
+
+msgid "Public Key"
+msgstr "Clave Pública"
+
+msgid "Raw JSON Data"
+msgstr "Datos JSON Crudos"
+
+msgid "No group data available."
+msgstr "No hay datos de grupo disponibles."
+
+msgid "← Back to Dashboard"
+msgstr "← Volver al Panel"
 
