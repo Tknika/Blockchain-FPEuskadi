@@ -130,11 +130,17 @@ msgstr "Saioa hasteko errorea: %(error)s"
 msgid "Sign up successful!"
 msgstr "Erregistroa ondo egin da!"
 
+msgid "Sign up error: %(error)s"
+msgstr "Erregistro errorea: %(error)s"
+
+msgid "A user with this password already exists. Please use a different password."
+msgstr "Pasahitz honekin erabiltzaile bat dago dagoeneko. Mesedez, erabili pasahitz desberdin bat."
+
 msgid "Please enter username and password."
 msgstr "Mesedez, sartu erabiltzaile-izena eta pasahitza."
 
 msgid "Password does not meet complexity requirements. Please check the requirements above."
-msgstr "Pasahitzak ez du konplexutasun-eskakizunak betetzen. Mesedez, egiaztatu goiko eskakizunak."
+msgstr "Pasahitzak ez ditu konplexutasun-eskakizunak betetzen. Mesedez, egiaztatu goiko eskakizunak."
 
 msgid "Creating account and registering on blockchain..."
 msgstr "Kontua sortzen eta blockchain-ean erregistratzen..."

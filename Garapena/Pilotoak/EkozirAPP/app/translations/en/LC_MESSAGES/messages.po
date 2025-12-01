@@ -130,6 +130,12 @@ msgstr "Login error: %(error)s"
 msgid "Sign up successful!"
 msgstr "Sign up successful!"
 
+msgid "Sign up error: %(error)s"
+msgstr "Sign up error: %(error)s"
+
+msgid "A user with this password already exists. Please use a different password."
+msgstr "A user with this password already exists. Please use a different password."
+
 msgid "Please enter username and password."
 msgstr "Please enter username and password."
 

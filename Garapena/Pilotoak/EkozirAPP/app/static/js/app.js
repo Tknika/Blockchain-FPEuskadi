@@ -765,14 +765,14 @@
         await refreshGroups();
       } else {
         if (data.publicKeyExists) {
-          setSignInStatusError("A user with this password already exists. Please use a different password.");
+          setSignInStatusError(t('userWithPasswordExists'));
         } else {
-          setSignInStatusError(data.error || "Sign up failed.");
+          setSignInStatusError(data.error || t('signUpFailed'));
         }
       }
     } catch (error) {
       hideLoading();
-      setSignInStatusError(`Sign up error: ${error.message}`);
+      setSignInStatusError(t('signUpError', { error: error.message }));
       updateStatus(t('signUpFailed'), { error: error.message });
     }
   }

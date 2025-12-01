@@ -172,7 +172,7 @@ def auth_signup() -> Response:
         # Check if public key already exists (prevent duplicate public keys)
         if ekozir_service.is_public_key_registered(public_key_json):
             return _json_response({
-                "error": "A user with this password already exists. Please use a different password.",
+                "error": _("A user with this password already exists. Please use a different password."),
                 "publicKeyExists": True
             }, status=400)
         
@@ -562,6 +562,8 @@ def get_translations() -> Response:
         "loginError": _("Login error: %(error)s"),
         "signUpSuccessful": _("Sign up successful!"),
         "signUpFailed": _("Sign up failed"),
+        "signUpError": _("Sign up error: %(error)s"),
+        "userWithPasswordExists": _("A user with this password already exists. Please use a different password."),
         "logoutError": _("Logout error"),
         "enterUsernamePassword": _("Enter username and password to sign up."),
         "pleaseEnterUsernamePassword": _("Please enter username and password."),
