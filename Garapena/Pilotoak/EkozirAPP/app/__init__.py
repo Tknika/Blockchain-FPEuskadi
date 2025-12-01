@@ -6,6 +6,7 @@ import logging
 import sys
 
 from flask import Flask
+from flask_babel import Babel
 
 from .config import load_config
 from .services.web3_service import init_web3
@@ -35,6 +36,20 @@ def create_app() -> Flask:
     # Load environment-aware configuration (Besu RPC, contract metadata, etc.)
     config = load_config()
     app.config.update(config)
+
+    # Configure Flask-Babel for internationalization
+    app.config['BABEL_DEFAULT_LOCALE'] = 'eu'  # Basque as default
+    app.config['BABEL_SUPPORTED_LOCALES'] = ['eu', 'es', 'en']  # Basque, Spanish, English
+    app.config['BABEL_TRANSLATION_DIRECTORIES'] = 'translations'
+    
+    # Initialize Babel
+    babel = Babel(app)
+    
+    @babel.localeselector
+    def get_locale():
+        """Get the locale from session or default to Basque."""
+        from flask import session
+        return session.get('language', 'eu')
 
     # Set up the global Web3 client and contract bindings once per process.
     init_web3(app)

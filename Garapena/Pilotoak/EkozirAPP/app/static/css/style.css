@@ -7,6 +7,33 @@
 body {
   margin: 0;
   padding: 0 0 4rem;
+  position: relative;
+}
+
+/* Language selector in top right */
+.language-selector {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+}
+
+.language-selector select {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 2px solid #1e3c72;
+  background-color: #ffffff;
+  color: #1e3c72;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
+  transition: all 0.2s ease;
+}
+
+.language-selector select:hover {
+  background-color: #f0f4ff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
 }
 
 .app-header {

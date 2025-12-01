@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ get_locale() }}">
   <head>
     <meta charset="utf-8" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, shrink-to-fit=no"
     />
-    <title>{% block title %}Ekozir Private Messaging{% endblock %}</title>
+    <title>{% block title %}{{ _('Ekozir Private Messaging') }}{% endblock %}</title>
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/style.css') }}"
@@ -15,15 +15,32 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.6.1/elliptic.min.js"></script>
   </head>
   <body>
+    <!-- Language selector in top right -->
+    <div class="language-selector">
+      <select id="languageSelect" onchange="changeLanguage(this.value)">
+        <option value="eu" {% if get_locale() == 'eu' %}selected{% endif %}>EU</option>
+        <option value="es" {% if get_locale() == 'es' %}selected{% endif %}>ES</option>
+        <option value="en" {% if get_locale() == 'en' %}selected{% endif %}>EN</option>
+      </select>
+    </div>
     <header class="app-header">
-      <h1>Ekozir Encrypted Groups</h1>
+      <h1>Ekozir</h1>
       <p class="subtitle">
-        Besu-powered private messaging — sign up with username and password to get started.
+        {{ _('Encrypted Group Messages for a Circular Economy — sign up with username and password to get started.') }}
       </p>
     </header>
     <main class="app-body">
       {% block content %}{% endblock %}
     </main>
+    <script>
+      // Language switching function - reloads page to apply new language
+      function changeLanguage(lang) {
+        window.location.href = '/set_language/' + lang;
+      }
+      
+      // Store current locale for JavaScript
+      window.CURRENT_LOCALE = '{{ get_locale() }}';
+    </script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   </body>
 </html>

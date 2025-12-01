@@ -1,0 +1,237 @@
+# Spanish translations for EkozirAPP
+# Copyright (C) 2025
+msgid ""
+msgstr ""
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Ekozir Private Messaging"
+msgstr "Ekozir Mensajería Privada"
+
+msgid "Encrypted Group Messages for a Circular Economy — sign up with username and password to get started."
+msgstr "Mensajes de Grupo Cifrados para una Economía Circular — regístrate con nombre de usuario y contraseña para comenzar."
+
+msgid "Ekozir Dashboard"
+msgstr "Panel de Ekozir"
+
+msgid "Logged in as:"
+msgstr "Sesión iniciada como:"
+
+msgid "Copy Public Key"
+msgstr "Copiar Clave Pública"
+
+msgid "Copied!"
+msgstr "¡Copiado!"
+
+msgid "Logout"
+msgstr "Cerrar Sesión"
+
+msgid "Login"
+msgstr "Iniciar Sesión"
+
+msgid "Sign Up"
+msgstr "Registrarse"
+
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "Password"
+msgstr "Contraseña"
+
+msgid "Your username"
+msgstr "Tu nombre de usuario"
+
+msgid "Your password"
+msgstr "Tu contraseña"
+
+msgid "Enter your password to access your groups and messages."
+msgstr "Ingresa tu contraseña para acceder a tus grupos y mensajes."
+
+msgid "Create a new account. Your username will be permanently associated with your account and cannot be changed. Your password must be complex because it is used to generate your encryption keys for accessing all your data. Choose a strong password and remember it—if you lose it, you will lose access to your account and data."
+msgstr "Crea una nueva cuenta. Tu nombre de usuario estará permanentemente asociado con tu cuenta y no se puede cambiar. Tu contraseña debe ser compleja porque se usa para generar tus claves de cifrado para acceder a todos tus datos. Elige una contraseña segura y recuérdala—si la pierdes, perderás el acceso a tu cuenta y datos."
+
+msgid "Enter username and password to sign up."
+msgstr "Ingresa nombre de usuario y contraseña para registrarte."
+
+msgid "Create Group"
+msgstr "Crear Grupo"
+
+msgid "Define a group name. You can add members later in the Manage Membership section."
+msgstr "Define un nombre de grupo. Puedes agregar miembros más tarde en la sección Gestionar Membresía."
+
+msgid "Group name"
+msgstr "Nombre del grupo"
+
+msgid "Manage Membership"
+msgstr "Gestionar Membresía"
+
+msgid "Add or remove participants when you are the group creator. Paste the public key (JSON format) of the member you want to add."
+msgstr "Agrega o elimina participantes cuando eres el creador del grupo. Pega la clave pública (formato JSON) del miembro que deseas agregar."
+
+msgid "Select one of your groups"
+msgstr "Selecciona uno de tus grupos"
+
+msgid "Paste public key (JSON format) here..."
+msgstr "Pega la clave pública (formato JSON) aquí..."
+
+msgid "Add Member"
+msgstr "Agregar Miembro"
+
+msgid "Remove Member"
+msgstr "Eliminar Miembro"
+
+msgid "Send Message"
+msgstr "Enviar Mensaje"
+
+msgid "Select a group and choose recipients. Messages are stored encrypted."
+msgstr "Selecciona un grupo y elige destinatarios. Los mensajes se almacenan cifrados."
+
+msgid "Select recipients:"
+msgstr "Selecciona destinatarios:"
+
+msgid "Type your message here (it will be encrypted automatically before sending)"
+msgstr "Escribe tu mensaje aquí (se cifrará automáticamente antes de enviar)"
+
+msgid "Your Groups and Messages"
+msgstr "Tus Grupos y Mensajes"
+
+msgid "Your Groups"
+msgstr "Tus Grupos"
+
+msgid "Select a group to inspect members and messages."
+msgstr "Selecciona un grupo para inspeccionar miembros y mensajes."
+
+msgid "Refresh Groups"
+msgstr "Actualizar Grupos"
+
+msgid "Group Messages"
+msgstr "Mensajes del Grupo"
+
+msgid "View encrypted content, keys, and confirmation status."
+msgstr "Ver contenido cifrado, claves y estado de confirmación."
+
+msgid "Not logged in"
+msgstr "No has iniciado sesión"
+
+msgid "Login successful!"
+msgstr "¡Sesión iniciada con éxito!"
+
+msgid "Login failed."
+msgstr "Error al iniciar sesión."
+
+msgid "This user is not signed up. Please use the Sign Up button to create an account."
+msgstr "Este usuario no está registrado. Por favor, usa el botón Registrarse para crear una cuenta."
+
+msgid "Login error: %(error)s"
+msgstr "Error al iniciar sesión: %(error)s"
+
+msgid "Sign up successful!"
+msgstr "¡Registro exitoso!"
+
+msgid "Please enter username and password."
+msgstr "Por favor, ingresa nombre de usuario y contraseña."
+
+msgid "Password does not meet complexity requirements. Please check the requirements above."
+msgstr "La contraseña no cumple con los requisitos de complejidad. Por favor, verifica los requisitos arriba."
+
+msgid "Creating account and registering on blockchain..."
+msgstr "Creando cuenta y registrando en blockchain..."
+
+msgid "Processing blockchain transaction..."
+msgstr "Procesando transacción de blockchain..."
+
+msgid "No groups found."
+msgstr "No se encontraron grupos."
+
+msgid "Login to view your groups."
+msgstr "Inicia sesión para ver tus grupos."
+
+msgid "Login to view group messages."
+msgstr "Inicia sesión para ver mensajes del grupo."
+
+msgid "Select a group to view its messages."
+msgstr "Selecciona un grupo para ver sus mensajes."
+
+msgid "Group created successfully!"
+msgstr "¡Grupo creado con éxito!"
+
+msgid "Failed to create group."
+msgstr "Error al crear grupo."
+
+msgid "Member added successfully!"
+msgstr "¡Miembro agregado con éxito!"
+
+msgid "Member removed successfully!"
+msgstr "¡Miembro eliminado con éxito!"
+
+msgid "Failed to add member."
+msgstr "Error al agregar miembro."
+
+msgid "Failed to remove member."
+msgstr "Error al eliminar miembro."
+
+msgid "No other members in this group."
+msgstr "No hay otros miembros en este grupo."
+
+msgid "Message sent successfully!"
+msgstr "¡Mensaje enviado con éxito!"
+
+msgid "Failed to send message."
+msgstr "Error al enviar mensaje."
+
+msgid "No messages stored for this group yet."
+msgstr "Aún no hay mensajes almacenados para este grupo."
+
+msgid "No messages available for you in this group."
+msgstr "No hay mensajes disponibles para ti en este grupo."
+
+msgid "Sent Messages"
+msgstr "Mensajes Enviados"
+
+msgid "Received Messages"
+msgstr "Mensajes Recibidos"
+
+msgid "No sent messages"
+msgstr "No hay mensajes enviados"
+
+msgid "No received messages"
+msgstr "No hay mensajes recibidos"
+
+msgid "To:"
+msgstr "Para:"
+
+msgid "From:"
+msgstr "De:"
+
+msgid "Confirmed"
+msgstr "Confirmado"
+
+msgid "Pending confirmation"
+msgstr "Confirmación pendiente"
+
+msgid "Confirm Message"
+msgstr "Confirmar Mensaje"
+
+msgid "Message confirmed successfully!"
+msgstr "¡Mensaje confirmado con éxito!"
+
+msgid "Failed to confirm message."
+msgstr "Error al confirmar mensaje."
+
+msgid "Failed to decrypt message"
+msgstr "Error al descifrar mensaje"
+
+msgid "Unknown"
+msgstr "Desconocido"
+
+msgid "Error"
+msgstr "Error"
+
+msgid "Success"
+msgstr "Éxito"
+
+msgid "Loading..."
+msgstr "Cargando..."
+

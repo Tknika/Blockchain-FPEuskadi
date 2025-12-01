@@ -24,6 +24,10 @@ RUN pip install --no-cache-dir --upgrade pip \
 # This layer will be rebuilt when app code changes, but dependencies stay cached
 COPY . /app
 
+# Compile translation files (.po to .mo) for Flask-Babel
+# This ensures all language translations are available at runtime
+RUN pybabel compile -d app/translations || echo "Warning: Translation compilation failed, but continuing..."
+
 #EXPOSE 5003
 
 CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5003", "wsgi:application"]

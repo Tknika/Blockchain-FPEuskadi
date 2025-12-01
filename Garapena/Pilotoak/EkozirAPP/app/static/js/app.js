@@ -1,6 +1,63 @@
 /* Front-end controller for the Ekozir Flask dApp with ECDH encryption. */
 
 (() => {
+  // Translation system
+  let translations = {};
+  let translationsLoaded = false;
+
+  /**
+   * Load translations from the API
+   */
+  async function loadTranslations() {
+    try {
+      const response = await fetch('/api/translations');
+      const { data } = await response.json();
+      translations = data;
+      translationsLoaded = true;
+      // Update all elements with data-translate attributes
+      updateTranslatedElements();
+    } catch (error) {
+      console.warn('Failed to load translations:', error);
+      translationsLoaded = true; // Mark as loaded even on error to prevent infinite loops
+    }
+  }
+
+  /**
+   * Translate a key, with fallback to the key itself
+   */
+  function t(key, params = {}) {
+    if (!translationsLoaded) {
+      return key; // Return key if translations not loaded yet
+    }
+    let text = translations[key] || key;
+    // Replace parameters in format %(param)s
+    Object.keys(params).forEach(param => {
+      text = text.replace(`%(${param})s`, params[param]);
+    });
+    return text;
+  }
+
+  /**
+   * Update all elements with data-translate attributes
+   */
+  function updateTranslatedElements() {
+    // Update text content
+    document.querySelectorAll('[data-translate]').forEach(el => {
+      const key = el.getAttribute('data-translate');
+      if (key && translations[key]) {
+        el.textContent = translations[key];
+      }
+    });
+    
+    // Update placeholders
+    document.querySelectorAll('[data-placeholder-translate]').forEach(el => {
+      const key = el.getAttribute('data-placeholder-translate');
+      if (key && translations[key]) {
+        el.placeholder = translations[key];
+      }
+    });
+  }
+
   const state = {
     username: null,
     password: null, // Stored temporarily for decryption
@@ -58,11 +115,11 @@
   /**
    * Show loading indicator for blockchain transactions
    */
-  function showLoading(message = "Processing blockchain transaction...") {
+  function showLoading(message = null) {
     if (ui.loadingOverlay) {
       const loadingText = ui.loadingOverlay.querySelector('.loading-text');
       if (loadingText) {
-        loadingText.textContent = message;
+        loadingText.textContent = message || t('processingTransaction');
       }
       ui.loadingOverlay.style.display = "flex";
     }
@@ -481,7 +538,7 @@
     const password = ui.loginPassword.value;
     
     if (!password) {
-      ui.loginStatus.textContent = "Please enter your password.";
+      setLoginStatusError(t('pleaseEnterUsernamePassword'));
       return;
     }
     
@@ -515,21 +572,21 @@
         state.publicKey = JSON.stringify(normalizePublicKeyJson(backendPublicKey));
         state.ecdhKeyPair = await generateECDHKeyPairFromPassword(password);
         
-        ui.loginStatus.textContent = "Login successful!";
+        // Reset to normal styling for success message
+        resetLoginStatusStyle();
+        ui.loginStatus.textContent = t('loginSuccessful');
         updateSignedInUI();
         await refreshGroups();
       } else if (data.needsSignup) {
-        // User not registered, show signup option
-        ui.loginStatus.textContent = "User not registered. Please sign up.";
-        hideLoginSection();
-        showSignUpSection();
+        // User not registered, keep login card visible and show error message
+        setLoginStatusError(t('userNotSignedUp'));
       } else {
-        ui.loginStatus.textContent = data.error || "Login failed.";
+        setLoginStatusError(data.error || t('loginFailed'));
       }
     } catch (error) {
       hideLoading();
-      ui.loginStatus.textContent = `Login error: ${error.message}`;
-      updateStatus("Login failed", { error: error.message });
+      setLoginStatusError(t('loginError', { error: error.message }));
+      updateStatus(t('loginFailed'), { error: error.message });
     }
   }
 
@@ -594,6 +651,60 @@
   }
 
   /**
+   * Apply error styling to signInStatus element
+   */
+  function setSignInStatusError(message) {
+    ui.signInStatus.textContent = message;
+    ui.signInStatus.style.color = "#dc2626"; // Red color
+    ui.signInStatus.style.fontWeight = "bold";
+    ui.signInStatus.style.fontSize = "1rem";
+    ui.signInStatus.style.backgroundColor = "#fef2f2"; // Light red background
+    ui.signInStatus.style.padding = "0.75rem";
+    ui.signInStatus.style.borderRadius = "6px";
+    ui.signInStatus.style.border = "2px solid #dc2626";
+  }
+
+  /**
+   * Reset signInStatus styling to normal
+   */
+  function resetSignInStatusStyle() {
+    ui.signInStatus.style.color = "";
+    ui.signInStatus.style.fontWeight = "";
+    ui.signInStatus.style.fontSize = "";
+    ui.signInStatus.style.backgroundColor = "";
+    ui.signInStatus.style.padding = "";
+    ui.signInStatus.style.borderRadius = "";
+    ui.signInStatus.style.border = "";
+  }
+
+  /**
+   * Apply error styling to loginStatus element
+   */
+  function setLoginStatusError(message) {
+    ui.loginStatus.textContent = message;
+    ui.loginStatus.style.color = "#dc2626"; // Red color
+    ui.loginStatus.style.fontWeight = "bold";
+    ui.loginStatus.style.fontSize = "1rem";
+    ui.loginStatus.style.backgroundColor = "#fef2f2"; // Light red background
+    ui.loginStatus.style.padding = "0.75rem";
+    ui.loginStatus.style.borderRadius = "6px";
+    ui.loginStatus.style.border = "2px solid #dc2626";
+  }
+
+  /**
+   * Reset loginStatus styling to normal
+   */
+  function resetLoginStatusStyle() {
+    ui.loginStatus.style.color = "";
+    ui.loginStatus.style.fontWeight = "";
+    ui.loginStatus.style.fontSize = "";
+    ui.loginStatus.style.backgroundColor = "";
+    ui.loginStatus.style.padding = "";
+    ui.loginStatus.style.borderRadius = "";
+    ui.loginStatus.style.border = "";
+  }
+
+  /**
    * Sign up new user
    */
   async function handleSignUp() {
@@ -601,20 +712,21 @@
     const password = ui.passwordInput.value;
     
     if (!username || !password) {
-      ui.signInStatus.textContent = "Please enter username and password.";
+      setSignInStatusError(t('pleaseEnterUsernamePassword'));
       return;
     }
     
     // Validate password complexity
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.valid) {
-      ui.signInStatus.textContent = "Password does not meet complexity requirements. Please check the requirements above.";
+      // Display error message in red with prominent styling
+      setSignInStatusError(t('passwordComplexityError'));
       updatePasswordRequirements(password);
       return;
     }
     
     try {
-      showLoading("Creating account and registering on blockchain...");
+      showLoading(t('creatingAccount'));
       // Derive public key (already normalized)
       const publicKeyDict = await derivePublicKeyFromPassword(password);
       const publicKeyJson = JSON.stringify(publicKeyDict);
@@ -646,19 +758,21 @@
         state.publicKey = JSON.stringify(normalizePublicKeyJson(backendPublicKey));
         state.ecdhKeyPair = await generateECDHKeyPairFromPassword(password);
         
+        // Reset to normal styling for success message
+        resetSignInStatusStyle();
         ui.signInStatus.textContent = "Sign up successful!";
         updateSignedInUI();
         await refreshGroups();
       } else {
         if (data.publicKeyExists) {
-          ui.signInStatus.textContent = "A user with this password already exists. Please use a different password.";
+          setSignInStatusError("A user with this password already exists. Please use a different password.");
         } else {
-          ui.signInStatus.textContent = data.error || "Sign up failed.";
+          setSignInStatusError(data.error || "Sign up failed.");
         }
       }
     } catch (error) {
       hideLoading();
-      ui.signInStatus.textContent = `Sign up error: ${error.message}`;
+      setSignInStatusError(`Sign up error: ${error.message}`);
       updateStatus("Sign up failed", { error: error.message });
     }
   }
@@ -674,7 +788,7 @@
     
     // Clear Manage Membership card
     if (ui.memberGroupSelect) {
-      ui.memberGroupSelect.innerHTML = '<option value="">Select one of your groups</option>';
+      ui.memberGroupSelect.innerHTML = `<option value="">${t('selectOneOfYourGroups')}</option>`;
     }
     if (ui.memberPublicKey) {
       ui.memberPublicKey.value = "";
@@ -682,7 +796,7 @@
     
     // Clear Send Message card
     if (ui.messageGroupSelect) {
-      ui.messageGroupSelect.innerHTML = '<option value="">Select one of your groups</option>';
+      ui.messageGroupSelect.innerHTML = `<option value="">${t('selectOneOfYourGroups')}</option>`;
     }
     if (ui.recipientSelection) {
       ui.recipientSelection.style.display = "none";
@@ -713,6 +827,7 @@
       ui.loginPassword.value = "";
     }
     if (ui.loginStatus) {
+      resetLoginStatusStyle();
       ui.loginStatus.textContent = "";
     }
     if (ui.userNameInput) {
@@ -722,7 +837,8 @@
       ui.passwordInput.value = "";
     }
     if (ui.signInStatus) {
-      ui.signInStatus.textContent = "Enter username and password to sign up.";
+      resetSignInStatusStyle();
+      ui.signInStatus.textContent = t('enterUsernamePassword');
     }
   }
 
@@ -780,6 +896,11 @@
     if (ui.authButtons) {
       ui.authButtons.style.display = "none";
     }
+    // Reset login status styling when showing login section
+    if (ui.loginStatus) {
+      resetLoginStatusStyle();
+      ui.loginStatus.textContent = "";
+    }
   }
 
   /**
@@ -791,6 +912,11 @@
     }
     if (ui.authButtons) {
       ui.authButtons.style.display = "";
+    }
+    // Reset login status styling when hiding login section
+    if (ui.loginStatus) {
+      resetLoginStatusStyle();
+      ui.loginStatus.textContent = "";
     }
   }
 
@@ -812,7 +938,8 @@
       ui.passwordRequirements.style.display = "none";
     }
     if (ui.signInStatus) {
-      ui.signInStatus.textContent = "Enter username and password to sign up.";
+      resetSignInStatusStyle();
+      ui.signInStatus.textContent = t('enterUsernamePassword');
     }
   }
 
@@ -831,7 +958,7 @@
       
       // Show temporary feedback on button
       const originalText = ui.copyPublicKeyButton.textContent;
-      ui.copyPublicKeyButton.textContent = "Copied!";
+      ui.copyPublicKeyButton.textContent = t('copied');
       setTimeout(() => {
         ui.copyPublicKeyButton.textContent = originalText;
       }, 2000);
@@ -919,10 +1046,10 @@
       clearAllCardData();
       clearGroupSelectors();
       if (ui.groupsList) {
-        ui.groupsList.innerHTML = '<p class="muted">Login to view your groups.</p>';
+        ui.groupsList.innerHTML = `<p class="muted">${t('loginToViewGroups')}</p>`;
       }
       if (ui.messagesList) {
-        ui.messagesList.innerHTML = '<p class="muted">Login to view group messages.</p>';
+        ui.messagesList.innerHTML = `<p class="muted">${t('loginToViewMessages')}</p>`;
       }
       updateStatus("Not logged in");
     } else {
@@ -950,10 +1077,10 @@
    */
   function clearGroupSelectors() {
     if (ui.memberGroupSelect) {
-      ui.memberGroupSelect.innerHTML = '<option value="">Select one of your groups</option>';
+      ui.memberGroupSelect.innerHTML = `<option value="">${t('selectOneOfYourGroups')}</option>`;
     }
     if (ui.messageGroupSelect) {
-      ui.messageGroupSelect.innerHTML = '<option value="">Select one of your groups</option>';
+      ui.messageGroupSelect.innerHTML = `<option value="">${t('selectOneOfYourGroups')}</option>`;
     }
   }
 
@@ -979,7 +1106,7 @@
 
       if (groupIds.length === 0) {
         if (ui.groupsList) {
-          ui.groupsList.innerHTML = '<p class="muted">No groups found.</p>';
+          ui.groupsList.innerHTML = `<p class="muted">${t('noGroupsFound')}</p>`;
         }
         clearGroupSelectors();
         return;
@@ -1037,7 +1164,7 @@
     const memberList = members.length > 0
       ? members
           .map((entry) => {
-            const displayName = entry.name || entry.publicKey || "Unknown";
+            const displayName = entry.name || entry.publicKey || t('unknown');
             const truncatedKey = entry.publicKey ? entry.publicKey.substring(0, 20) + "..." : "";
             return `<li>${displayName}${!entry.name ? ` (${truncatedKey})` : ""}</li>`;
           })
@@ -1122,11 +1249,11 @@
       hideLoading();
       
       if (response.ok) {
-        updateStatus("Group created.", { txHash: data.txHash });
+        updateStatus(t('groupCreated'), { txHash: data.txHash });
         ui.groupName.value = ""; // Clear the input
         await refreshGroups();
       } else {
-        updateStatus("Failed to create group.", { error: data.error });
+        updateStatus(t('failedToCreateGroup'), { error: data.error });
       }
     } catch (error) {
       hideLoading();
@@ -1222,7 +1349,7 @@
       hideLoading();
       
       if (response.ok) {
-        updateStatus("Member added successfully.", { txHash: data.txHash });
+        updateStatus(t('memberAdded'), { txHash: data.txHash });
         ui.memberPublicKey.value = ""; // Clear the input
         
         // Wait a brief moment to ensure blockchain state is updated
@@ -1238,7 +1365,7 @@
         }
       } else {
         // Show specific error message from backend
-        const errorMsg = data.error || "Failed to add member.";
+        const errorMsg = data.error || t('failedToAddMember');
         if (data.memberNotRegistered) {
           updateStatus(`Error: ${errorMsg} Make sure the user has signed up first.`);
         } else if (data.notCreator) {
@@ -1246,12 +1373,12 @@
         } else if (data.alreadyMember) {
           updateStatus(`Error: ${errorMsg}`);
         } else {
-          updateStatus(`Failed to add member: ${errorMsg}`);
+          updateStatus(`${t('failedToAddMember')}: ${errorMsg}`);
         }
       }
     } catch (error) {
       hideLoading();
-      updateStatus("Failed to add member.", { error: error.message });
+      updateStatus(t('failedToAddMember'), { error: error.message });
     }
   }
 
@@ -1295,11 +1422,11 @@
       hideLoading();
       
       if (response.ok) {
-        updateStatus("Member removed successfully.", { txHash: data.txHash });
+        updateStatus(t('memberRemoved'), { txHash: data.txHash });
         ui.memberPublicKey.value = ""; // Clear the input
         await refreshGroups();
       } else {
-        updateStatus("Failed to remove member.", { error: data.error });
+        updateStatus(t('failedToRemoveMember'), { error: data.error });
       }
     } catch (error) {
       hideLoading();
@@ -1334,7 +1461,7 @@
       if (otherMembers.length === 0) {
         const noMembersMsg = document.createElement("p");
         noMembersMsg.className = "muted";
-        noMembersMsg.textContent = "No other members in this group.";
+        noMembersMsg.textContent = t('noOtherMembers');
         ui.recipientCheckboxes.appendChild(noMembersMsg);
         ui.recipientSelection.style.display = "";
         ui.messageContent.style.display = "none";
@@ -1350,10 +1477,10 @@
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.value = member.publicKey;
-        checkbox.dataset.name = member.name || "Unknown";
+        checkbox.dataset.name = member.name || t('unknown');
         
         label.appendChild(checkbox);
-        label.appendChild(document.createTextNode(` ${member.name || "Unknown"}`));
+        label.appendChild(document.createTextNode(` ${member.name || t('unknown')}`));
         ui.recipientCheckboxes.appendChild(label);
       });
 
@@ -1542,7 +1669,7 @@
    */
   function getMemberName(publicKey, members) {
     const member = members.find(m => m.publicKey === publicKey);
-    return member ? (member.name || "Unknown") : "Unknown";
+    return member ? (member.name || t('unknown')) : t('unknown');
   }
 
   /**
@@ -1560,7 +1687,7 @@
 
       ui.messagesList.innerHTML = "";
       if (messageIds.length === 0) {
-        ui.messagesList.innerHTML = '<p class="muted">No messages stored for this group yet.</p>';
+        ui.messagesList.innerHTML = `<p class="muted">${t('noMessagesStored')}</p>`;
         return;
       }
 
@@ -1575,7 +1702,7 @@
       }
       
       if (loadedMessages.length === 0) {
-        ui.messagesList.innerHTML = '<p class="muted">No messages available for you in this group.</p>';
+        ui.messagesList.innerHTML = `<p class="muted">${t('noMessagesAvailable')}</p>`;
         return;
       }
       
@@ -1627,12 +1754,12 @@
     sentColumn.className = "messages-column";
     
     const sentHeader = document.createElement("h3");
-    sentHeader.textContent = `Sent Messages (${sentMessages.length})`;
+    sentHeader.textContent = `${t('sentMessages')} (${sentMessages.length})`;
     sentColumn.appendChild(sentHeader);
     
     const sentList = document.createElement("div");
     if (sentMessages.length === 0) {
-      sentList.innerHTML = '<p class="muted">No sent messages</p>';
+      sentList.innerHTML = `<p class="muted">${t('noSentMessages')}</p>`;
     } else {
       sentMessages.forEach(details => {
         const messageElement = renderMessageItem(details, members, true);
@@ -1646,12 +1773,12 @@
     receivedColumn.className = "messages-column";
     
     const receivedHeader = document.createElement("h3");
-    receivedHeader.textContent = `Received Messages (${receivedMessages.length})`;
+    receivedHeader.textContent = `${t('receivedMessages')} (${receivedMessages.length})`;
     receivedColumn.appendChild(receivedHeader);
     
     const receivedList = document.createElement("div");
     if (receivedMessages.length === 0) {
-      receivedList.innerHTML = '<p class="muted">No received messages</p>';
+      receivedList.innerHTML = `<p class="muted">${t('noReceivedMessages')}</p>`;
     } else {
       receivedMessages.forEach(details => {
         const messageElement = renderMessageItem(details, members, false);
@@ -1691,7 +1818,7 @@
     if (decryptedText !== null) {
       contentDisplay = `<p style="margin: 0.5rem 0; padding: 0.5rem; background-color: #f0f0f0; border-radius: 4px; word-wrap: break-word;">${decryptedText}</p>`;
     } else {
-      contentDisplay = `<p class="muted" style="margin: 0.5rem 0;">Failed to decrypt message</p>`;
+      contentDisplay = `<p class="muted" style="margin: 0.5rem 0;">${t('failedToDecrypt')}</p>`;
     }
 
     // Confirmation status for sent messages
@@ -1700,17 +1827,17 @@
       if (isConfirmed) {
         const confirmedDate = confirmation.timestamp 
           ? new Date(confirmation.timestamp * 1000).toLocaleString()
-          : "Unknown";
+          : t('unknown');
         confirmationStatus = `
           <div style="margin-top: 0.5rem; padding: 0.5rem; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724;">
-            <span style="font-weight: 600;">✓ Confirmed</span>
+            <span style="font-weight: 600;">✓ ${t('confirmed')}</span>
             <span class="muted" style="font-size: 0.8rem; margin-left: 0.5rem;">by ${recipientName} on ${confirmedDate}</span>
           </div>
         `;
       } else {
         confirmationStatus = `
           <div style="margin-top: 0.5rem; padding: 0.5rem; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; color: #856404;">
-            <span style="font-weight: 600;">⏳ Pending confirmation</span>
+            <span style="font-weight: 600;">⏳ ${t('pendingConfirmation')}</span>
             <span class="muted" style="font-size: 0.8rem; margin-left: 0.5rem;">from ${recipientName}</span>
           </div>
         `;
@@ -1719,7 +1846,7 @@
 
     wrapper.innerHTML = `
       <div style="margin-bottom: 0.5rem;">
-        <strong>${isSent ? `To: ${recipientName}` : `From: ${senderName}`}</strong>
+        <strong>${isSent ? `${t('to')} ${recipientName}` : `${t('from')} ${senderName}`}</strong>
       </div>
       ${contentDisplay}
       <p class="muted" style="font-size: 0.85rem; margin-top: 0.5rem;">
@@ -1727,7 +1854,7 @@
       </p>
       ${confirmationStatus}
       ${isRecipient && !isConfirmed 
-        ? `<button class="confirm-message" data-message="${msg.id}" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.85rem;">Confirm Reception</button>` 
+        ? `<button class="confirm-message" data-message="${msg.id}" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.85rem;">${t('confirmMessage')}</button>` 
         : ""}
     `;
 
@@ -1736,7 +1863,7 @@
     if (confirmButton) {
       confirmButton.addEventListener("click", async () => {
         try {
-          showLoading("Confirming message reception on blockchain...");
+          showLoading(t('processingTransaction'));
           const response = await fetch("/api/transactions/confirmMessage", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1747,12 +1874,12 @@
           hideLoading();
           
           if (response.ok) {
-            updateStatus("Message confirmed.", { txHash: data.txHash });
+            updateStatus(t('messageConfirmed'), { txHash: data.txHash });
             if (state.selectedGroupId) {
               await loadMessages(state.selectedGroupId);
             }
           } else {
-            updateStatus("Failed to confirm message.", { error: data.error });
+            updateStatus(t('failedToConfirmMessage'), { error: data.error });
           }
         } catch (error) {
           hideLoading();
@@ -1886,6 +2013,9 @@
   // ==================== Bootstrap ====================
 
   async function bootstrap() {
+    // Load translations first
+    await loadTranslations();
+    
     registerEventListeners();
     updateSignedInUI();
     

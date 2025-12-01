@@ -5,7 +5,8 @@ from __future__ import annotations
 import json
 from typing import Any, Dict
 
-from flask import Blueprint, Flask, Response, current_app, jsonify, render_template, request, session
+from flask import Blueprint, Flask, Response, current_app, jsonify, redirect, render_template, request, session, url_for
+from flask_babel import gettext as _, get_locale
 
 from .middleware.auth import get_current_user_public_key, require_auth
 from .services import ekozir_service
@@ -514,6 +515,109 @@ def message_detail(message_id: int) -> Response:
         )
     except Exception as e:
         return _json_response({"error": str(e)}, status=500)
+
+
+@bp.route("/set_language/<language>", methods=["GET"])
+def set_language(language: str) -> Response:
+    """Set the language preference in session and redirect back."""
+    if language in ['eu', 'es', 'en']:
+        session['language'] = language
+    return redirect(request.referrer or url_for('ekozir.index'))
+
+
+@bp.route("/api/translations", methods=["GET"])
+def get_translations() -> Response:
+    """Get all translations for the current locale as JSON for JavaScript."""
+    from flask_babel import gettext as _
+    
+    translations = {
+        # Authentication
+        "notLoggedIn": _("Not logged in"),
+        "loggedInAs": _("Logged in as:"),
+        "copyPublicKey": _("Copy Public Key"),
+        "copied": _("Copied!"),
+        "logout": _("Logout"),
+        "login": _("Login"),
+        "signUp": _("Sign Up"),
+        "cancel": _("Cancel"),
+        "password": _("Password"),
+        "username": _("Your username"),
+        "yourUsername": _("Your username"),
+        "yourPassword": _("Your password"),
+        "loginSuccessful": _("Login successful!"),
+        "loginFailed": _("Login failed."),
+        "userNotSignedUp": _("This user is not signed up. Please use the Sign Up button to create an account."),
+        "loginError": _("Login error: %(error)s"),
+        "signUpSuccessful": _("Sign up successful!"),
+        "enterUsernamePassword": _("Enter username and password to sign up."),
+        "pleaseEnterUsernamePassword": _("Please enter username and password."),
+        "passwordComplexityError": _("Password does not meet complexity requirements. Please check the requirements above."),
+        "creatingAccount": _("Creating account and registering on blockchain..."),
+        "processingTransaction": _("Processing blockchain transaction..."),
+        
+        # Groups
+        "selectOneOfYourGroups": _("Select one of your groups"),
+        "noGroupsFound": _("No groups found."),
+        "loginToViewGroups": _("Login to view your groups."),
+        "loginToViewMessages": _("Login to view group messages."),
+        "selectGroupToViewMessages": _("Select a group to view its messages."),
+        "refreshGroups": _("Refresh Groups"),
+        "createGroup": _("Create Group"),
+        "groupName": _("Group name"),
+        "groupCreated": _("Group created successfully!"),
+        "groupCreationFailed": _("Failed to create group."),
+        "failedToCreateGroup": _("Failed to create group."),
+        
+        # Members
+        "manageMembership": _("Manage Membership"),
+        "addMember": _("Add Member"),
+        "removeMember": _("Remove Member"),
+        "pastePublicKey": _("Paste public key (JSON format) here..."),
+        "memberAdded": _("Member added successfully!"),
+        "memberRemoved": _("Member removed successfully!"),
+        "memberAddFailed": _("Failed to add member."),
+        "failedToAddMember": _("Failed to add member."),
+        "memberRemoveFailed": _("Failed to remove member."),
+        "failedToRemoveMember": _("Failed to remove member."),
+        "noOtherMembers": _("No other members in this group."),
+        
+        # Messages
+        "sendMessage": _("Send Message"),
+        "typeYourMessage": _("Type your message here (it will be encrypted automatically before sending)"),
+        "selectRecipients": _("Select recipients:"),
+        "messageSent": _("Message sent successfully!"),
+        "messageSendFailed": _("Failed to send message."),
+        "noMessagesStored": _("No messages stored for this group yet."),
+        "noMessagesAvailable": _("No messages available for you in this group."),
+        "sentMessages": _("Sent Messages"),
+        "receivedMessages": _("Received Messages"),
+        "noSentMessages": _("No sent messages"),
+        "noReceivedMessages": _("No received messages"),
+        "to": _("To:"),
+        "from": _("From:"),
+        "confirmed": _("Confirmed"),
+        "pendingConfirmation": _("Pending confirmation"),
+        "confirmMessage": _("Confirm Message"),
+        "messageConfirmed": _("Message confirmed successfully!"),
+        "messageConfirmFailed": _("Failed to confirm message."),
+        "failedToConfirmMessage": _("Failed to confirm message."),
+        "failedToDecrypt": _("Failed to decrypt message"),
+        "unknown": _("Unknown"),
+        
+        # Navigation
+        "yourGroupsAndMessages": _("Your Groups and Messages"),
+        "yourGroups": _("Your Groups"),
+        "groupMessages": _("Group Messages"),
+        "selectGroupToInspect": _("Select a group to inspect members and messages."),
+        "viewEncryptedContent": _("View encrypted content, keys, and confirmation status."),
+        
+        # Common
+        "error": _("Error"),
+        "success": _("Success"),
+        "loading": _("Loading..."),
+    }
+    
+    return _json_response(translations)
 
 
 def init_app(app: Flask) -> None:

@@ -1,0 +1,237 @@
+# Basque translations for EkozirAPP
+# Copyright (C) 2025
+msgid ""
+msgstr ""
+"Language: eu\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Ekozir Private Messaging"
+msgstr "Ekozir Mezu Pribatuak"
+
+msgid "Encrypted Group Messages for a Circular Economy — sign up with username and password to get started."
+msgstr "Ekonomia Zirkularrerako Mezu Talde Zifratuak — hasi erabiltzaile-izena eta pasahitza erabiliz."
+
+msgid "Ekozir Dashboard"
+msgstr "Ekozir Aire-panel"
+
+msgid "Logged in as:"
+msgstr "Hau bezala saioa hasita:"
+
+msgid "Copy Public Key"
+msgstr "Gako Publikoa Kopiatu"
+
+msgid "Copied!"
+msgstr "Kopiatuta!"
+
+msgid "Logout"
+msgstr "Saioa Itxi"
+
+msgid "Login"
+msgstr "Saioa Hasi"
+
+msgid "Sign Up"
+msgstr "Erregistratu"
+
+msgid "Cancel"
+msgstr "Utzi"
+
+msgid "Password"
+msgstr "Pasahitza"
+
+msgid "Your username"
+msgstr "Zure erabiltzaile-izena"
+
+msgid "Your password"
+msgstr "Zure pasahitza"
+
+msgid "Enter your password to access your groups and messages."
+msgstr "Sartu zure pasahitza zure taldeak eta mezuak atzitzeko."
+
+msgid "Create a new account. Your username will be permanently associated with your account and cannot be changed. Your password must be complex because it is used to generate your encryption keys for accessing all your data. Choose a strong password and remember it—if you lose it, you will lose access to your account and data."
+msgstr "Sortu kontu berria. Zure erabiltzaile-izena betirako lotuta egongo da zure kontuarekin eta ezin da aldatu. Zure pasahitza konplexua izan behar du zure datu guztiak atzitzeko zifratze-gakoak sortzeko erabiltzen delako. Aukeratu pasahitz indartsu bat eta gogoratu—galtzen baduzu, zure kontu eta datuetara sarbidea galduko duzu."
+
+msgid "Enter username and password to sign up."
+msgstr "Sartu erabiltzaile-izena eta pasahitza erregistratzeko."
+
+msgid "Create Group"
+msgstr "Taldea Sortu"
+
+msgid "Define a group name. You can add members later in the Manage Membership section."
+msgstr "Definitu talde-izen bat. Kideak geroago gehi ditzakezu Kideen Kudeaketa atalean."
+
+msgid "Group name"
+msgstr "Talde-izena"
+
+msgid "Manage Membership"
+msgstr "Kideen Kudeaketa"
+
+msgid "Add or remove participants when you are the group creator. Paste the public key (JSON format) of the member you want to add."
+msgstr "Gehitu edo kendu parte-hartzaileak taldearen sortzailea zarenean. Itsatsi gehitu nahi duzun kidearen gako publikoa (JSON formatua)."
+
+msgid "Select one of your groups"
+msgstr "Aukeratu zure taldeetako bat"
+
+msgid "Paste public key (JSON format) here..."
+msgstr "Itsatsi gako publikoa (JSON formatua) hemen..."
+
+msgid "Add Member"
+msgstr "Kidea Gehitu"
+
+msgid "Remove Member"
+msgstr "Kidea Kendu"
+
+msgid "Send Message"
+msgstr "Mezua Bidali"
+
+msgid "Select a group and choose recipients. Messages are stored encrypted."
+msgstr "Aukeratu talde bat eta hautatu hartzaileak. Mezuak zifratuta gordetzen dira."
+
+msgid "Select recipients:"
+msgstr "Hautatu hartzaileak:"
+
+msgid "Type your message here (it will be encrypted automatically before sending)"
+msgstr "Idatzi zure mezua hemen (bidali aurretik automatikoki zifratuko da)"
+
+msgid "Your Groups and Messages"
+msgstr "Zure Taldeak eta Mezuak"
+
+msgid "Your Groups"
+msgstr "Zure Taldeak"
+
+msgid "Select a group to inspect members and messages."
+msgstr "Aukeratu talde bat kideak eta mezuak ikusteko."
+
+msgid "Refresh Groups"
+msgstr "Taldeak Eguneratu"
+
+msgid "Group Messages"
+msgstr "Talde Mezuak"
+
+msgid "View encrypted content, keys, and confirmation status."
+msgstr "Ikusi zifratutako edukia, gakoak eta berrespen-egoera."
+
+msgid "Not logged in"
+msgstr "Ez zaude saioa hasita"
+
+msgid "Login successful!"
+msgstr "Saioa ondo hasi da!"
+
+msgid "Login failed."
+msgstr "Saioa hastea huts egin du."
+
+msgid "This user is not signed up. Please use the Sign Up button to create an account."
+msgstr "Erabiltzaile hau ez dago erregistratuta. Mesedez, erabili Erregistratu botoia kontu bat sortzeko."
+
+msgid "Login error: %(error)s"
+msgstr "Saioa hasteko errorea: %(error)s"
+
+msgid "Sign up successful!"
+msgstr "Erregistroa ondo egin da!"
+
+msgid "Please enter username and password."
+msgstr "Mesedez, sartu erabiltzaile-izena eta pasahitza."
+
+msgid "Password does not meet complexity requirements. Please check the requirements above."
+msgstr "Pasahitzak ez du konplexutasun-eskakizunak betetzen. Mesedez, egiaztatu goiko eskakizunak."
+
+msgid "Creating account and registering on blockchain..."
+msgstr "Kontua sortzen eta blockchain-ean erregistratzen..."
+
+msgid "Processing blockchain transaction..."
+msgstr "Blockchain transakzioa prozesatzen..."
+
+msgid "No groups found."
+msgstr "Ez da talderik aurkitu."
+
+msgid "Login to view your groups."
+msgstr "Hasi saioa zure taldeak ikusteko."
+
+msgid "Login to view group messages."
+msgstr "Hasi saioa talde mezuak ikusteko."
+
+msgid "Select a group to view its messages."
+msgstr "Aukeratu talde bat bere mezuak ikusteko."
+
+msgid "Group created successfully!"
+msgstr "Taldea ondo sortu da!"
+
+msgid "Failed to create group."
+msgstr "Taldea sortzea huts egin du."
+
+msgid "Member added successfully!"
+msgstr "Kidea ondo gehitu da!"
+
+msgid "Member removed successfully!"
+msgstr "Kidea ondo kendu da!"
+
+msgid "Failed to add member."
+msgstr "Kidea gehitzea huts egin du."
+
+msgid "Failed to remove member."
+msgstr "Kidea kentzea huts egin du."
+
+msgid "No other members in this group."
+msgstr "Ez dago beste kiderik talde honetan."
+
+msgid "Message sent successfully!"
+msgstr "Mezua ondo bidali da!"
+
+msgid "Failed to send message."
+msgstr "Mezua bidaltzea huts egin du."
+
+msgid "No messages stored for this group yet."
+msgstr "Oraindik ez da mezurik gorde talde honetarako."
+
+msgid "No messages available for you in this group."
+msgstr "Ez dago mezu eskuragarririk zuretzat talde honetan."
+
+msgid "Sent Messages"
+msgstr "Bidalitako Mezuak"
+
+msgid "Received Messages"
+msgstr "Jasotako Mezuak"
+
+msgid "No sent messages"
+msgstr "Ez dago bidalitako mezurik"
+
+msgid "No received messages"
+msgstr "Ez dago jasotako mezurik"
+
+msgid "To:"
+msgstr "Nori:"
+
+msgid "From:"
+msgstr "Nork:"
+
+msgid "Confirmed"
+msgstr "Berretsita"
+
+msgid "Pending confirmation"
+msgstr "Berrespenaren zain"
+
+msgid "Confirm Message"
+msgstr "Mezua Berretsi"
+
+msgid "Message confirmed successfully!"
+msgstr "Mezua ondo berretsi da!"
+
+msgid "Failed to confirm message."
+msgstr "Mezua berrestea huts egin du."
+
+msgid "Failed to decrypt message"
+msgstr "Mezua deszifratzea huts egin du"
+
+msgid "Unknown"
+msgstr "Ezezaguna"
+
+msgid "Error"
+msgstr "Errorea"
+
+msgid "Success"
+msgstr "Arrakasta"
+
+msgid "Loading..."
+msgstr "Kargatzen..."
+

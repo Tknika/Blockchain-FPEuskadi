@@ -1,0 +1,237 @@
+# English translations for EkozirAPP
+# Copyright (C) 2025
+msgid ""
+msgstr ""
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Ekozir Private Messaging"
+msgstr "Ekozir Private Messaging"
+
+msgid "Encrypted Group Messages for a Circular Economy — sign up with username and password to get started."
+msgstr "Encrypted Group Messages for a Circular Economy — sign up with username and password to get started."
+
+msgid "Ekozir Dashboard"
+msgstr "Ekozir Dashboard"
+
+msgid "Logged in as:"
+msgstr "Logged in as:"
+
+msgid "Copy Public Key"
+msgstr "Copy Public Key"
+
+msgid "Copied!"
+msgstr "Copied!"
+
+msgid "Logout"
+msgstr "Logout"
+
+msgid "Login"
+msgstr "Login"
+
+msgid "Sign Up"
+msgstr "Sign Up"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "Password"
+msgstr "Password"
+
+msgid "Your username"
+msgstr "Your username"
+
+msgid "Your password"
+msgstr "Your password"
+
+msgid "Enter your password to access your groups and messages."
+msgstr "Enter your password to access your groups and messages."
+
+msgid "Create a new account. Your username will be permanently associated with your account and cannot be changed. Your password must be complex because it is used to generate your encryption keys for accessing all your data. Choose a strong password and remember it—if you lose it, you will lose access to your account and data."
+msgstr "Create a new account. Your username will be permanently associated with your account and cannot be changed. Your password must be complex because it is used to generate your encryption keys for accessing all your data. Choose a strong password and remember it—if you lose it, you will lose access to your account and data."
+
+msgid "Enter username and password to sign up."
+msgstr "Enter username and password to sign up."
+
+msgid "Create Group"
+msgstr "Create Group"
+
+msgid "Define a group name. You can add members later in the Manage Membership section."
+msgstr "Define a group name. You can add members later in the Manage Membership section."
+
+msgid "Group name"
+msgstr "Group name"
+
+msgid "Manage Membership"
+msgstr "Manage Membership"
+
+msgid "Add or remove participants when you are the group creator. Paste the public key (JSON format) of the member you want to add."
+msgstr "Add or remove participants when you are the group creator. Paste the public key (JSON format) of the member you want to add."
+
+msgid "Select one of your groups"
+msgstr "Select one of your groups"
+
+msgid "Paste public key (JSON format) here..."
+msgstr "Paste public key (JSON format) here..."
+
+msgid "Add Member"
+msgstr "Add Member"
+
+msgid "Remove Member"
+msgstr "Remove Member"
+
+msgid "Send Message"
+msgstr "Send Message"
+
+msgid "Select a group and choose recipients. Messages are stored encrypted."
+msgstr "Select a group and choose recipients. Messages are stored encrypted."
+
+msgid "Select recipients:"
+msgstr "Select recipients:"
+
+msgid "Type your message here (it will be encrypted automatically before sending)"
+msgstr "Type your message here (it will be encrypted automatically before sending)"
+
+msgid "Your Groups and Messages"
+msgstr "Your Groups and Messages"
+
+msgid "Your Groups"
+msgstr "Your Groups"
+
+msgid "Select a group to inspect members and messages."
+msgstr "Select a group to inspect members and messages."
+
+msgid "Refresh Groups"
+msgstr "Refresh Groups"
+
+msgid "Group Messages"
+msgstr "Group Messages"
+
+msgid "View encrypted content, keys, and confirmation status."
+msgstr "View encrypted content, keys, and confirmation status."
+
+msgid "Not logged in"
+msgstr "Not logged in"
+
+msgid "Login successful!"
+msgstr "Login successful!"
+
+msgid "Login failed."
+msgstr "Login failed."
+
+msgid "This user is not signed up. Please use the Sign Up button to create an account."
+msgstr "This user is not signed up. Please use the Sign Up button to create an account."
+
+msgid "Login error: %(error)s"
+msgstr "Login error: %(error)s"
+
+msgid "Sign up successful!"
+msgstr "Sign up successful!"
+
+msgid "Please enter username and password."
+msgstr "Please enter username and password."
+
+msgid "Password does not meet complexity requirements. Please check the requirements above."
+msgstr "Password does not meet complexity requirements. Please check the requirements above."
+
+msgid "Creating account and registering on blockchain..."
+msgstr "Creating account and registering on blockchain..."
+
+msgid "Processing blockchain transaction..."
+msgstr "Processing blockchain transaction..."
+
+msgid "No groups found."
+msgstr "No groups found."
+
+msgid "Login to view your groups."
+msgstr "Login to view your groups."
+
+msgid "Login to view group messages."
+msgstr "Login to view group messages."
+
+msgid "Select a group to view its messages."
+msgstr "Select a group to view its messages."
+
+msgid "Group created successfully!"
+msgstr "Group created successfully!"
+
+msgid "Failed to create group."
+msgstr "Failed to create group."
+
+msgid "Member added successfully!"
+msgstr "Member added successfully!"
+
+msgid "Member removed successfully!"
+msgstr "Member removed successfully!"
+
+msgid "Failed to add member."
+msgstr "Failed to add member."
+
+msgid "Failed to remove member."
+msgstr "Failed to remove member."
+
+msgid "No other members in this group."
+msgstr "No other members in this group."
+
+msgid "Message sent successfully!"
+msgstr "Message sent successfully!"
+
+msgid "Failed to send message."
+msgstr "Failed to send message."
+
+msgid "No messages stored for this group yet."
+msgstr "No messages stored for this group yet."
+
+msgid "No messages available for you in this group."
+msgstr "No messages available for you in this group."
+
+msgid "Sent Messages"
+msgstr "Sent Messages"
+
+msgid "Received Messages"
+msgstr "Received Messages"
+
+msgid "No sent messages"
+msgstr "No sent messages"
+
+msgid "No received messages"
+msgstr "No received messages"
+
+msgid "To:"
+msgstr "To:"
+
+msgid "From:"
+msgstr "From:"
+
+msgid "Confirmed"
+msgstr "Confirmed"
+
+msgid "Pending confirmation"
+msgstr "Pending confirmation"
+
+msgid "Confirm Message"
+msgstr "Confirm Message"
+
+msgid "Message confirmed successfully!"
+msgstr "Message confirmed successfully!"
+
+msgid "Failed to confirm message."
+msgstr "Failed to confirm message."
+
+msgid "Failed to decrypt message"
+msgstr "Failed to decrypt message"
+
+msgid "Unknown"
+msgstr "Unknown"
+
+msgid "Error"
+msgstr "Error"
+
+msgid "Success"
+msgstr "Success"
+
+msgid "Loading..."
+msgstr "Loading..."
+
