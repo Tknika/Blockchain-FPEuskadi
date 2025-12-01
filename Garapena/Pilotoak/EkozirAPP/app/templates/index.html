@@ -81,7 +81,7 @@
     {{ _('Add or remove participants when you are the group creator. Paste the public key (JSON format) of the member you want to add.') }}
   </p>
   <select id="memberGroupSelect">
-    <option value="" data-translate="selectOneOfYourGroups">{{ _('Select one of your groups') }}</option>
+    <option value="" selected data-translate="selectOneOfYourGroups">{{ _('Select one of your groups') }}</option>
   </select>
   <textarea id="memberPublicKey" rows="4" data-placeholder-translate="pastePublicKey" placeholder="{{ _('Paste public key (JSON format) here...') }}"></textarea>
   <div class="button-row">
@@ -96,7 +96,7 @@
     {{ _('Select a group and choose recipients. Messages are stored encrypted.') }}
   </p>
   <select id="messageGroupSelect">
-    <option value="" data-translate="selectOneOfYourGroups">{{ _('Select one of your groups') }}</option>
+    <option value="" selected data-translate="selectOneOfYourGroups">{{ _('Select one of your groups') }}</option>
   </select>
   <div id="recipientSelection" style="display: none;">
     <p data-translate="selectRecipients">{{ _('Select recipients:') }}</p>

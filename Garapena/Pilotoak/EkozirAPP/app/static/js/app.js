@@ -788,7 +788,8 @@
     
     // Clear Manage Membership card
     if (ui.memberGroupSelect) {
-      ui.memberGroupSelect.innerHTML = `<option value="">${t('selectOneOfYourGroups')}</option>`;
+      ui.memberGroupSelect.innerHTML = `<option value="" selected>${t('selectOneOfYourGroups')}</option>`;
+      ui.memberGroupSelect.value = ""; // Ensure empty option is selected by default
     }
     if (ui.memberPublicKey) {
       ui.memberPublicKey.value = "";
@@ -796,7 +797,8 @@
     
     // Clear Send Message card
     if (ui.messageGroupSelect) {
-      ui.messageGroupSelect.innerHTML = `<option value="">${t('selectOneOfYourGroups')}</option>`;
+      ui.messageGroupSelect.innerHTML = `<option value="" selected>${t('selectOneOfYourGroups')}</option>`;
+      ui.messageGroupSelect.value = ""; // Ensure empty option is selected by default
     }
     if (ui.recipientSelection) {
       ui.recipientSelection.style.display = "none";
@@ -1077,10 +1079,12 @@
    */
   function clearGroupSelectors() {
     if (ui.memberGroupSelect) {
-      ui.memberGroupSelect.innerHTML = `<option value="">${t('selectOneOfYourGroups')}</option>`;
+      ui.memberGroupSelect.innerHTML = `<option value="" selected>${t('selectOneOfYourGroups')}</option>`;
+      ui.memberGroupSelect.value = ""; // Ensure empty option is selected by default
     }
     if (ui.messageGroupSelect) {
-      ui.messageGroupSelect.innerHTML = `<option value="">${t('selectOneOfYourGroups')}</option>`;
+      ui.messageGroupSelect.innerHTML = `<option value="" selected>${t('selectOneOfYourGroups')}</option>`;
+      ui.messageGroupSelect.value = ""; // Ensure empty option is selected by default
     }
   }
 
@@ -1214,13 +1218,15 @@
       .map((group) => `<option value="${group.id}">#${group.id} — ${group.name}</option>`)
       .join("");
 
-    const defaultOption = `<option value="">${t('selectOneOfYourGroups')}</option>`;
+    const defaultOption = `<option value="" selected>${t('selectOneOfYourGroups')}</option>`;
 
     if (ui.memberGroupSelect) {
       ui.memberGroupSelect.innerHTML = `${defaultOption}${options}`;
+      ui.memberGroupSelect.value = ""; // Ensure empty option is selected by default
     }
     if (ui.messageGroupSelect) {
       ui.messageGroupSelect.innerHTML = `${defaultOption}${options}`;
+      ui.messageGroupSelect.value = ""; // Ensure empty option is selected by default
     }
   }
 
