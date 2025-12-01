@@ -235,3 +235,75 @@ msgstr "Éxito"
 msgid "Loading..."
 msgstr "Cargando..."
 
+msgid "Logged in as %(username)s"
+msgstr "Sesión iniciada como %(username)s"
+
+msgid "No public key available to copy."
+msgstr "No hay clave pública disponible para copiar."
+
+msgid "Public key copied to clipboard!"
+msgstr "¡Clave pública copiada al portapapeles!"
+
+msgid "Failed to copy public key to clipboard."
+msgstr "Error al copiar la clave pública al portapapeles."
+
+msgid "Sign up failed"
+msgstr "Registro fallido"
+
+msgid "Logout error"
+msgstr "Error al cerrar sesión"
+
+msgid "Group name cannot be empty."
+msgstr "El nombre del grupo no puede estar vacío."
+
+msgid "Failed to load groups."
+msgstr "Error al cargar grupos."
+
+msgid "Please select a group."
+msgstr "Por favor, selecciona un grupo."
+
+msgid "Please paste the public key (JSON format) of the member you want to add."
+msgstr "Por favor, pega la clave pública (formato JSON) del miembro que deseas agregar."
+
+msgid "Please paste the public key (JSON format) of the member you want to remove."
+msgstr "Por favor, pega la clave pública (formato JSON) del miembro que deseas eliminar."
+
+msgid "Invalid public key format. Please paste a valid JSON public key (e.g., copied from another user's 'Copy Public Key' button)."
+msgstr "Formato de clave pública inválido. Por favor, pega una clave pública JSON válida (por ejemplo, copiada del botón 'Copiar Clave Pública' de otro usuario)."
+
+msgid "Invalid public key format. Please paste a valid JSON public key."
+msgstr "Formato de clave pública inválido. Por favor, pega una clave pública JSON válida."
+
+msgid "Error: %(error)s Make sure the user has signed up first."
+msgstr "Error: %(error)s Asegúrate de que el usuario se haya registrado primero."
+
+msgid "Error: %(error)s"
+msgstr "Error: %(error)s"
+
+msgid "Failed to load group members."
+msgstr "Error al cargar miembros del grupo."
+
+msgid "Message %(current)s/%(total)s sent!"
+msgstr "¡Mensaje %(current)s/%(total)s enviado!"
+
+msgid "Failed to send message %(current)s/%(total)s: %(error)s"
+msgstr "Error al enviar mensaje %(current)s/%(total)s: %(error)s"
+
+msgid "Successfully sent %(count)s out of %(total)s message(s)."
+msgstr "Enviados exitosamente %(count)s de %(total)s mensaje(s)."
+
+msgid "Please provide message content."
+msgstr "Por favor, proporciona el contenido del mensaje."
+
+msgid "Please select at least one recipient."
+msgstr "Por favor, selecciona al menos un destinatario."
+
+msgid "Failed to load messages."
+msgstr "Error al cargar mensajes."
+
+msgid "Welcome back, %(username)s!"
+msgstr "¡Bienvenido de nuevo, %(username)s!"
+
+msgid "Failed to bootstrap application."
+msgstr "Error al iniciar la aplicación."
+

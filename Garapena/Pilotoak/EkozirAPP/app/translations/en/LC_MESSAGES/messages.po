@@ -235,3 +235,75 @@ msgstr "Success"
 msgid "Loading..."
 msgstr "Loading..."
 
+msgid "Logged in as %(username)s"
+msgstr "Logged in as %(username)s"
+
+msgid "No public key available to copy."
+msgstr "No public key available to copy."
+
+msgid "Public key copied to clipboard!"
+msgstr "Public key copied to clipboard!"
+
+msgid "Failed to copy public key to clipboard."
+msgstr "Failed to copy public key to clipboard."
+
+msgid "Sign up failed"
+msgstr "Sign up failed"
+
+msgid "Logout error"
+msgstr "Logout error"
+
+msgid "Group name cannot be empty."
+msgstr "Group name cannot be empty."
+
+msgid "Failed to load groups."
+msgstr "Failed to load groups."
+
+msgid "Please select a group."
+msgstr "Please select a group."
+
+msgid "Please paste the public key (JSON format) of the member you want to add."
+msgstr "Please paste the public key (JSON format) of the member you want to add."
+
+msgid "Please paste the public key (JSON format) of the member you want to remove."
+msgstr "Please paste the public key (JSON format) of the member you want to remove."
+
+msgid "Invalid public key format. Please paste a valid JSON public key (e.g., copied from another user's 'Copy Public Key' button)."
+msgstr "Invalid public key format. Please paste a valid JSON public key (e.g., copied from another user's 'Copy Public Key' button)."
+
+msgid "Invalid public key format. Please paste a valid JSON public key."
+msgstr "Invalid public key format. Please paste a valid JSON public key."
+
+msgid "Error: %(error)s Make sure the user has signed up first."
+msgstr "Error: %(error)s Make sure the user has signed up first."
+
+msgid "Error: %(error)s"
+msgstr "Error: %(error)s"
+
+msgid "Failed to load group members."
+msgstr "Failed to load group members."
+
+msgid "Message %(current)s/%(total)s sent!"
+msgstr "Message %(current)s/%(total)s sent!"
+
+msgid "Failed to send message %(current)s/%(total)s: %(error)s"
+msgstr "Failed to send message %(current)s/%(total)s: %(error)s"
+
+msgid "Successfully sent %(count)s out of %(total)s message(s)."
+msgstr "Successfully sent %(count)s out of %(total)s message(s)."
+
+msgid "Please provide message content."
+msgstr "Please provide message content."
+
+msgid "Please select at least one recipient."
+msgstr "Please select at least one recipient."
+
+msgid "Failed to load messages."
+msgstr "Failed to load messages."
+
+msgid "Welcome back, %(username)s!"
+msgstr "Welcome back, %(username)s!"
+
+msgid "Failed to bootstrap application."
+msgstr "Failed to bootstrap application."
+

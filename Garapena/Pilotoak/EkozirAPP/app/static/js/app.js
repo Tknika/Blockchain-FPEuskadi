@@ -773,7 +773,7 @@
     } catch (error) {
       hideLoading();
       setSignInStatusError(`Sign up error: ${error.message}`);
-      updateStatus("Sign up failed", { error: error.message });
+      updateStatus(t('signUpFailed'), { error: error.message });
     }
   }
 
@@ -860,7 +860,7 @@
       
       updateSignedInUI();
     } catch (error) {
-      updateStatus("Logout error", { error: error.message });
+      updateStatus(t('logoutError'), { error: error.message });
     }
   }
 
@@ -948,13 +948,13 @@
    */
   async function copyPublicKeyToClipboard() {
     if (!state.publicKey) {
-      updateStatus("No public key available to copy.");
+      updateStatus(t('noPublicKeyAvailable'));
       return;
     }
     
     try {
       await navigator.clipboard.writeText(state.publicKey);
-      updateStatus("Public key copied to clipboard!");
+      updateStatus(t('publicKeyCopied'));
       
       // Show temporary feedback on button
       const originalText = ui.copyPublicKeyButton.textContent;
@@ -963,7 +963,7 @@
         ui.copyPublicKeyButton.textContent = originalText;
       }, 2000);
     } catch (error) {
-      updateStatus("Failed to copy public key to clipboard.");
+      updateStatus(t('failedToCopyPublicKey'));
       console.error("Copy failed:", error);
     }
   }
@@ -1051,7 +1051,7 @@
       if (ui.messagesList) {
         ui.messagesList.innerHTML = `<p class="muted">${t('loginToViewMessages')}</p>`;
       }
-      updateStatus("Not logged in");
+      updateStatus(t('notLoggedIn'));
     } else {
       // Display username in banner
       if (ui.bannerUsername && state.username) {
@@ -1068,7 +1068,7 @@
       navButtons.forEach(button => {
         button.classList.remove('active');
       });
-      updateStatus(`Logged in as ${state.username}`);
+      updateStatus(t('loggedInAsUser', { username: state.username }));
     }
   }
 
@@ -1130,7 +1130,7 @@
       // Update group selectors with the collected groups
       populateGroupSelectors(collectedGroups);
     } catch (error) {
-      updateStatus("Failed to load groups.", { error: error.message });
+      updateStatus(t('failedToLoadGroups'), { error: error.message });
       console.error("Error refreshing groups:", error);
     }
   }
@@ -1230,7 +1230,7 @@
   async function handleCreateGroup() {
     const name = ui.groupName.value.trim();
     if (!name) {
-      updateStatus("Group name cannot be empty.");
+      updateStatus(t('groupNameEmpty'));
       return;
     }
 
@@ -1257,7 +1257,7 @@
       }
     } catch (error) {
       hideLoading();
-      updateStatus("Failed to create group.", { error: error.message });
+      updateStatus(t('failedToCreateGroup'), { error: error.message });
     }
   }
 
@@ -1317,12 +1317,12 @@
     const publicKeyInput = ui.memberPublicKey.value.trim();
 
     if (!groupId) {
-      updateStatus("Please select a group.");
+      updateStatus(t('pleaseSelectGroup'));
       return;
     }
 
     if (!publicKeyInput) {
-      updateStatus("Please paste the public key (JSON format) of the member you want to add.");
+      updateStatus(t('pleasePastePublicKey'));
       return;
     }
 
@@ -1330,7 +1330,7 @@
     const memberPublicKey = parsePublicKey(publicKeyInput);
     
     if (!memberPublicKey) {
-      updateStatus("Invalid public key format. Please paste a valid JSON public key (e.g., copied from another user's 'Copy Public Key' button).");
+      updateStatus(t('invalidPublicKeyFormat'));
       return;
     }
 
@@ -1367,11 +1367,11 @@
         // Show specific error message from backend
         const errorMsg = data.error || t('failedToAddMember');
         if (data.memberNotRegistered) {
-          updateStatus(`Error: ${errorMsg} Make sure the user has signed up first.`);
+          updateStatus(t('errorMakeSureSignedUp', { error: errorMsg }));
         } else if (data.notCreator) {
-          updateStatus(`Error: ${errorMsg}`);
+          updateStatus(t('errorPrefix', { error: errorMsg }));
         } else if (data.alreadyMember) {
-          updateStatus(`Error: ${errorMsg}`);
+          updateStatus(t('errorPrefix', { error: errorMsg }));
         } else {
           updateStatus(`${t('failedToAddMember')}: ${errorMsg}`);
         }
@@ -1390,12 +1390,12 @@
     const publicKeyInput = ui.memberPublicKey.value.trim();
 
     if (!groupId) {
-      updateStatus("Please select a group.");
+      updateStatus(t('pleaseSelectGroup'));
       return;
     }
 
     if (!publicKeyInput) {
-      updateStatus("Please paste the public key (JSON format) of the member you want to remove.");
+      updateStatus(t('pleasePastePublicKeyRemove'));
       return;
     }
 
@@ -1403,7 +1403,7 @@
     const memberPublicKey = parsePublicKey(publicKeyInput);
     
     if (!memberPublicKey) {
-      updateStatus("Invalid public key format. Please paste a valid JSON public key.");
+      updateStatus(t('invalidPublicKeyFormatSimple'));
       return;
     }
 
@@ -1430,7 +1430,7 @@
       }
     } catch (error) {
       hideLoading();
-      updateStatus("Failed to remove member.", { error: error.message });
+      updateStatus(t('failedToRemoveMember'), { error: error.message });
     }
   }
 
@@ -1488,7 +1488,7 @@
       ui.messageContent.style.display = "";
       ui.sendMessage.style.display = "";
     } catch (error) {
-      updateStatus("Failed to load group members.", { error: error.message });
+      updateStatus(t('failedToLoadGroupMembers'), { error: error.message });
     }
   }
 
@@ -1500,18 +1500,18 @@
     const content = ui.messageContent.value.trim();
 
     if (!groupId) {
-      updateStatus("Please select a group.");
+      updateStatus(t('pleaseSelectGroup'));
       return;
     }
 
     if (!content) {
-      updateStatus("Please provide message content.");
+      updateStatus(t('pleaseProvideMessageContent'));
       return;
     }
 
     const checkboxes = ui.recipientCheckboxes.querySelectorAll("input[type='checkbox']:checked");
     if (checkboxes.length === 0) {
-      updateStatus("Please select at least one recipient.");
+      updateStatus(t('pleaseSelectRecipient'));
       return;
     }
 
@@ -1590,21 +1590,21 @@
           const { data } = await response.json();
           
           if (response.ok) {
-            updateStatus(`Message ${i + 1}/${recipients.length} sent!`, { txHash: data.txHash });
+            updateStatus(t('messageSentCount', { current: i + 1, total: recipients.length }), { txHash: data.txHash });
             successCount++;
           } else {
-            updateStatus(`Failed to send message ${i + 1}/${recipients.length}: ${data.error}`);
+            updateStatus(t('failedToSendMessageCount', { current: i + 1, total: recipients.length, error: data.error }));
             failCount++;
           }
         } catch (error) {
-          updateStatus(`Failed to send message ${i + 1}/${recipients.length}: ${error.message}`);
+          updateStatus(t('failedToSendMessageCount', { current: i + 1, total: recipients.length, error: error.message }));
           failCount++;
         }
       }
 
       hideLoading();
       if (successCount > 0) {
-        updateStatus(`Successfully sent ${successCount} out of ${recipients.length} message(s).`);
+        updateStatus(t('successfullySentMessages', { count: successCount, total: recipients.length }));
       }
       
       ui.messageContent.value = "";
@@ -1615,7 +1615,7 @@
       }
     } catch (error) {
       hideLoading();
-      updateStatus(`Failed to send message: ${error.message}`);
+      updateStatus(t('messageSendFailed'), { error: error.message });
     }
   }
 
@@ -1728,7 +1728,7 @@
       // Render messages in two columns
       renderMessagesInColumns(sentMessages, receivedMessages, members);
     } catch (error) {
-      updateStatus("Failed to load messages.", { error: error.message });
+      updateStatus(t('failedToLoadMessages'), { error: error.message });
     }
   }
 
@@ -1883,7 +1883,7 @@
           }
         } catch (error) {
           hideLoading();
-          updateStatus("Failed to confirm message.", { error: error.message });
+          updateStatus(t('failedToConfirmMessage'), { error: error.message });
         }
       });
     }
@@ -2024,13 +2024,13 @@
     if (isAuthenticated) {
       // Need to get password from user for decryption
       // For now, we'll prompt when needed
-      updateStatus(`Welcome back, ${state.username}!`);
+      updateStatus(t('welcomeBack', { username: state.username }));
       await refreshGroups();
     }
   }
 
   bootstrap().catch((error) => {
-    updateStatus("Failed to bootstrap application.", { error: error.message });
+    updateStatus(t('failedToBootstrap'), { error: error.message });
   });
 })();
 

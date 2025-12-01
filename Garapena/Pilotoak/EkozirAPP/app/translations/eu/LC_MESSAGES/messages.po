@@ -235,3 +235,75 @@ msgstr "Arrakasta"
 msgid "Loading..."
 msgstr "Kargatzen..."
 
+msgid "Logged in as %(username)s"
+msgstr "%(username)s bezala saioa hasita"
+
+msgid "No public key available to copy."
+msgstr "Ez dago kopiatzeko gako publikorik."
+
+msgid "Public key copied to clipboard!"
+msgstr "Gako publikoa arbelera kopiatu da!"
+
+msgid "Failed to copy public key to clipboard."
+msgstr "Gako publikoa arbelera kopiatzea huts egin du."
+
+msgid "Sign up failed"
+msgstr "Erregistroa huts egin du"
+
+msgid "Logout error"
+msgstr "Saioa ixteko errorea"
+
+msgid "Group name cannot be empty."
+msgstr "Talde-izena ezin da hutsik egon."
+
+msgid "Failed to load groups."
+msgstr "Taldeak kargatzea huts egin du."
+
+msgid "Please select a group."
+msgstr "Mesedez, aukeratu talde bat."
+
+msgid "Please paste the public key (JSON format) of the member you want to add."
+msgstr "Mesedez, itsatsi gehitu nahi duzun kidearen gako publikoa (JSON formatua)."
+
+msgid "Please paste the public key (JSON format) of the member you want to remove."
+msgstr "Mesedez, itsatsi kendu nahi duzun kidearen gako publikoa (JSON formatua)."
+
+msgid "Invalid public key format. Please paste a valid JSON public key (e.g., copied from another user's 'Copy Public Key' button)."
+msgstr "Gako publikoaren formatua baliogabea da. Mesedez, itsatsi JSON gako publiko baliozkoa (adibidez, beste erabiltzaile baten 'Gako Publikoa Kopiatu' botoitik kopiatua)."
+
+msgid "Invalid public key format. Please paste a valid JSON public key."
+msgstr "Gako publikoaren formatua baliogabea da. Mesedez, itsatsi JSON gako publiko baliozkoa."
+
+msgid "Error: %(error)s Make sure the user has signed up first."
+msgstr "Errorea: %(error)s Ziurtatu erabiltzailea lehenik erregistratu dela."
+
+msgid "Error: %(error)s"
+msgstr "Errorea: %(error)s"
+
+msgid "Failed to load group members."
+msgstr "Talde kideak kargatzea huts egin du."
+
+msgid "Message %(current)s/%(total)s sent!"
+msgstr "%(current)s/%(total)s mezua bidali da!"
+
+msgid "Failed to send message %(current)s/%(total)s: %(error)s"
+msgstr "%(current)s/%(total)s mezua bidaltzea huts egin du: %(error)s"
+
+msgid "Successfully sent %(count)s out of %(total)s message(s)."
+msgstr "%(count)s mezua %(total)s-tik ondo bidali da."
+
+msgid "Please provide message content."
+msgstr "Mesedez, eman mezuko edukia."
+
+msgid "Please select at least one recipient."
+msgstr "Mesedez, hautatu gutxienez hartzaile bat."
+
+msgid "Failed to load messages."
+msgstr "Mezuak kargatzea huts egin du."
+
+msgid "Welcome back, %(username)s!"
+msgstr "Ongi etorri berriro, %(username)s!"
+
+msgid "Failed to bootstrap application."
+msgstr "Aplikazioa abiaraztea huts egin du."
+

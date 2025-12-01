@@ -534,8 +534,12 @@ def get_translations() -> Response:
         # Authentication
         "notLoggedIn": _("Not logged in"),
         "loggedInAs": _("Logged in as:"),
+        "loggedInAsUser": _("Logged in as %(username)s"),
         "copyPublicKey": _("Copy Public Key"),
         "copied": _("Copied!"),
+        "noPublicKeyAvailable": _("No public key available to copy."),
+        "publicKeyCopied": _("Public key copied to clipboard!"),
+        "failedToCopyPublicKey": _("Failed to copy public key to clipboard."),
         "logout": _("Logout"),
         "login": _("Login"),
         "signUp": _("Sign Up"),
@@ -549,6 +553,8 @@ def get_translations() -> Response:
         "userNotSignedUp": _("This user is not signed up. Please use the Sign Up button to create an account."),
         "loginError": _("Login error: %(error)s"),
         "signUpSuccessful": _("Sign up successful!"),
+        "signUpFailed": _("Sign up failed"),
+        "logoutError": _("Logout error"),
         "enterUsernamePassword": _("Enter username and password to sign up."),
         "pleaseEnterUsernamePassword": _("Please enter username and password."),
         "passwordComplexityError": _("Password does not meet complexity requirements. Please check the requirements above."),
@@ -567,6 +573,8 @@ def get_translations() -> Response:
         "groupCreated": _("Group created successfully!"),
         "groupCreationFailed": _("Failed to create group."),
         "failedToCreateGroup": _("Failed to create group."),
+        "groupNameEmpty": _("Group name cannot be empty."),
+        "failedToLoadGroups": _("Failed to load groups."),
         
         # Members
         "manageMembership": _("Manage Membership"),
@@ -580,6 +588,14 @@ def get_translations() -> Response:
         "memberRemoveFailed": _("Failed to remove member."),
         "failedToRemoveMember": _("Failed to remove member."),
         "noOtherMembers": _("No other members in this group."),
+        "pleaseSelectGroup": _("Please select a group."),
+        "pleasePastePublicKey": _("Please paste the public key (JSON format) of the member you want to add."),
+        "pleasePastePublicKeyRemove": _("Please paste the public key (JSON format) of the member you want to remove."),
+        "invalidPublicKeyFormat": _("Invalid public key format. Please paste a valid JSON public key (e.g., copied from another user's 'Copy Public Key' button)."),
+        "invalidPublicKeyFormatSimple": _("Invalid public key format. Please paste a valid JSON public key."),
+        "errorMakeSureSignedUp": _("Error: %(error)s Make sure the user has signed up first."),
+        "errorPrefix": _("Error: %(error)s"),
+        "failedToLoadGroupMembers": _("Failed to load group members."),
         
         # Messages
         "sendMessage": _("Send Message"),
@@ -587,6 +603,12 @@ def get_translations() -> Response:
         "selectRecipients": _("Select recipients:"),
         "messageSent": _("Message sent successfully!"),
         "messageSendFailed": _("Failed to send message."),
+        "messageSentCount": _("Message %(current)s/%(total)s sent!"),
+        "failedToSendMessageCount": _("Failed to send message %(current)s/%(total)s: %(error)s"),
+        "successfullySentMessages": _("Successfully sent %(count)s out of %(total)s message(s)."),
+        "pleaseProvideMessageContent": _("Please provide message content."),
+        "pleaseSelectRecipient": _("Please select at least one recipient."),
+        "failedToLoadMessages": _("Failed to load messages."),
         "noMessagesStored": _("No messages stored for this group yet."),
         "noMessagesAvailable": _("No messages available for you in this group."),
         "sentMessages": _("Sent Messages"),
@@ -615,6 +637,8 @@ def get_translations() -> Response:
         "error": _("Error"),
         "success": _("Success"),
         "loading": _("Loading..."),
+        "welcomeBack": _("Welcome back, %(username)s!"),
+        "failedToBootstrap": _("Failed to bootstrap application."),
     }
     
     return _json_response(translations)
