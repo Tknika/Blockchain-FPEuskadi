@@ -6,7 +6,7 @@ import logging
 import sys
 
 from flask import Flask
-from flask_babel import Babel
+from flask_babel import Babel, get_locale as babel_get_locale
 
 from .config import load_config
 from .services.web3_service import init_web3
@@ -50,6 +50,12 @@ def create_app() -> Flask:
     
     # Initialize Babel with locale selector (Flask-Babel 4.0+ API)
     babel = Babel(app, locale_selector=get_locale)
+    
+    # Make get_locale available to all templates via context processor
+    @app.context_processor
+    def inject_get_locale():
+        """Make get_locale function available to all templates."""
+        return dict(get_locale=babel_get_locale)
 
     # Set up the global Web3 client and contract bindings once per process.
     init_web3(app)
