@@ -113,13 +113,13 @@ msgid "View encrypted content, keys, and confirmation status."
 msgstr "Ikusi zifratutako edukia, gakoak eta berrespen-egoera."
 
 msgid "Not logged in"
-msgstr "Ez zaude saioa hasita"
+msgstr "Ez duzu saioa hasi"
 
 msgid "Login successful!"
 msgstr "Saioa ondo hasi da!"
 
 msgid "Login failed."
-msgstr "Saioa hastea huts egin du."
+msgstr "Saioa hasteak huts egin du."
 
 msgid "This user is not signed up. Please use the Sign Up button to create an account."
 msgstr "Erabiltzaile hau ez dago erregistratuta. Mesedez, erabili Erregistratu botoia kontu bat sortzeko."

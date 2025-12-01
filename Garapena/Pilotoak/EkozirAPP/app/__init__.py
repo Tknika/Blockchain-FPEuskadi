@@ -59,7 +59,8 @@ def create_app() -> Flask:
     @app.context_processor
     def inject_get_locale():
         """Make get_locale function available to all templates."""
-        return dict(get_locale=babel_get_locale)
+        # Use the same function that reads from session
+        return dict(get_locale=get_locale)
 
     # Set up the global Web3 client and contract bindings once per process.
     init_web3(app)
