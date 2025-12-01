@@ -104,9 +104,13 @@ def auth_login() -> Response:
                 "error": "Username not found for this public key"
             }, status=401)
         
-        # Store in session
+        # Store in session and mark as permanent for timeout handling
+        session.permanent = True
         session['public_key'] = public_key_json
         session['username'] = username
+        # Initialize last activity time to current time
+        from datetime import datetime
+        session['last_activity'] = datetime.now().isoformat()
         
         return _json_response({
             "publicKey": public_key_json,
@@ -175,9 +179,13 @@ def auth_signup() -> Response:
         # Execute signUp transaction (normalization happens inside the function too)
         receipt = ekozir_service.sign_up_transaction(public_key_json, username)
         
-        # Store in session
+        # Store in session and mark as permanent for timeout handling
+        session.permanent = True
         session['public_key'] = public_key_json
         session['username'] = username
+        # Initialize last activity time to current time
+        from datetime import datetime
+        session['last_activity'] = datetime.now().isoformat()
         
         return _json_response({
             "publicKey": public_key_json,

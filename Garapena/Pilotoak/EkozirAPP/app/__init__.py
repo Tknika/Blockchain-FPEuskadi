@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import sys
+from datetime import timedelta
 
 from flask import Flask
 from flask_babel import Babel, get_locale as babel_get_locale
@@ -36,6 +37,9 @@ def create_app() -> Flask:
     # Load environment-aware configuration (Besu RPC, contract metadata, etc.)
     config = load_config()
     app.config.update(config)
+    
+    # Configure session timeout: 10 minutes of inactivity
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
 
     # Configure Flask-Babel for internationalization
     app.config['BABEL_DEFAULT_LOCALE'] = 'eu'  # Basque as default
@@ -64,6 +68,10 @@ def create_app() -> Flask:
     from . import routes
 
     routes.init_app(app)
+    
+    # Register before_request handler to track activity and check session expiration
+    from .middleware.session_timeout import check_session_timeout
+    app.before_request(check_session_timeout)
 
     return app
 
