@@ -50,7 +50,7 @@ msgid "Enter your password to access your groups and messages."
 msgstr "Ingresa tu contraseña para acceder a tus grupos y mensajes."
 
 msgid "Create a new account. Your username will be permanently associated with your account and cannot be changed. Your password must be complex because it is used to generate your encryption keys for accessing all your data. Choose a strong password and remember it—if you lose it, you will lose access to your account and data."
-msgstr "Crea una nueva cuenta. Tu nombre de usuario estará permanentemente asociado con tu cuenta y no se puede cambiar. Tu contraseña debe ser compleja porque se usa para generar tus claves de cifrado para acceder a todos tus datos. Elige una contraseña segura y recuérdala—si la pierdes, perderás el acceso a tu cuenta y datos."
+msgstr "Crea una nueva cuenta. <strong>Tu nombre de usuario estará permanentemente asociado con tu cuenta y no se puede cambiar</strong>.<br/>Tu contraseña debe ser compleja (12 o más caracteres, mayúsculas, minúsculas, números y caracteres especiales) porque se usa para generar tus claves de cifrado para acceder a todos tus datos.<br/><strong>Elige una contraseña segura y recuérdala—si la pierdes, perderás el acceso a tu cuenta y datos</strong>."
 
 msgid "Enter username and password to sign up."
 msgstr "Ingresa nombre de usuario y contraseña para registrarte."

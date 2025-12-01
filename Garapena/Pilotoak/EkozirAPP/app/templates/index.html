@@ -55,7 +55,7 @@
 <section class="card" id="signUpSection" style="display: none;">
   <h2 data-translate="signUp">{{ _('Sign Up') }}</h2>
   <p>
-    {{ _('Create a new account. Your username will be permanently associated with your account and cannot be changed. Your password must be complex because it is used to generate your encryption keys for accessing all your data. Choose a strong password and remember it—if you lose it, you will lose access to your account and data.') }}
+    {{ _('Create a new account. Your username will be permanently associated with your account and cannot be changed. Your password must be complex because it is used to generate your encryption keys for accessing all your data. Choose a strong password and remember it—if you lose it, you will lose access to your account and data.') |safe }}
   </p>
   <p id="signInStatus" class="muted" data-translate="enterUsernamePassword">{{ _('Enter username and password to sign up.') }}</p>
   <input id="userNameInput" type="text" data-placeholder-translate="yourUsername" placeholder="{{ _('Your username') }}"/>
