@@ -42,14 +42,14 @@ def create_app() -> Flask:
     app.config['BABEL_SUPPORTED_LOCALES'] = ['eu', 'es', 'en']  # Basque, Spanish, English
     app.config['BABEL_TRANSLATION_DIRECTORIES'] = 'translations'
     
-    # Initialize Babel
-    babel = Babel(app)
-    
-    @babel.localeselector
+    # Define locale selector function
     def get_locale():
         """Get the locale from session or default to Basque."""
         from flask import session
         return session.get('language', 'eu')
+    
+    # Initialize Babel with locale selector (Flask-Babel 4.0+ API)
+    babel = Babel(app, locale_selector=get_locale)
 
     # Set up the global Web3 client and contract bindings once per process.
     init_web3(app)
