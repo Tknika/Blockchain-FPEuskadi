@@ -1,0 +1,13 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv
+
+# Node.js dependencies (not needed after bundle is created)
+node_modules/
+#package-lock.json
+
+# Other

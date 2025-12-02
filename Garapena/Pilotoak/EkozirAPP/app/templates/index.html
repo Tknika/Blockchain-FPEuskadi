@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Ekozir Dashboard') }}{% endblock %}
+
+{% block content %}
+
+<!-- Banner displayed when logged in -->
+<div id="userBanner" style="display: none;" class="user-banner">
+  <div class="banner-content">
+    <span><strong>{{ _('Logged in as:') }}</strong> <span id="bannerUsername"></span></span>
+    <div class="banner-actions">
+      <button id="copyPublicKeyButton" class="copy-button" data-translate="copyPublicKey">{{ _('Copy Public Key') }}</button>
+      <button id="logoutButtonBanner" data-translate="logout">{{ _('Logout') }}</button>
+    </div>
+  </div>
+</div>
+
+<pre id="walletInfo" class="info-panel" data-translate="notLoggedIn">{{ _('Not logged in') }}</pre>
+
+<!-- Loading indicator overlay -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+  <div class="loading-spinner">
+    <div class="spinner"></div>
+    <p class="loading-text" data-translate="processingTransaction">{{ _('Processing blockchain transaction...') }}</p>
+  </div>
+</div>
+
+<!-- Login/Signup buttons shown outside cards when not logged in -->
+<div id="authButtons" class="auth-buttons">
+  <button id="showLoginButton" data-translate="login">{{ _('Login') }}</button>
+  <button id="showSignUpButton" data-translate="signUp">{{ _('Sign Up') }}</button>
+</div>
+
+<!-- Navigation menu shown when logged in -->
+<nav id="mainNavigation" class="main-navigation" style="display: none;">
+  <button class="nav-button" data-section="groupsAndMessages" data-translate="yourGroupsAndMessages">{{ _('Your Groups and Messages') }}</button>
+  <button class="nav-button" data-section="createGroup" data-translate="createGroup">{{ _('Create Group') }}</button>
+  <button class="nav-button" data-section="manageMembership" data-translate="manageMembership">{{ _('Manage Membership') }}</button>
+  <button class="nav-button" data-section="sendMessage" data-translate="sendMessage">{{ _('Send Message') }}</button>
+</nav>
+
+<section class="card" id="loginSection" style="display: none;">
+  <h2 data-translate="login">{{ _('Login') }}</h2>
+  <p>
+    {{ _('Enter your password to access your groups and messages.') }}
+  </p>
+  <input id="loginPassword" type="password" data-placeholder-translate="password" placeholder="{{ _('Password') }}"/>
+  <div class="button-row">
+    <button id="loginButton" data-translate="login">{{ _('Login') }}</button>
+    <button id="cancelLoginButton" data-translate="cancel">{{ _('Cancel') }}</button>
+  </div>
+  <p id="loginStatus" class="muted"></p>
+</section>
+
+<section class="card" id="signUpSection" style="display: none;">
+  <h2 data-translate="signUp">{{ _('Sign Up') }}</h2>
+  <p>
+    {{ _('Create a new account. Your username will be permanently associated with your account and cannot be changed. Your password must be complex because it is used to generate your encryption keys for accessing all your data. Choose a strong password and remember it—if you lose it, you will lose access to your account and data.') |safe }}
+  </p>
+  <p id="signInStatus" class="muted" data-translate="enterUsernamePassword">{{ _('Enter username and password to sign up.') }}</p>
+  <input id="userNameInput" type="text" data-placeholder-translate="yourUsername" placeholder="{{ _('Your username') }}"/>
+  <input id="passwordInput" type="password" data-placeholder-translate="yourPassword" placeholder="{{ _('Your password') }}"/>
+  <div class="button-row">
+    <button id="signUp" data-translate="signUp">{{ _('Sign Up') }}</button>
+    <button id="cancelSignUpButton" data-translate="cancel">{{ _('Cancel') }}</button>
+  </div>
+</section>
+
+<section class="card" data-requires-signin data-section="createGroup">
+  <h2 data-translate="createGroup">{{ _('Create Group') }}</h2>
+  <p>
+    {{ _('Define a group name. You can add members later in the Manage Membership section.') }}
+  </p>
+  <input id="groupName" type="text" data-placeholder-translate="groupName" placeholder="{{ _('Group name') }}" />
+  <button id="createGroup" data-translate="createGroup">{{ _('Create Group') }}</button>
+</section>
+
+<section class="card" data-requires-signin data-section="manageMembership">
+  <h2 data-translate="manageMembership">{{ _('Manage Membership') }}</h2>
+  <p>
+    {{ _('Add or remove participants when you are the group creator. Paste the public key (JSON format) of the member you want to add.') }}
+  </p>
+  <select id="memberGroupSelect">
+    <option value="" selected data-translate="selectOneOfYourGroups">{{ _('Select one of your groups') }}</option>
+  </select>
+  <textarea id="memberPublicKey" rows="4" data-placeholder-translate="pastePublicKey" placeholder="{{ _('Paste public key (JSON format) here...') }}"></textarea>
+  <div class="button-row">
+    <button id="addMember" data-translate="addMember">{{ _('Add Member') }}</button>
+    <button id="removeMember" data-translate="removeMember">{{ _('Remove Member') }}</button>
+  </div>
+</section>
+
+<section class="card" data-requires-signin data-section="sendMessage">
+  <h2 data-translate="sendMessage">{{ _('Send Message') }}</h2>
+  <p>
+    {{ _('Select a group and choose recipients. Messages are stored encrypted.') }}
+  </p>
+  <select id="messageGroupSelect">
+    <option value="" selected data-translate="selectOneOfYourGroups">{{ _('Select one of your groups') }}</option>
+  </select>
+  <div id="recipientSelection" style="display: none;">
+    <p data-translate="selectRecipients">{{ _('Select recipients:') }}</p>
+    <div id="recipientCheckboxes"></div>
+  </div>
+  <textarea
+    id="messageContent"
+    rows="3"
+    data-placeholder-translate="typeYourMessage"
+    placeholder="{{ _('Type your message here (it will be encrypted automatically before sending)') }}"
+    style="display: none;"
+  ></textarea>
+  <button id="sendMessage" style="display: none;" data-translate="sendMessage">{{ _('Send Message') }}</button>
+</section>
+
+<section class="card" data-requires-signin data-section="groupsAndMessages">
+  <h2 data-translate="yourGroupsAndMessages">{{ _('Your Groups and Messages') }}</h2>
+  <div style="margin-bottom: 1rem;">
+    <h3 style="margin-top: 0;" data-translate="yourGroups">{{ _('Your Groups') }}</h3>
+    <p>
+      {{ _('Select a group to inspect members and messages.') }}
+    </p>
+    <button id="refreshGroups" data-translate="refreshGroups">{{ _('Refresh Groups') }}</button>
+    <div id="groupsList" class="list-panel"></div>
+  </div>
+  <div>
+    <h3 data-translate="groupMessages">{{ _('Group Messages') }}</h3>
+    <p>
+      {{ _('View encrypted content, keys, and confirmation status.') }}
+    </p>
+    <div id="messagesList" class="list-panel"></div>
+  </div>
+</section>
+
+<script>
+  // Inject configuration for the front-end controller.
+  window.APP_CONFIG = {
+    contractAddress: "{{ contract_address }}",
+    chainId: "{{ chain_id }}",
+    besuRpc: "{{ besu_rpc }}"
+  };
+</script>
+{% endblock %}

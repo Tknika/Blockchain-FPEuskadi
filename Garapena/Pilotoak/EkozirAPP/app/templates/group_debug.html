@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Group Debug') }} - {{ _('Group') }} #{{ group_id }}{% endblock %}
+
+{% block content %}
+
+<div class="card">
+  <h1>{{ _('Group Debug Information') }}</h1>
+  <p><strong>{{ _('Group ID') }}:</strong> {{ group_id }}</p>
+  
+  {% if error %}
+    <div style="background-color: #fee; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+      <strong>{{ _('Error') }}:</strong> {{ error }}
+    </div>
+  {% elif group %}
+    <h2>{{ _('Raw Group Data from Smart Contract') }}</h2>
+    
+    <div style="margin: 1rem 0;">
+      <h3>{{ _('Basic Information') }}</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 0.5rem; border: 1px solid #ddd; font-weight: bold;">ID</td>
+          <td style="padding: 0.5rem; border: 1px solid #ddd;">{{ group.id }}</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.5rem; border: 1px solid #ddd; font-weight: bold;">{{ _('Name') }}</td>
+          <td style="padding: 0.5rem; border: 1px solid #ddd;">{{ group.name }}</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.5rem; border: 1px solid #ddd; font-weight: bold;">{{ _('Message Count') }}</td>
+          <td style="padding: 0.5rem; border: 1px solid #ddd;">{{ group.messageCount }}</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.5rem; border: 1px solid #ddd; font-weight: bold;">{{ _('Created At') }}</td>
+          <td style="padding: 0.5rem; border: 1px solid #ddd;">{{ group.createdAt }} ({{ _('Unix timestamp') }})</td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="margin: 1rem 0;">
+      <h3>{{ _('Creator Public Key') }}</h3>
+      <pre style="background: #f5f5f5; padding: 1rem; border-radius: 8px; overflow-x: auto; word-break: break-all;">{{ group.creator }}</pre>
+    </div>
+
+    <div style="margin: 1rem 0;">
+      <h3>{{ _('Members Array (from getGroup)') }}</h3>
+      <p><strong>{{ _('Total Members') }}:</strong> {{ members|length }}</p>
+      
+      {% if members|length > 0 %}
+        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+          <thead>
+            <tr style="background-color: #f0f0f0;">
+              <th style="padding: 0.5rem; border: 1px solid #ddd; text-align: left;">{{ _('Index') }}</th>
+              <th style="padding: 0.5rem; border: 1px solid #ddd; text-align: left;">{{ _('Public Key (JSON)') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for member in members %}
+            <tr>
+              <td style="padding: 0.5rem; border: 1px solid #ddd;">{{ loop.index0 }}</td>
+              <td style="padding: 0.5rem; border: 1px solid #ddd;">
+                <pre style="margin: 0; font-size: 0.85rem; word-break: break-all; white-space: pre-wrap;">{{ member }}</pre>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">{{ _('No members found in the members array.') }}</p>
+      {% endif %}
+    </div>
+
+    {% if member_info|length > 0 %}
+    <div style="margin: 1rem 0;">
+      <h3>{{ _('Member Info (with Names)') }}</h3>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+        <thead>
+          <tr style="background-color: #f0f0f0;">
+            <th style="padding: 0.5rem; border: 1px solid #ddd; text-align: left;">{{ _('Name') }}</th>
+            <th style="padding: 0.5rem; border: 1px solid #ddd; text-align: left;">{{ _('Public Key') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for member in member_info %}
+          <tr>
+            <td style="padding: 0.5rem; border: 1px solid #ddd;">{{ member.name or _('(no name)') }}</td>
+            <td style="padding: 0.5rem; border: 1px solid #ddd;">
+              <pre style="margin: 0; font-size: 0.85rem; word-break: break-all; white-space: pre-wrap;">{{ member.publicKey }}</pre>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <div style="margin: 1rem 0;">
+      <h3>{{ _('Raw JSON Data') }}</h3>
+      <pre style="background: #f5f5f5; padding: 1rem; border-radius: 8px; overflow-x: auto; word-break: break-all; white-space: pre-wrap;">{{ group_json }}</pre>
+    </div>
+
+  {% else %}
+    <p>{{ _('No group data available.') }}</p>
+  {% endif %}
+
+  <div style="margin-top: 2rem;">
+    <a href="/" style="color: #1e3c72; text-decoration: none;">{{ _('← Back to Dashboard') }}</a>
+  </div>
+</div>
+
+{% endblock %}
+

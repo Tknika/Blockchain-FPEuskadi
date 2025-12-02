@@ -3,3 +3,4 @@
 Ziurtagiriak.sol
 Etiketa.sol
 Formakuntza.sol
+Ekozir.sol

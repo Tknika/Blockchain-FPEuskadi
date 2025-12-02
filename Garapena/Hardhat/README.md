@@ -6,9 +6,9 @@ Nos permitirá compilar y desplegar nuestro smart contract con ficheros de confi
 
 ## Instalación
 
-En esta misma carpeta instalamos Hardhat:
+En esta misma carpeta instalamos Hardhat (utilizar Node 20 a lo sumo):
 
-`npm install --save-dev hardhat`
+`npm install --save-dev hardhat@^2.26.0`
 
 Instalamos dependencias de Hardhat:
 
@@ -16,8 +16,9 @@ Instalamos dependencias de Hardhat:
 
 Instalamos otras dependencias que necesitemos, en este caso dependencias de OpenZeppelin para el contrato Ziurtagiriak.sol y Formakuntza.sol:
 
-`npm install --save-dev openzeppelin-v4.9.3@npm:@openzeppelin/contracts@4.9.3` 
 `npm install --save-dev openzeppelin-v5.3.0@npm:@openzeppelin/contracts@5.3.0`
+
+`npm install --save-dev openzeppelin-v4.9.3@npm:@openzeppelin/contracts@4.9.3`
 
 Es importante indicarle la versión a descargar porque los contrato están diseñados para distintan versiones.
 

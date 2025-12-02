@@ -1,0 +1,16 @@
+{
+  "name": "ekozirapp",
+  "version": "1.0.0",
+  "description": "Mediante contenedores Docker tal y como está definido en el docker-compose.yml de la carpeta Webserver junto con el fichero de las variables de entorno (ekozir.env).",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@metamask/eth-sig-util": "^8.2.0",
+    "browserify": "^17.0.1"
+  }
+}

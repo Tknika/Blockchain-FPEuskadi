@@ -96,6 +96,17 @@ services:
       - formakuntza_ziurtagiriak:/app/static/certs
     networks:
       - server_network
+
+  ekozir:
+    build:
+      context: ../Pilotoak/EkozirAPP
+      dockerfile: Dockerfile
+    hostname: ekozir
+    restart: always
+    env_file:
+      - ekozir.env
+    networks:
+      - server_network
     
   webserver:
     image: nginx:latest

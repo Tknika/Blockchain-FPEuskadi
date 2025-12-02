@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Password-Based Encryption</title>
+    <!-- Load library for deterministic ECDH key generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.6.1/elliptic.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+        input[type="password"], input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        textarea {
+            min-height: 100px;
+            font-family: monospace;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            word-break: break-all;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔐 Simple Password-Based Encryption</h1>
+        <p style="text-align: center; color: #666;">
+            No MetaMask needed! Just enter a password to encrypt and decrypt messages.
+        </p>
+
+        <!-- Login Section -->
+        <div class="section">
+            <h2>1. Login / Set Password</h2>
+            <p>Enter a password to derive your encryption key. This password is never stored or sent anywhere.</p>
+            <input type="password" id="password" placeholder="Enter your password" />
+            <button onclick="login()">Login / Set Password</button>
+            <div id="loginStatus"></div>
+        </div>
+
+        <!-- Public Key Encryption Section -->
+        <div class="section" style="border: 2px solid #4CAF50;">
+            <h2>🔑 Public Key Encryption (Share Your Public Key)</h2>
+            <p><strong>Use Case:</strong> Generate a public key from your password. Others can use this public key to encrypt messages that only you (with your password) can decrypt.</p>
+            
+            <h3>Step 1: Generate Your Public Key (Deterministic ECDH)</h3>
+            <p>Click the button below to generate a deterministic ECDH public key from your password. The same password will always generate the same public key.</p>
+            <p style="font-size: 12px; color: #666;">
+                <strong>✓ Deterministic:</strong> Same password = same key pair (even across sessions)<br>
+                <strong>✓ ECDH P-256:</strong> Modern, efficient, and secure<br>
+                <strong>✓ Hybrid Encryption:</strong> Supports messages of any length<br>
+                <strong>✓ Secure:</strong> Uses AES-256-GCM for messages<br>
+                <strong>✓ Smart Contract Ready:</strong> Small public keys (91 bytes) = lower gas costs
+            </p>
+            <button onclick="generatePublicKey()" id="generatePublicKeyBtn" disabled>Generate Public Key from Password</button>
+            <div id="publicKeyStatus"></div>
+            <div id="publicKeyResult" class="result" style="display: none;"></div>
+
+            <h3>Step 2: Encrypt Message Using Someone's Public Key (Hybrid Encryption)</h3>
+            <p>Paste someone's public key below and encrypt a message of any length. Only they can decrypt it with their password.</p>
+            <p style="font-size: 12px; color: #666;">
+                <strong>How it works:</strong> Your message is encrypted with a random AES key, and that key is encrypted with the recipient's public key. This allows messages of any length!<br>
+                <strong>Tip:</strong> If you generated a public key above, you can copy it and paste it here to test the full flow!
+            </p>
+            <textarea id="recipientPublicKey" placeholder="Paste recipient's public key (JSON format) here..."></textarea>
+            <textarea id="messageForPublicKey" placeholder="Enter message to encrypt with public key..."></textarea>
+            <button onclick="encryptWithPublicKey()" id="encryptPublicKeyBtn">Encrypt with Public Key</button>
+            <button onclick="autoFillPublicKey()" style="background: #2196F3;">Use My Generated Public Key</button>
+            <div id="encryptPublicKeyStatus"></div>
+            <div id="encryptPublicKeyResult" class="result" style="display: none;"></div>
+
+            <h3>Step 3: Decrypt Message Encrypted with Your Public Key</h3>
+            <p>If someone encrypted a message using your public key, paste it here and decrypt it with your password.</p>
+            <textarea id="publicKeyEncryptedData" placeholder="Paste encrypted data (encrypted with your public key) here..."></textarea>
+            <button onclick="decryptWithPrivateKey()" id="decryptPublicKeyBtn" disabled>Decrypt with My Password</button>
+            <div id="decryptPublicKeyStatus"></div>
+            <div id="decryptPublicKeyResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let isLoggedIn = false;
+        let ecdhKeyPair = null; // Store ECDH key pair for public key encryption
+
+        /**
+         * Convert ArrayBuffer to base64 string for storage/transmission
+         */
+        function arrayBufferToBase64(buffer) {
+            const bytes = new Uint8Array(buffer);
+            const binary = String.fromCharCode.apply(null, bytes);
+            return btoa(binary);
+        }
+
+        /**
+         * Convert base64 string to ArrayBuffer
+         */
+        function base64ToArrayBuffer(base64) {
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        /**
+         * Login: Set password for public key generation
+         */
+        async function login() {
+            const password = document.getElementById('password').value;
+            const statusDiv = document.getElementById('loginStatus');
+
+            if (!password) {
+                statusDiv.innerHTML = '<div class="status error">Please enter a password</div>';
+                return;
+            }
+
+            try {
+                isLoggedIn = true;
+                statusDiv.innerHTML = '<div class="status success">✓ Logged in! You can now generate your public key.</div>';
+                
+                // Enable public key generation buttons
+                document.getElementById('generatePublicKeyBtn').disabled = false;
+                document.getElementById('decryptPublicKeyBtn').disabled = false;
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">Error: ${error.message}</div>`;
+                console.error('Login error:', error);
+            }
+        }
+
+        /**
+         * Helper function to show status messages
+         */
+        function showStatus(elementId, message, type) {
+            const statusDiv = document.getElementById(elementId);
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        /**
+         * Copy text to clipboard
+         */
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        }
+
+        /**
+         * Derive a deterministic seed from password using PBKDF2
+         * This ensures the same password always generates the same seed
+         */
+        async function deriveSeedFromPassword(password) {
+            // Use a fixed salt for deterministic key generation
+            // This salt is public and ensures same password = same seed
+            const salt = new TextEncoder().encode('KEY_DERIVATION_SALT_v1');
+            
+            const passwordBuffer = new TextEncoder().encode(password);
+            const passwordKey = await crypto.subtle.importKey(
+                'raw',
+                passwordBuffer,
+                'PBKDF2',
+                false,
+                ['deriveBits']
+            );
+
+            // Derive 256 bits (32 bytes) of seed material
+            const seed = await crypto.subtle.deriveBits(
+                {
+                    name: 'PBKDF2',
+                    salt: salt,
+                    iterations: 100000,
+                    hash: 'SHA-256'
+                },
+                passwordKey,
+                256 // 32 bytes
+            );
+
+            return seed;
+        }
+
+        /**
+         * Generate TRULY DETERMINISTIC ECDH key pair from password using elliptic library
+         * The same password will ALWAYS generate the same key pair, even across sessions
+         * 
+         * Uses P-256 curve (NIST secp256r1) which is widely supported and secure.
+         */
+        async function generateECDHKeyPairFromPassword(password) {
+            // Check if elliptic is available
+            if (typeof elliptic === 'undefined') {
+                throw new Error('Elliptic library not loaded. Please ensure elliptic.min.js is available.');
+            }
+            
+            // Use a fixed salt for ECDH key generation to ensure determinism
+            const salt = new TextEncoder().encode('ECDH_KEY_SALT_DETERMINISTIC_v1');
+            
+            // Derive seed from password using PBKDF2
+            const seed = await deriveSeedFromPassword(password);
+            const seedBytes = new Uint8Array(seed);
+            
+            // Use HKDF to derive deterministic private key material
+            const seedKey = await crypto.subtle.importKey(
+                'raw',
+                seed,
+                'HKDF',
+                false,
+                ['deriveBits']
+            );
+            
+            // Derive 256 bits (32 bytes) for P-256 private key
+            const privateKeyBits = await crypto.subtle.deriveBits(
+                {
+                    name: 'HKDF',
+                    hash: 'SHA-256',
+                    salt: salt,
+                    info: new TextEncoder().encode('ECDH-P256-PrivateKey')
+                },
+                seedKey,
+                256 // 32 bytes for P-256
+            );
+            
+            // Convert to hex string for elliptic library
+            const privateKeyBytes = new Uint8Array(privateKeyBits);
+            const privateKeyHex = Array.from(privateKeyBytes)
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+            
+            // Create P-256 curve instance
+            const ec = new elliptic.ec('p256');
+            
+            // Create key pair from private key (deterministic)
+            // The private key must be in valid range [1, n-1] where n is curve order
+            const keyPair = ec.keyFromPrivate(privateKeyHex, 'hex');
+            
+            // Get public key point
+            const pubPoint = keyPair.getPublic();
+            
+            // Convert to JWK format for Web Crypto API
+            // P-256 public key: uncompressed format is 0x04 || x || y (65 bytes)
+            // JWK format needs x and y as base64url-encoded
+            const pubKeyX = pubPoint.getX().toArray('be', 32); // 32 bytes, big-endian
+            const pubKeyY = pubPoint.getY().toArray('be', 32); // 32 bytes, big-endian
+            
+            // Convert to base64url (JWK format)
+            const pubKeyXBase64 = arrayBufferToBase64Url(new Uint8Array(pubKeyX).buffer);
+            const pubKeyYBase64 = arrayBufferToBase64Url(new Uint8Array(pubKeyY).buffer);
+            
+            // Import public key into Web Crypto API
+            const publicKey = await crypto.subtle.importKey(
+                'jwk',
+                {
+                    kty: 'EC',
+                    crv: 'P-256',
+                    x: pubKeyXBase64,
+                    y: pubKeyYBase64,
+                    ext: true
+                },
+                {
+                    name: 'ECDH',
+                    namedCurve: 'P-256'
+                },
+                true, // extractable
+                [] // ECDH public keys don't have encrypt/decrypt operations
+            );
+            
+            // For ECDH, Web Crypto API doesn't support importing raw private keys.
+            // We'll use elliptic library for key agreement operations.
+            // Store the elliptic key pair for key agreement, and Web Crypto API public key for compatibility
+            return {
+                publicKey: publicKey, // Web Crypto API format for encryption
+                ellipticKeyPair: keyPair, // Elliptic format for key agreement
+                privateKeyHex: privateKeyHex // Store for reference
+            };
+        }
+        
+        /**
+         * Convert ArrayBuffer to base64url string (JWK format)
+         */
+        function arrayBufferToBase64Url(buffer) {
+            const bytes = new Uint8Array(buffer);
+            const base64 = btoa(String.fromCharCode.apply(null, bytes));
+            // Convert base64 to base64url (replace + with -, / with _, remove padding)
+            return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        }
+        
+        /**
+         * Convert base64url string to ArrayBuffer
+         */
+        function base64UrlToArrayBuffer(base64url) {
+            // Convert base64url to base64
+            let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+            // Add padding if needed
+            while (base64.length % 4) {
+                base64 += '=';
+            }
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+        
+        /**
+         * Convert base64url string to hex string (for elliptic library)
+         */
+        function base64UrlToHex(base64url) {
+            const buffer = base64UrlToArrayBuffer(base64url);
+            const bytes = new Uint8Array(buffer);
+            return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        /**
+         * Generate and display ECDH public key from password
+         */
+        async function generatePublicKey() {
+            const password = document.getElementById('password').value;
+            const statusDiv = document.getElementById('publicKeyStatus');
+            const resultDiv = document.getElementById('publicKeyResult');
+
+            if (!password) {
+                statusDiv.innerHTML = '<div class="status error">Please enter your password first</div>';
+                return;
+            }
+
+            try {
+                statusDiv.innerHTML = '<div class="status info">Generating ECDH key pair from password...</div>';
+
+                // Generate ECDH key pair
+                const keyPair = await generateECDHKeyPairFromPassword(password);
+                ecdhKeyPair = keyPair; // Store ECDH key pair
+                
+                // Export the public key in JWK format
+                const publicKeyJwk = await crypto.subtle.exportKey('jwk', keyPair.publicKey);
+                
+                // Create shareable public key object
+                const shareablePublicKey = {
+                    kty: publicKeyJwk.kty,
+                    crv: publicKeyJwk.crv, // curve name (P-256)
+                    x: publicKeyJwk.x, // x coordinate
+                    y: publicKeyJwk.y, // y coordinate
+                    alg: 'ECDH-P256',
+                    ext: true
+                };
+
+                // Store the shareable public key
+                window.shareablePublicKey = shareablePublicKey;
+
+                // Display the public key
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
+                    <h3>Your Public Key (ECDH-P256) - Share this with others:</h3>
+                    <p style="font-size: 12px; color: #666;">Anyone can use this public key to encrypt messages that only you can decrypt with your password.</p>
+                    <pre>${JSON.stringify(shareablePublicKey, null, 2)}</pre>
+                    <button onclick="copyToClipboard('${JSON.stringify(shareablePublicKey)}')" style="margin-top: 10px;">Copy Public Key to Clipboard</button>
+                    <p style="margin-top: 15px; font-size: 12px; color: #666;">
+                        <strong>Key Type:</strong> ECDH-P256<br>
+                        <strong>Key Size:</strong> 91 bytes (optimized for smart contracts)<br>
+                        <strong>Note:</strong> Keep your password secret! Only someone with your password can decrypt messages encrypted with this public key.
+                    </p>
+                `;
+
+                statusDiv.innerHTML = '<div class="status success">✓ ECDH-P256 public key generated! You can now share it with others.</div>';
+
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">Error generating public key: ${error.message}</div>`;
+                console.error('Public key generation error:', error);
+            }
+        }
+
+        /**
+         * Encrypt a message using someone's public key
+         */
+        async function encryptWithPublicKey() {
+            const publicKeyJson = document.getElementById('recipientPublicKey').value;
+            const message = document.getElementById('messageForPublicKey').value;
+            const statusDiv = document.getElementById('encryptPublicKeyStatus');
+            const resultDiv = document.getElementById('encryptPublicKeyResult');
+
+            if (!publicKeyJson) {
+                statusDiv.innerHTML = '<div class="status error">Please paste the recipient\'s public key</div>';
+                return;
+            }
+
+            if (!message) {
+                statusDiv.innerHTML = '<div class="status error">Please enter a message to encrypt</div>';
+                return;
+            }
+
+            try {
+                // Parse the public key
+                let publicKeyData;
+                try {
+                    publicKeyData = JSON.parse(publicKeyJson);
+                } catch (e) {
+                    throw new Error('Invalid public key format. Expected JSON.');
+                }
+
+                // Validate ECDH public key format
+                if (!publicKeyData.crv || publicKeyData.crv !== 'P-256') {
+                    throw new Error('Invalid public key format. Expected ECDH P-256 public key.');
+                }
+                
+                if (!publicKeyData.x || !publicKeyData.y) {
+                    throw new Error('Invalid ECDH public key: missing x or y coordinates');
+                }
+                
+                // Import ECDH public key (for validation, actual encryption uses elliptic)
+                const publicKey = await crypto.subtle.importKey(
+                    'jwk',
+                    publicKeyData,
+                    {
+                        name: 'ECDH',
+                        namedCurve: 'P-256'
+                    },
+                    false, // not extractable
+                    [] // ECDH public keys don't have encrypt/decrypt operations
+                );
+
+                // Convert message to ArrayBuffer
+                const messageBuffer = new TextEncoder().encode(message);
+
+                // Use hybrid encryption: AES for message, public key crypto for AES key
+                // This allows encryption of messages of any length
+                
+                // ECDH Key Agreement Protocol using elliptic library:
+                // 1. Generate ephemeral ECDH key pair for sender (using elliptic)
+                // 2. Use ECDH key agreement to derive shared secret
+                // 3. Derive AES key from shared secret
+                // 4. Encrypt message with AES
+                // 5. Send: encrypted message + sender's ephemeral public key
+                
+                // Check if elliptic is available
+                if (typeof elliptic === 'undefined') {
+                    throw new Error('Elliptic library not loaded. Required for ECDH encryption.');
+                }
+                
+                // Step 1: Generate ephemeral ECDH key pair for the sender using elliptic
+                const ec = new elliptic.ec('p256');
+                const ephemeralKeyPair = ec.genKeyPair(); // Random ephemeral key for sender
+                
+                // Export sender's ephemeral public key in JWK format
+                const ephemeralPubPoint = ephemeralKeyPair.getPublic();
+                const ephemeralX = ephemeralPubPoint.getX().toArray('be', 32);
+                const ephemeralY = ephemeralPubPoint.getY().toArray('be', 32);
+                
+                const ephemeralPublicKeyJwk = {
+                    kty: 'EC',
+                    crv: 'P-256',
+                    x: arrayBufferToBase64Url(new Uint8Array(ephemeralX).buffer),
+                    y: arrayBufferToBase64Url(new Uint8Array(ephemeralY).buffer),
+                    ext: true
+                };
+                
+                // Step 2: Use ECDH key agreement to derive shared secret using elliptic
+                // Import recipient's public key
+                const recipientPubKey = ec.keyFromPublic({
+                    x: base64UrlToHex(publicKeyData.x),
+                    y: base64UrlToHex(publicKeyData.y)
+                }, 'hex');
+                
+                // Derive shared secret: sender's private key * recipient's public key
+                const sharedSecretPoint = ephemeralKeyPair.derive(recipientPubKey.getPublic());
+                
+                // Convert shared secret point to bytes (x coordinate, 32 bytes)
+                const sharedSecretBytes = sharedSecretPoint.toArray('be', 32);
+                const sharedSecret = new Uint8Array(sharedSecretBytes).buffer;
+                
+                // Step 3: Derive AES key from shared secret using HKDF
+                const sharedSecretKey = await crypto.subtle.importKey(
+                    'raw',
+                    sharedSecret,
+                    'HKDF',
+                    false,
+                    ['deriveKey']
+                );
+                
+                // Derive AES-256-GCM key from shared secret
+                const aesKey = await crypto.subtle.deriveKey(
+                    {
+                        name: 'HKDF',
+                        hash: 'SHA-256',
+                        salt: new TextEncoder().encode('ECDH-AES-KEY-SALT'), // Fixed salt
+                        info: new TextEncoder().encode('ECDH-AES-256-GCM-Key') // Context info
+                    },
+                    sharedSecretKey,
+                    {
+                        name: 'AES-GCM',
+                        length: 256
+                    },
+                    false, // not extractable
+                    ['encrypt', 'decrypt']
+                );
+
+                // Step 4: Encrypt the message with AES-GCM
+                const iv = crypto.getRandomValues(new Uint8Array(12)); // 12 bytes for AES-GCM
+                const encryptedMessage = await crypto.subtle.encrypt(
+                    {
+                        name: 'AES-GCM',
+                        iv: iv
+                    },
+                    aesKey,
+                    messageBuffer
+                );
+
+                // Step 4: Create encrypted package
+                const encryptedPackage = {
+                    encryptedMessage: arrayBufferToBase64(encryptedMessage),
+                    iv: arrayBufferToBase64(iv),
+                    algorithm: 'HYBRID-ECDH-AES-GCM',
+                    keyType: 'ECDH',
+                    version: '1.0',
+                    ephemeralPublicKey: ephemeralPublicKeyJwk, // Sender's ephemeral public key
+                    publicKeyHash: await hashPublicKey(publicKeyData) // For verification
+                };
+
+                // Display the result
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
+                    <h3>Encrypted Message (send this to the recipient):</h3>
+                    <p style="font-size: 12px; color: #666;">Only the person with the matching private key (derived from their password) can decrypt this.</p>
+                    <pre>${JSON.stringify(encryptedPackage, null, 2)}</pre>
+                    <button onclick="copyToClipboard('${JSON.stringify(encryptedPackage)}')" style="margin-top: 10px;">Copy Encrypted Message to Clipboard</button>
+                `;
+
+                // Store for quick decryption test
+                window.lastPublicKeyEncrypted = encryptedPackage;
+
+                statusDiv.innerHTML = '<div class="status success">✓ Message encrypted with hybrid encryption! Send this to the recipient. (Supports messages of any length)</div>';
+
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">Encryption error: ${error.message}</div>`;
+                console.error('Public key encryption error:', error);
+            }
+        }
+
+        /**
+         * Decrypt a message encrypted with your public key
+         */
+        async function decryptWithPrivateKey() {
+            if (!isLoggedIn || !ecdhKeyPair) {
+                showStatus('decryptPublicKeyStatus', 'Please generate your public key first (Step 1)', 'error');
+                return;
+            }
+
+            const encryptedDataInput = document.getElementById('publicKeyEncryptedData').value;
+            const statusDiv = document.getElementById('decryptPublicKeyStatus');
+            const resultDiv = document.getElementById('decryptPublicKeyResult');
+
+            if (!encryptedDataInput) {
+                // Try to use last encrypted package if available
+                if (window.lastPublicKeyEncrypted) {
+                    document.getElementById('publicKeyEncryptedData').value = JSON.stringify(window.lastPublicKeyEncrypted, null, 2);
+                    encryptedDataInput = JSON.stringify(window.lastPublicKeyEncrypted);
+                } else {
+                    statusDiv.innerHTML = '<div class="status error">Please enter encrypted data or encrypt a message first</div>';
+                    return;
+                }
+            }
+
+            try {
+                // Parse the encrypted package
+                let encryptedPackage;
+                try {
+                    encryptedPackage = JSON.parse(encryptedDataInput);
+                } catch (e) {
+                    throw new Error('Invalid encrypted data format. Expected JSON.');
+                }
+
+                // Validate required fields for ECDH hybrid encryption
+                if (!encryptedPackage.encryptedMessage || !encryptedPackage.iv) {
+                    throw new Error('Invalid encrypted data: missing required fields (encryptedMessage, iv)');
+                }
+                
+                if (!encryptedPackage.ephemeralPublicKey) {
+                    throw new Error('Invalid ECDH encrypted data: missing ephemeralPublicKey');
+                }
+
+                // Check if this is hybrid encryption
+                const isHybrid = encryptedPackage.algorithm === 'HYBRID-ECDH-AES-GCM';
+                
+                if (!isHybrid) {
+                    throw new Error('Unsupported encryption algorithm. Expected HYBRID-ECDH-AES-GCM');
+                }
+                
+                // Regenerate key pair from password
+                const password = document.getElementById('password').value;
+                if (!password) {
+                    throw new Error('Password is required for decryption');
+                }
+                
+                // Generate deterministic ECDH key pair from password
+                const keyPair = await generateECDHKeyPairFromPassword(password);
+
+                let decryptedMessage;
+                
+                if (isHybrid) {
+                    // ECDH Key Agreement Decryption using elliptic library:
+                    // 1. Import sender's ephemeral public key using elliptic
+                    // 2. Use ECDH key agreement to derive shared secret
+                    // 3. Derive AES key from shared secret
+                    // 4. Decrypt message with AES
+                    
+                    // Check if elliptic is available
+                    if (typeof elliptic === 'undefined') {
+                        throw new Error('Elliptic library not loaded. Required for ECDH decryption.');
+                    }
+                    
+                    // Step 1: Import sender's ephemeral public key using elliptic
+                    const ec = new elliptic.ec('p256');
+                    const ephemeralPubKey = ec.keyFromPublic({
+                        x: base64UrlToHex(encryptedPackage.ephemeralPublicKey.x),
+                        y: base64UrlToHex(encryptedPackage.ephemeralPublicKey.y)
+                    }, 'hex');
+                    
+                    // Step 2: Use ECDH key agreement to derive shared secret using elliptic
+                    // The shared secret is derived from: recipient's private key + sender's public key
+                    // keyPair.ellipticKeyPair is the deterministic key pair from password
+                    const sharedSecretPoint = keyPair.ellipticKeyPair.derive(ephemeralPubKey.getPublic());
+                    
+                    // Convert shared secret point to bytes (x coordinate)
+                    const sharedSecretBytes = sharedSecretPoint.toArray('be', 32); // 32 bytes
+                    const sharedSecret = new Uint8Array(sharedSecretBytes).buffer;
+                    
+                    // Step 3: Derive AES key from shared secret using HKDF (same as encryption)
+                    const sharedSecretKey = await crypto.subtle.importKey(
+                        'raw',
+                        sharedSecret,
+                        'HKDF',
+                        false,
+                        ['deriveKey']
+                    );
+                    
+                    // Derive AES-256-GCM key from shared secret (same parameters as encryption)
+                    const aesKey = await crypto.subtle.deriveKey(
+                        {
+                            name: 'HKDF',
+                            hash: 'SHA-256',
+                            salt: new TextEncoder().encode('ECDH-AES-KEY-SALT'), // Same salt as encryption
+                            info: new TextEncoder().encode('ECDH-AES-256-GCM-Key') // Same info as encryption
+                        },
+                        sharedSecretKey,
+                        {
+                            name: 'AES-GCM',
+                            length: 256
+                        },
+                        false,
+                        ['decrypt']
+                    );
+
+                    // Step 4: Decrypt the message using AES-GCM
+                    const encryptedMessageBuffer = base64ToArrayBuffer(encryptedPackage.encryptedMessage);
+                    const iv = base64ToArrayBuffer(encryptedPackage.iv);
+                    
+                    const decryptedBuffer = await crypto.subtle.decrypt(
+                        {
+                            name: 'AES-GCM',
+                            iv: iv
+                        },
+                        aesKey,
+                        encryptedMessageBuffer
+                    );
+
+                    // Convert decrypted data back to string
+                    decryptedMessage = new TextDecoder().decode(decryptedBuffer);
+                }
+
+                // Display the result
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
+                    <h3>Decrypted Message:</h3>
+                    <pre>${decryptedMessage}</pre>
+                `;
+
+                statusDiv.innerHTML = '<div class="status success">✓ Message decrypted successfully!</div>';
+
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">Decryption error: ${error.message}</div>`;
+                console.error('Public key decryption error:', error);
+                
+                if (error.message.includes('decrypt') || error.message.includes('bad')) {
+                    statusDiv.innerHTML += '<div class="status error" style="margin-top: 10px;">This might be due to: wrong password, corrupted data, or message encrypted with a different public key.</div>';
+                }
+            }
+        }
+
+        /**
+         * Helper: Hash public key for verification
+         */
+        async function hashPublicKey(publicKeyData) {
+            const keyString = JSON.stringify(publicKeyData);
+            const keyBuffer = new TextEncoder().encode(keyString);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', keyBuffer);
+            return arrayBufferToBase64(hashBuffer).substring(0, 16); // First 16 chars for brevity
+        }
+
+        /**
+         * Auto-fill the recipient public key field with the generated public key
+         * This makes it easy to test the full flow
+         */
+        function autoFillPublicKey() {
+            if (window.shareablePublicKey) {
+                document.getElementById('recipientPublicKey').value = JSON.stringify(window.shareablePublicKey, null, 2);
+                showStatus('encryptPublicKeyStatus', 'Public key auto-filled! Now enter a message and click "Encrypt with Public Key"', 'info');
+            } else {
+                showStatus('encryptPublicKeyStatus', 'Please generate your public key first (Step 1)', 'error');
+            }
+        }
+
+        // Check if Web Crypto API is available
+        if (!window.crypto || !window.crypto.subtle) {
+            alert('Web Crypto API is not available in this browser. Please use a modern browser.');
+        }
+    </script>
+
+</body>
+
+</html>
+
