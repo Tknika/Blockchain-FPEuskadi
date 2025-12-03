@@ -30,5 +30,5 @@ RUN pybabel compile -d app/translations || echo "Warning: Translation compilatio
 
 #EXPOSE 5003
 
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5003", "wsgi:application"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5005", "wsgi:application"]
 
