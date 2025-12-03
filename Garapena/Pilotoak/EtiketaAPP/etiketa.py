@@ -9,8 +9,16 @@ from web3 import Web3
 from web3.exceptions import TimeExhausted
 from datetime import datetime, time
 from cryptography.fernet import Fernet
-import os, json
+import os, json, logging
 from thingsboard import get_devices_data
+
+# Configure logging to ensure messages appear in Docker logs
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler()]  # StreamHandler outputs to stdout/stderr
+)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -38,10 +46,10 @@ def initialize_web3(providers_string):
         try:
             web3_instance = Web3(Web3.HTTPProvider(provider_url))
             if web3_instance.is_connected():
-                print(f"Connected to Web3 provider: {provider_url}")
+                logger.info(f"Connected to Web3 provider: {provider_url}")
                 return web3_instance
         except Exception as e:
-            print(f"Failed to connect to {provider_url}: {str(e)}")
+            logger.warning(f"Failed to connect to {provider_url}: {str(e)}")
             continue
     
     raise Exception("Could not connect to any Web3 provider")

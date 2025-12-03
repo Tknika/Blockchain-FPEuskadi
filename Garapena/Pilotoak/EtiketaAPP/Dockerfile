@@ -2,6 +2,8 @@
 FROM python:3.10-slim
 
 ENV TZ=Europe/Madrid
+# Ensure Python output is unbuffered so logs appear immediately in Docker
+ENV PYTHONUNBUFFERED=1
 
 RUN apt-get update && apt-get install -y default-libmysqlclient-dev build-essential pkg-config
 
