@@ -14,7 +14,7 @@ msgid "Encrypted Group Messages for a Circular Economy — sign up with username
 msgstr "Mensajes de Grupo Cifrados para una Economía Circular — regístrate con nombre de usuario y contraseña para comenzar."
 
 msgid "Ekozir Dashboard"
-msgstr "Panel de Ekozir"
+msgstr "Panel de Control Ekozir"
 
 msgid "Logged in as:"
 msgstr "Sesión iniciada como:"

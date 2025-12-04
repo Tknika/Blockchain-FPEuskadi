@@ -14,7 +14,7 @@ msgid "Encrypted Group Messages for a Circular Economy — sign up with username
 msgstr "Ekonomia Zirkularrerako Talde Mezu Zifratuak — hasi erabiltzaile-izena eta pasahitza erabiliz."
 
 msgid "Ekozir Dashboard"
-msgstr "Ekozir Aire-panel"
+msgstr "Ekozir Kontrol-panela"
 
 msgid "Logged in as:"
 msgstr "Hau bezala saioa hasita:"
