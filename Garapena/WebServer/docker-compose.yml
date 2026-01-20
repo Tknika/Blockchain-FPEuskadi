@@ -107,7 +107,16 @@ services:
       - ekozir.env
     networks:
       - server_network
-    
+
+  esploratzaile:
+    build:
+      context: ../Pilotoak/EsploratzaileAPP
+      dockerfile: Dockerfile
+    hostname: esploratzaile
+    restart: always
+    networks:
+      - server_network
+  
   webserver:
     image: nginx:latest
     hostname: webserver
