@@ -8,7 +8,9 @@ WORKDIR /app
 COPY package*.json ./
 
 # Instalar todas las dependencias (incluyendo devDependencies para el build)
-RUN npm ci
+# RUN npm ci
+# Usar npm install en lugar de npm ci ya que package-lock.json puede no estar disponible
+RUN npm install
 
 # Copiar código fuente
 COPY . .
