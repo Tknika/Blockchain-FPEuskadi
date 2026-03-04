@@ -86,8 +86,8 @@ Una transacción representa un **cambio de estado** en la red:
 | **Remitente** | Dirección de la cuenta que firma (identificada por su clave privada). |
 | **Destinatario** | Dirección de la cuenta destino (vacía si es despliegue de contrato). |
 | **Datos (payload)** | Código del contrato o parámetros codificados de la llamada. |
-| **Gas** | Límite máximo de unidades de gas que se acepta consumir. Evita bucles infinitos y fija un techo de coste. |
-| **Nonce** | Número secuencial que evita replay y ordena las transacciones del mismo remitente. |
+| **Gas** | Límite máximo de unidades de gas que se acepta consumir. Evita bucles infinitos y fija un techo de coste. El coste real se paga en la moneda nativa de la red (p. ej. ETH): **gas consumido × precio del gas** = comisión que recibe el validador. El remitente indica además el *gas price* (o *max fee* en EIP-1559) que está dispuesto a pagar por unidad de gas. |
+| **Nonce** | Número secuencial que evita replay y ordena las transacciones del mismo remitente. **Replay:** una transacción firmada podría ser copiada y reenviada por un tercero (por ejemplo en otra red o de nuevo en la misma) para repetir la misma operación (p. ej. otra transferencia). Como cada transacción válida debe llevar el siguiente nonce esperado para esa cuenta, una vez ejecutada ese nonce ya está "usado" y la misma transacción no puede volver a incluirse: quedaría invalidada. |
 
 #### 🔹 Consenso
 
@@ -116,8 +116,8 @@ Blockchain no es solo una base de datos; es un **registro histórico secuencial*
 En plataformas como Ethereum o Hyperledger Besu, el **estado global** (balances, contratos, almacenamiento) no se guarda dentro de cada bloque. En su lugar:
 
 - Se usa una estructura de datos tipo **Trie** (árbol de prefijos).
-- El bloque solo contiene la **raíz** (Root Hash) de este árbol.
-- Esto permite a clientes ligeros verificar un saldo sin descargar toda la blockchain: basta con la ruta desde la raíz hasta la hoja correspondiente.
+- El bloque solo contiene la **raíz** (Root Hash) de este árbol. Es el hash que representa el nodo superior de una estructura de datos tipo árbol (Trie/Merkle Tree). Este hash se calcula a partir de todos los datos almacenados en las hojas del árbol y sus ramas intermedias. Cambiar un sólo dato en cualquier hoja cambia la raíz.
+- Así, almacenar sólo la raíz en el bloque permite comprobar de forma eficiente (mediante pruebas de inclusión) que una transacción, estado o recibo está realmente incluido sin revelar ni almacenar todo el árbol en cada bloque. Esto permite a clientes ligeros verificar un saldo sin descargar toda la blockchain: basta con la ruta desde la raíz hasta la hoja correspondiente.
 
 ### Anatomía de un bloque
 
@@ -135,14 +135,14 @@ Cada bloque tiene dos partes principales:
 | **Nonce** | Número usado una vez, exclusivo de PoW (prueba de trabajo) para demostrar el trabajo realizado; en PoA (prueba de autoridad) se fija a cero o a un valor convencional. |
 | **Timestamp** | Marca de tiempo Unix cuando se creó el bloque. Ayuda a la sincronización y control del tiempo en la red. |
 | **UncleHash (OmmersHash)** | Hash de la lista de "tíos" (bloques huérfanos reconocidos). En PoA suele estar vacío, pero sigue presente en la cabecera. |
-| **Coinbase (Beneficiary)** | Dirección del validador que propone el bloque y recibe las comisiones. |
-| **LogsBloom** | Filtro de Bloom que permite buscar eventos rápidamente sin leer todo el bloque. |
+| **Coinbase (Beneficiary)** | Dirección del validador que propone el bloque y recibe las comisiones. Aquí es donde el minero o validador reciben la recompensa por minar el bloque. |
+| **LogsBloom** | Filtro de Bloom (estructura de datos probabilística que permite verificar rápidamente si un evento podría estar presente, aunque con posibles falsos positivos), utilizado para buscar eventos de forma eficiente sin leer todo el bloque. |
 | **Difficulty** | Dificultad requerida para minar (PoW) o un valor fijo/testimonial en PoA. |
 | **ExtraData** | En PoA, incluye la firma del validador y datos del consenso. Puede tener datos adicionales definidos por la red. |
-| **Number** | Número de bloque en la cadena (altura). Permite orden cronológico. |
+| **Number** | Número de bloque en la cadena (altura). Permite mantener un orden cronológico. |
 | **GasLimit** | Máximo de gas permitido para las transacciones del bloque. Define la capacidad de procesamiento. |
 | **GasUsed** | Gas consumido realmente por las transacciones del bloque. |
-| **MixHash** | En PoW contiene información de validación del proceso de minado; en PoA, suele ser un valor fijo. |
+| **MixHash** | En PoW contiene información de validación del proceso de minado; en PoA, suele ser un valor fijo. Esta validación consiste en que, junto con el Nonce, el MixHash demuestra que se ha realizado el trabajo computacional necesario (por ejemplo, que el hash del bloque cumple el objetivo de dificultad). |
 | **StateRoot** | Raíz del árbol de estado global *después* de ejecutar las transacciones del bloque. |
 | **TransactionsRoot** | Raíz del árbol que contiene todas las transacciones del bloque. |
 | **ReceiptsRoot** | Raíz del árbol de recibos (logs de eventos de Smart Contracts). Crucial para indexadores y dApps. |
@@ -158,7 +158,7 @@ Cada bloque tiene dos partes principales:
 
 ## 1.4 La EVM (Ethereum Virtual Machine) – El motor de ejecución
 
-Hyperledger Besu implementa la **EVM**, la misma máquina virtual que Ethereum. Esto garantiza compatibilidad con contratos y herramientas del ecosistema Ethereum.
+La **EVM** (Ethereum Virtual Machine) es el entorno de ejecución para los smart contracts en Ethereum y redes compatibles como Hyperledger Besu. Es una máquina virtual determinista, basada en pila, que ejecuta bytecode de contratos de forma idéntica en todos los nodos, garantizando que el estado de la blockchain evolucione de forma consistente y verificable. La EVM aísla los contratos del sistema anfitrión, define cómo se procesan transacciones y contratos, y regula el consumo de recursos mediante el coste de gas, asegurando la seguridad y el funcionamiento autónomo de la red.
 
 ### Dónde y cuándo se ejecuta el código en la EVM
 
@@ -178,9 +178,9 @@ Los Smart Contracts se escriben típicamente en **Solidity**, un lenguaje de alt
 |---------------------|-------------|----------------|
 | **`.sol`** | Código fuente del contrato en Solidity. Contiene las funciones, variables de estado y lógica que el desarrollador escribe. | Es lo que se edita. No se sube a la blockchain. |
 | **`.abi`** (Application Binary Interface) | Archivo JSON que describe la interfaz del contrato: nombres de funciones, parámetros, tipos de retorno, eventos. No contiene lógica ni bytecode. | Permite que aplicaciones externas (DApps, scripts, wallets) sepan cómo codificar las llamadas y decodificar los resultados. Es la "interfaz" entre el frontend y el contrato desplegado. |
-| **Bytecode** | Código compilado (opcodes de la EVM). Suele generarse como string hexadecimal. Es lo que la EVM ejecuta. | Se incluye en el campo `data` de la transacción de despliegue. Una vez desplegado, se almacena en la blockchain asociado a la dirección del contrato. |
+| **`.bytecode`** | Código compilado (opcodes de la EVM). Suele generarse como string hexadecimal. Es lo que la EVM ejecuta. | Se incluye en el campo `data` de la transacción de despliegue. Una vez desplegado, se almacena en la blockchain asociado a la dirección del contrato. |
 
-**Flujo típico:** El desarrollador escribe `MiContrato.sol` → el compilador (ej. Solidity `solc`) genera el bytecode y el ABI → el bytecode se despliega en la red → las aplicaciones usan el ABI para construir y enviar transacciones que llaman a las funciones del contrato.
+**Flujo típico:** El desarrollador escribe `MiContrato.sol` → el compilador genera el bytecode (`MiContrato.bytecode`) y el ABI (`MiContrato.abi`)→ el bytecode se despliega en la red → las aplicaciones usan el ABI para construir y enviar transacciones que llaman a las funciones del contrato.
 
 **Importante – Versión de la EVM:** La EVM evoluciona con cada hard fork (London, Shanghai, Cancún, etc.). Cada red define en su `genesis.json` qué versión de EVM activa (por ejemplo, mediante bloques de activación de EIPs). Es **crucial compilar el contrato con la versión de EVM adecuada a la red** donde se desplegará. Si compilamos para una EVM más nueva que la de la red, el bytecode puede usar opcodes inexistentes y la transacción fallará. Si compilamos para una EVM más antigua, perdemos optimizaciones o funcionalidades. En Solidity se especifica con `pragma solidity ^0.8.0` y, en el compilador, con la opción `--evm-version` (ej. `paris`, `shanghai`).
 
@@ -243,7 +243,7 @@ La EVM es **Turing-completa**: puede ejecutar cualquier algoritmo, incluidos buc
 - Finanzas descentralizadas (DeFi).
 - NFTs y aplicaciones descentralizadas abiertas.
 
-### 🔐 Redes privadas (nuestro caso)
+### 🔐 Redes privadas
 
 **Ejemplos:** Hyperledger Besu, Fabric
 
@@ -303,9 +303,9 @@ El consenso es el mecanismo que permite a los nodos acordar cuál es el siguient
 - **Desventajas:** Mayor centralización (pocos validadores activos).
 - **Ejemplo:** EOS.
 
-### ⭐ Proof of Authority (PoA) – Caso práctico (Hyperledger Besu)
+### Proof of Authority (PoA)
 
-PoA sustituye la dificultad matemática (PoW) o económica (PoS) por la **identidad digital**. Los validadores son conocidos y autorizados; su reputación actúa como garantía.
+PoA sustituye la dificultad matemática (PoW) o económica (PoS) por la **identidad digital**. Los validadores son conocidos y autorizados.
 
 **Características:**
 
@@ -314,16 +314,23 @@ PoA sustituye la dificultad matemática (PoW) o económica (PoS) por la **identi
 - No requiere minería ni staking económico.
 - Eficiente y adecuado para redes privadas y de consorcio.
 
-**Implementaciones en Hyperledger Besu:**
+---
+
+## 2.3 Hyperledger Besu - Nuestra implementación práctica
+
+Las prácticas de este curso las vamos a desarrollar desplegando una [red privada Hyperledger Besu](https://besu.hyperledger.org/private-networks) con conseso PoA. Es un [software de código abierto](https://github.com/hyperledger/besu/), se sigue desarrollando de forma activa e implementa la **EVM**, la misma máquina virtual que Ethereum, esto garantiza compatibilidad con contratos y herramientas del ecosistema Ethereum.
+
+**Implementaciones de PoA en Hyperledger Besu:**
 
 | Opción | Uso recomendado |
 |--------|------------------|
-| **Clique PoA** | Redes de desarrollo o prueba. Más simple. |
-| **QBFT (Quorum Byzantine Fault Tolerance)** | Producción. Tolerancia a fallos bizantinos. |
+| **Clique PoA** | Utilizado principalmente en redes de desarrollo o entornos de prueba, Clique es un protocolo de Proof of Authority sencillo y fácil de configurar. Es ideal para escenarios donde se prioriza la rapidez en las pruebas y la facilidad de despliegue sobre la seguridad avanzada. No es recomendable para entornos de producción debido a su simplicidad y menor tolerancia a fallos. |
+| **IBFT (Istanbul Byzantine Fault Tolerance)** | Producción y consorcios. Variante BFT ampliamente soportada en múltiples redes empresariales; adecuado para entornos donde se requiere tolerancia a fallos y redundancia. |
+| **QBFT (Quorum Byzantine Fault Tolerance)** | Diseñado para entornos de producción, QBFT ofrece tolerancia a fallos bizantinos, permitiendo que la red siga operativa incluso si algunos nodos actúan de forma maliciosa o fallan. Este protocolo está pensado para redes donde la seguridad, la fiabilidad y la resiliencia ante fallos son prioritarias, garantizando mayor robustez y consistencia en consorcios o empresas. |
 
-#### 🔹 Cómo funciona QBFT
+#### 🔹 Cómo funciona QBFT (nuestro caso)
 
-QBFT es un protocolo BFT (Byzantine Fault Tolerance) que extiende PoA. Sus fases son:
+QBFT es un protocolo BFT (Byzantine Fault Tolerance) que implementa PoA (prueba de autoridad). Sus fases son:
 
 1. **Pre-Prepare:** El proponente (validador seleccionado por turno) envía el bloque propuesto a los demás.
 2. **Prepare:** Los validadores confirman la recepción y validez del bloque.
@@ -340,9 +347,15 @@ QBFT es un protocolo BFT (Byzantine Fault Tolerance) que extiende PoA. Sus fases
 
 ---
 
-# Parte 3: Operación de redes Blockchain
+# Parte 3: Despliegue de una red Blockchain preconfigurada
 
-## 3.1 Comunicación entre nodos
+Vamos a desplegar una red blockchain Hyperledger Besu **preconfigurada** en 4 máquinas virtuales que pueden comunicarse entre sí y analizaremos su funcionamiento.
+
+---
+
+# Parte 4: Configuración de redes Blockchain
+
+## 4.1 Comunicación entre nodos
 
 ### Protocolo P2P (peer-to-peer)
 
@@ -371,7 +384,7 @@ Hyperledger Besu expone:
 
 ---
 
-## 3.2 Seguridad en redes Blockchain
+## 4.2 Seguridad en redes Blockchain
 
 ### Criptografía
 
@@ -396,7 +409,7 @@ En redes privadas:
 
 ---
 
-## 3.3 Monitorización y mantenimiento
+## 4.3 Monitorización y mantenimiento
 
 ### Indicadores clave
 
@@ -421,6 +434,10 @@ En redes privadas:
 
 ---
 
+# Parte 5: Configuración y despliegue de una red Blockchain
+
+---
+
 # Anexo: Glosario técnico
 
 | Término | Definición |
@@ -432,5 +449,7 @@ En redes privadas:
 | **Enode** | URI que identifica un nodo en la red P2P (clave pública + IP + puerto). |
 | **Genesis** | Bloque inicial (bloque 0) que define los parámetros de la red. Debe ser idéntico en todos los nodos. |
 | **Ledger** | Conjunto formado por la cadena de bloques y el estado global derivado. |
+| **Hard fork** | Modificación importante y no retrocompatible del protocolo, que obliga a actualizar los nodos. En Ethereum, los hard forks se utilizan para introducir nuevas funcionalidades o corregir errores críticos. |
+| **Byzantine Fault Tolerance (BFT)** | Capacidad de una red distribuida para seguir operando correctamente incluso si algunos de sus nodos actúan de forma maliciosa o fallan de manera arbitraria. En blockchain, es crucial para que el consenso sea seguro frente a fallos o ataques de nodos. |
 
 ---
