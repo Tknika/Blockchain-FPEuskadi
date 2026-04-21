@@ -1,0 +1,178 @@
+# Hedapena Ansible Playbook: desplegar Hyperledger Besu en los nodos y el servidor web.
+# Se solicitan una vez el usuario SSH y su contraseña (los mismos para todas las máquinas).
+# Comando para ejecutar: ansible-playbook -i Hedapena/inventory.yml Hedapena/hedapena-AnsiblePlaybook.yml --ask-become-pass
+
+- name: Instalar Docker y Docker Compose en todas las máquinas
+  hosts: all_servers
+  become: true
+  vars_prompt:
+    - name: ssh_user
+      prompt: "Usuario SSH para todas las máquinas"
+      private: false
+    - name: ssh_password
+      prompt: "Contraseña SSH para el usuario introducido (la misma para todas las máquinas)"
+      private: true
+  vars:
+    ansible_user: "{{ ssh_user }}"
+    ansible_password: "{{ ssh_password }}"
+    deploy_home: "/home/{{ ssh_user }}"
+  tasks:
+    # Guardar usuario, contraseña y home para reutilizar en los siguientes plays (webserver, besu_nodes).
+    - name: Cache SSH runtime variables for later plays
+      ansible.builtin.set_fact:
+        cached_ssh_user: "{{ ssh_user }}"
+        cached_ssh_password: "{{ ssh_password }}"
+        cached_deploy_home: "{{ deploy_home }}"
+        cacheable: true
+
+    # Instalar Docker y Docker Compose v2 desde los repositorios de Ubuntu (docker.io, docker-compose-v2).
+    - name: Install Docker and Docker Compose v2
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - docker-compose-v2
+        state: present
+        update_cache: true
+
+    - name: Asegurar que el servicio Docker está iniciado y habilitado
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Añadir el usuario SSH al grupo docker
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: true
+
+- name: Desplegar el servidor web (WebServer + Pilotoak) e iniciar los servicios
+  hosts: webserver
+  become: true
+  vars:
+    ansible_user: "{{ cached_ssh_user }}"
+    ansible_password: "{{ cached_ssh_password }}"
+    deploy_home: "{{ cached_deploy_home }}"
+    repo_root: "{{ playbook_dir }}/.."
+  tasks:
+    - name: Crear la carpeta web en el directorio home del usuario SSH
+      ansible.builtin.file:
+        path: "{{ deploy_home }}/web"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0755"
+
+    # Copiar desde el nodo control a remoto (usa conexión Ansible, funciona con autenticación por contraseña).
+    - name: Deploy WebServer files to ~/web/WebServer
+      ansible.builtin.copy:
+        src: "{{ repo_root }}/Garapena/WebServer/"
+        dest: "{{ deploy_home }}/web/WebServer/"
+        mode: preserve
+
+    - name: Desplegar los archivos de Pilotoak en ~/web/Pilotoak
+      ansible.builtin.copy:
+        src: "{{ repo_root }}/Garapena/Pilotoak/"
+        dest: "{{ deploy_home }}/web/Pilotoak/"
+        mode: preserve
+
+    - name: Asignar la propiedad de la carpeta web al usuario ansible_user
+      ansible.builtin.file:
+        path: "{{ deploy_home }}/web"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        recurse: true
+
+    - name: Iniciar el stack del servidor web con docker compose
+      ansible.builtin.shell:
+        cmd: docker compose -f docker-compose.yml up -d
+        chdir: "{{ deploy_home }}/web/WebServer"
+      changed_when: true
+
+- name: Desplegar los ficheros de configuración de Besu en los nodos Besu e iniciar cada nodo
+  hosts: besu_nodes
+  become: true
+  vars:
+    ansible_user: "{{ cached_ssh_user }}"
+    ansible_password: "{{ cached_ssh_password }}"
+    deploy_home: "{{ cached_deploy_home }}"
+    hedapena_root: "{{ playbook_dir }}"
+    # Directorios mínimos esperados por el docker-compose y la configuración de Besu.
+    hedapena_directories:
+      - "{{ deploy_home }}/besuNode"
+      - "{{ deploy_home }}/besuNode/configNodes"
+      - "{{ deploy_home }}/besuNode/networkFiles"
+      - "{{ deploy_home }}/besuNode/networkFiles/keys"
+      - "{{ deploy_home }}/besuNode/networkFiles/JWTkeys"
+      - "{{ deploy_home }}/besuNode/Node"
+      - "{{ deploy_home }}/besuNode/Node/data"
+    # Ficheros comunes a todos los nodos validadores.
+    hedapena_common_files:
+      - src: "{{ hedapena_root }}/configNodes/node-config.toml"
+        dest: "{{ deploy_home }}/besuNode/configNodes/node-config.toml"
+      - src: "{{ hedapena_root }}/networkFiles/genesis.json"
+        dest: "{{ deploy_home }}/besuNode/networkFiles/genesis.json"
+      - src: "{{ hedapena_root }}/networkFiles/static-nodes.json"
+        dest: "{{ deploy_home }}/besuNode/networkFiles/static-nodes.json"
+      - src: "{{ hedapena_root }}/networkFiles/nodes_permissions_config.toml"
+        dest: "{{ deploy_home }}/besuNode/networkFiles/nodes_permissions_config.toml"
+      - src: "{{ hedapena_root }}/networkFiles/accounts_permissions_config.toml"
+        dest: "{{ deploy_home }}/besuNode/networkFiles/accounts_permissions_config.toml"
+      - src: "{{ hedapena_root }}/networkFiles/JWTkeys/publicRSAKeyOperator.pem"
+        dest: "{{ deploy_home }}/besuNode/networkFiles/JWTkeys/publicRSAKeyOperator.pem"
+    # Ficheros específicos del nodo, seleccionados mediante node_index desde inventory.yml.
+    hedapena_node_files:
+      - src: "{{ hedapena_root }}/docker-compose{{ node_index }}.yml"
+        dest: "{{ deploy_home }}/besuNode/docker-compose{{ node_index }}.yml"
+      - src: "{{ hedapena_root }}/networkFiles/keys/key{{ node_index }}"
+        dest: "{{ deploy_home }}/besuNode/networkFiles/keys/key{{ node_index }}"
+      - src: "{{ hedapena_root }}/networkFiles/JWTkeys/JWT_{{ node_index }}"
+        dest: "{{ deploy_home }}/besuNode/networkFiles/JWTkeys/JWT_{{ node_index }}"
+  tasks:
+    - name: Crear la estructura de carpetas necesaria en ~/besuNode
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0755"
+      loop: "{{ hedapena_directories }}"
+
+    # Copiar solo la configuración compartida por todos los nodos.
+    - name: Copiar los ficheros comunes a todos los nodos
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: preserve
+      loop: "{{ hedapena_common_files }}"
+      notify: Recrear nodo Besu
+
+    # Copiar únicamente los ficheros propios del nodo actual según node_index.
+    - name: Copiar los ficheros específicos de cada nodo
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: preserve
+      loop: "{{ hedapena_node_files }}"
+      notify: Recrear nodo Besu
+
+    - name: Asignar la propiedad de la carpeta besuNode al usuario SSH
+      ansible.builtin.file:
+        path: "{{ deploy_home }}/besuNode"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        recurse: true
+
+    - name: Iniciar el nodo Besu con su fichero docker-compose en cualquier caso
+      ansible.builtin.shell:
+        cmd: docker compose -f docker-compose{{ node_index }}.yml up -d
+        chdir: "{{ deploy_home }}/besuNode"
+
+  # Handlers: se ejecutan al final del play solo si alguna tarea los notificó por haber cambiado.
+  handlers:
+    - name: Recrear nodo Besu
+      ansible.builtin.shell:
+        cmd: docker compose -f docker-compose{{ node_index }}.yml up -d --force-recreate
+        chdir: "{{ deploy_home }}/besuNode"
