@@ -126,6 +126,13 @@
         cmd: docker compose -f docker-compose{{ node_index }}.yml up -d
         chdir: "{{ deploy_home }}/besuNode"
 
+  # Handlers: se ejecutan al final del play solo si alguna tarea los notificó por haber cambiado.
+  handlers:
+    - name: Recrear nodo Besu
+      ansible.builtin.shell:
+        cmd: docker compose -f docker-compose{{ node_index }}.yml up -d --force-recreate
+        chdir: "{{ deploy_home }}/besuNode"
+        
 - name: Desplegar el servidor web (WebServer + Pilotoak) e iniciar los servicios
   hosts: webserver
   become: true
@@ -169,10 +176,3 @@
         cmd: docker compose -f docker-compose.yml up -d
         chdir: "{{ deploy_home }}/web/WebServer"
       changed_when: true
-      
-  # Handlers: se ejecutan al final del play solo si alguna tarea los notificó por haber cambiado.
-  handlers:
-    - name: Recrear nodo Besu
-      ansible.builtin.shell:
-        cmd: docker compose -f docker-compose{{ node_index }}.yml up -d --force-recreate
-        chdir: "{{ deploy_home }}/besuNode"
