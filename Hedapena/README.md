@@ -94,11 +94,24 @@ En el repositorio actual se proporcionan las claves de cuatro usuarios y sus tok
 
 ### 3.1.- Nodos validadores
 
+### 3.1.1.- Despliegue manual
+
 Una vez copiada la configuración a cada nodo basta con ejecutar:
 
 `docker compose -f docker-composeX.yml up`
 
 donde X es el número de nodo en el que nos encontramos. Tras ejecutarlo en todos los nodos el blockchain debería comenzar a crear bloques.
+
+### 3.1.2.- Despliegue con Ansible
+
+Se puede desplegar la red de desarrollo situándonos en la máquina con IP 192.168.100.5 (que hará también de servidor web) y ejecutando el Playbook de Ansible: 
+
+- Clonamos el repositorio: `git clone https://github.com/Tknika/Blockchain-FPEuskadi.git`
+- Instalamos Ansible: `sudo apt install ansible sshpass`
+- Hacemos que los 4 nodos sean conocidos para ssh: `ssh-keyscan -t ed25519 -H 192.168.100.1 192.168.100.2 192.168.100.3 192.168.100.4  >> ~/.ssh/known_hosts`
+- Nos situamos en el proyecto clonado: `cd Blockchain-FPEuskadi`
+- Probamos la conectividad para Ansible: `ansible -i Hedapena/inventory.yml -m ping all --ask-pass`
+- Ejecutamos el Playbook: `ansible-playbook -i Hedapena/inventory.yml Hedapena/hedapena-AnsiblePlaybook.yml --ask-become-pass`
 
 ### 3.2.- Nodos NO validadores
 
