@@ -46,50 +46,6 @@
         groups: docker
         append: true
 
-- name: Desplegar el servidor web (WebServer + Pilotoak) e iniciar los servicios
-  hosts: webserver
-  become: true
-  vars:
-    ansible_user: "{{ cached_ssh_user }}"
-    ansible_password: "{{ cached_ssh_password }}"
-    deploy_home: "{{ cached_deploy_home }}"
-    repo_root: "{{ playbook_dir }}/.."
-  tasks:
-    - name: Crear la carpeta web en el directorio home del usuario SSH
-      ansible.builtin.file:
-        path: "{{ deploy_home }}/web"
-        state: directory
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-        mode: "0755"
-
-    # Copiar desde el nodo control a remoto (usa conexión Ansible, funciona con autenticación por contraseña).
-    - name: Deploy WebServer files to ~/web/WebServer
-      ansible.builtin.copy:
-        src: "{{ repo_root }}/Garapena/WebServer/"
-        dest: "{{ deploy_home }}/web/WebServer/"
-        mode: preserve
-
-    - name: Desplegar los archivos de Pilotoak en ~/web/Pilotoak
-      ansible.builtin.copy:
-        src: "{{ repo_root }}/Garapena/Pilotoak/"
-        dest: "{{ deploy_home }}/web/Pilotoak/"
-        mode: preserve
-
-    - name: Asignar la propiedad de la carpeta web al usuario ansible_user
-      ansible.builtin.file:
-        path: "{{ deploy_home }}/web"
-        state: directory
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-        recurse: true
-
-    - name: Iniciar el stack del servidor web con docker compose
-      ansible.builtin.shell:
-        cmd: docker compose -f docker-compose.yml up -d
-        chdir: "{{ deploy_home }}/web/WebServer"
-      changed_when: true
-
 - name: Desplegar los ficheros de configuración de Besu en los nodos Besu e iniciar cada nodo
   hosts: besu_nodes
   become: true
@@ -170,6 +126,50 @@
         cmd: docker compose -f docker-compose{{ node_index }}.yml up -d
         chdir: "{{ deploy_home }}/besuNode"
 
+- name: Desplegar el servidor web (WebServer + Pilotoak) e iniciar los servicios
+  hosts: webserver
+  become: true
+  vars:
+    ansible_user: "{{ cached_ssh_user }}"
+    ansible_password: "{{ cached_ssh_password }}"
+    deploy_home: "{{ cached_deploy_home }}"
+    repo_root: "{{ playbook_dir }}/.."
+  tasks:
+    - name: Crear la carpeta web en el directorio home del usuario SSH
+      ansible.builtin.file:
+        path: "{{ deploy_home }}/web"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0755"
+
+    # Copiar desde el nodo control a remoto (usa conexión Ansible, funciona con autenticación por contraseña).
+    - name: Deploy WebServer files to ~/web/WebServer
+      ansible.builtin.copy:
+        src: "{{ repo_root }}/Garapena/WebServer/"
+        dest: "{{ deploy_home }}/web/WebServer/"
+        mode: preserve
+
+    - name: Desplegar los archivos de Pilotoak en ~/web/Pilotoak
+      ansible.builtin.copy:
+        src: "{{ repo_root }}/Garapena/Pilotoak/"
+        dest: "{{ deploy_home }}/web/Pilotoak/"
+        mode: preserve
+
+    - name: Asignar la propiedad de la carpeta web al usuario ansible_user
+      ansible.builtin.file:
+        path: "{{ deploy_home }}/web"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        recurse: true
+
+    - name: Iniciar el stack del servidor web con docker compose
+      ansible.builtin.shell:
+        cmd: docker compose -f docker-compose.yml up -d
+        chdir: "{{ deploy_home }}/web/WebServer"
+      changed_when: true
+      
   # Handlers: se ejecutan al final del play solo si alguna tarea los notificó por haber cambiado.
   handlers:
     - name: Recrear nodo Besu
