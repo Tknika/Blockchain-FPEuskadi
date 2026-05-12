@@ -245,8 +245,9 @@ if __name__ == "__main__":
     while True:  # Reconnection loop
         try:
             if not test_connection(WS_URL):
-                logging.info("Saliendo debido a fallo de conexión")
-                exit(1)
+                logging.info(f"Fallo de conexión, reintentando en {RECONNECT_TIME} segundos...")
+                time.sleep(RECONNECT_TIME)
+                continue
             
             # Enable trace for debugging websocket
             #websocket.enableTrace(True)
