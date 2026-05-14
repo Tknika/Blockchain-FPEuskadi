@@ -2,7 +2,6 @@ var _ = require('lodash');
 var logger = require('./lib/utils/logger');
 var chalk = require('chalk');
 var http = require('http');
-const v8 = require('v8')
 
 // Init WS SECRET
 var WS_SECRET;
@@ -98,33 +97,44 @@ Nodes.setChartsCallback(function (err, charts)
 	}
 });
 
-let connections=0
-const C_LIMIT = 5
+let activeApiConnections = 0
+let apiConnectionAttempts = 0
+const MAX_API_CONNECTIONS = parseInt(process.env.MAX_API_CONNECTIONS || '100', 10)
+const API_CONNECTION_BURST_LIMIT = parseInt(process.env.API_CONNECTION_BURST_LIMIT || '120', 10)
 const C_RESET_MS = 30_000
 setInterval(() => {
-	if(connections > C_LIMIT){
-		const stats = v8.getHeapStatistics();
-		if(stats.used_heap_size/1000000 < 1000){
-			console.success('API', 'CON', 'RESET-LIMIT(MB) ', Math.floor(stats.used_heap_size/1000000), 'CON: ' + connections, 'WINDOW(sec): ', Math.floor(C_RESET_MS/1000) , JSON.stringify(stats));
-			connections=0
-		}else{
-			console.success('API', 'CON', 'RESET-SKIP(MB) ', Math.floor(stats.used_heap_size/1000000), 'CON: ' + connections, 'WINDOW(sec):', Math.floor(C_RESET_MS/1000), JSON.stringify(stats));
-		}
-	}
+	// Reset only the burst counter; active connections are tracked by socket lifecycle.
+	if(apiConnectionAttempts > 0)
+		console.success('API', 'CON', 'RESET-BURST', 'ATTEMPTS: ' + apiConnectionAttempts, 'ACTIVE: ' + activeApiConnections, 'WINDOW(sec): ', Math.floor(C_RESET_MS/1000));
+
+	apiConnectionAttempts = 0
 }, C_RESET_MS);
 
 
 // Init API Socket events
 api.on('connection', function (spark)
 {
-	if(connections > C_LIMIT){
-		// connection limit reached for the window, skip proceeding with connection
-		console.success('API', 'CON', 'LIMIT: '+connections, spark.address.ip);
+	apiConnectionAttempts++
+
+	if(activeApiConnections >= MAX_API_CONNECTIONS || apiConnectionAttempts > API_CONNECTION_BURST_LIMIT){
+		// Keep a high burst allowance so 20-30 nodes can reconnect after a server restart.
+		console.success('API', 'CON', 'LIMIT', 'ACTIVE: ' + activeApiConnections, 'ATTEMPTS: ' + apiConnectionAttempts, 'IP: ' + spark.address.ip);
 		spark.end(undefined, { reconnect: true }); // trigger a client-side reconnection
 		return false
 	}
-	connections++
-	console.info('API', 'CON', 'Open:', spark.address.ip);
+
+	activeApiConnections++
+	let connectionClosed = false
+	const releaseApiConnection = function ()
+	{
+		if(connectionClosed)
+			return
+
+		connectionClosed = true
+		activeApiConnections = Math.max(activeApiConnections - 1, 0)
+	}
+
+	console.info('API', 'CON', 'Open:', spark.address.ip, 'ACTIVE:', activeApiConnections);
 
 	spark.on('hello', function (data)
 	{
@@ -132,6 +142,7 @@ api.on('connection', function (spark)
 
 		if( _.isUndefined(data.secret) || WS_SECRET.indexOf(data.secret) === -1 || banned.indexOf(spark.address.ip) >= 0 || _.isUndefined(data.id) || reserved.indexOf(data.id) >= 0 )
 		{
+			releaseApiConnection()
 			spark.end(undefined, { reconnect: false });
 			console.error('API', 'CON', 'Closed - wrong auth', data);
 
@@ -156,7 +167,7 @@ api.on('connection', function (spark)
 				{
 					spark.emit('ready');
 
-					console.success('API', 'CON', 'Connected: ' + connections, data.id);
+					console.success('API', 'CON', 'Connected: ' + activeApiConnections, data.id);
 
 					client.write({
 						action: 'add',
@@ -370,6 +381,8 @@ api.on('connection', function (spark)
 
 	spark.on('end', function (data)
 	{
+		releaseApiConnection()
+
 		Nodes.inactive(spark.id, function (err, stats)
 		{
 			if(err !== null)
