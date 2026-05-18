@@ -116,7 +116,49 @@ services:
     restart: always
     networks:
       - server_network
-  
+
+  studio-backend:
+    build:
+      context: ../Pilotoak/Studio/backend
+    container_name: studio-backend
+    hostname: studio-backend
+    restart: always
+    environment:
+      PORT: 3001
+    #expose:
+    #  - "3001"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      server_network:
+        aliases:
+          - backend
+
+  studio:
+    build:
+      context: ../Pilotoak/Studio/frontend
+      args:
+        VITE_BESU_RPC_URL: ${VITE_BESU_RPC_URL:-http://192.168.100.1:8545}
+        VITE_CHAIN_ID: ${VITE_CHAIN_ID:-1337}
+        VITE_NETWORK_NAME: ${VITE_NETWORK_NAME:-Besu}
+        VITE_NATIVE_CURRENCY_NAME: ${VITE_NATIVE_CURRENCY_NAME:-Ether}
+        VITE_NATIVE_CURRENCY_SYMBOL: ${VITE_NATIVE_CURRENCY_SYMBOL:-ETH}
+        VITE_BLOCK_EXPLORER_URL: ${VITE_BLOCK_EXPLORER_URL:-http://esploratzaile.localhost}
+    container_name: studio
+    hostname: studio
+    restart: always
+    depends_on:
+      studio-backend:
+        condition: service_healthy
+    #expose:
+    #  - "5007"
+    networks:
+      - server_network
+
   webserver:
     image: nginx:latest
     hostname: webserver

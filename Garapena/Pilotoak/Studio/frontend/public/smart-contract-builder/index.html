@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartContract Builder — Visual Solidity Editor</title>
+  <link rel="stylesheet" href="css/styles.css?v=20260413-4" />
+
+  <!-- Blockly v9.3.3 (versión estable con API XML clásica) -->
+  <script src="https://unpkg.com/blockly@9.3.3/blockly.min.js"></script>
+  <!-- highlight.js para resaltar el código Solidity generado -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════
+       HEADER
+  ═══════════════════════════════════════════════════ -->
+  <header class="app-header">
+    <div class="header-left">
+      <span class="logo-icon">⬡</span>
+      <div class="header-titles">
+        <h1 id="builderAppTitle">SmartContract Builder</h1>
+        <p id="builderAppSubtitle">Crea contratos inteligentes de forma visual — sin escribir código</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <button id="btn-export" class="btn btn-accent builder-export-only" title="Enviar el contrato generado al Playground">
+        ↗ Usar en Playground
+      </button>
+      <button id="btn-generate" class="btn btn-primary">
+        ⚡ Generar Solidity
+      </button>
+      <button id="btn-clear" class="btn btn-secondary" title="Limpiar workspace">
+        🗑 Limpiar
+      </button>
+      <button id="btn-toggle-code" class="btn btn-secondary builder-embed-only" title="Mostrar panel de código">
+        🪟 Ver código
+      </button>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════
+       TEMPLATES BANNER
+  ═══════════════════════════════════════════════════ -->
+  <div class="templates-bar">
+    <span id="templatesLabel" class="templates-label">Plantillas rápidas:</span>
+    <button class="tpl-btn" data-tpl="storage">📦 Storage</button>
+    <button class="tpl-btn" data-tpl="erc20">🪙 Token ERC-20</button>
+    <button class="tpl-btn" data-tpl="erc721">🖼 NFT ERC-721</button>
+    <button class="tpl-btn" data-tpl="voting">🗳 Votación</button>
+    <button class="tpl-btn" data-tpl="blank">✨ En blanco</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       MAIN LAYOUT
+  ═══════════════════════════════════════════════════ -->
+  <div class="main-layout">
+
+    <!-- LEFT: Blockly canvas -->
+    <div class="blockly-panel">
+      <div class="panel-header">
+        <span id="visualPanelTitle" class="panel-title">🧩 Editor Visual</span>
+        <span id="visualPanelHint" class="hint">Arrastra bloques desde el panel izquierdo</span>
+      </div>
+      <div id="blocklyDiv"></div>
+    </div>
+
+    <!-- RIGHT: Generated code + info -->
+    <div class="code-panel">
+      <div class="panel-header">
+        <span id="codePanelTitle" class="panel-title">📄 Código Solidity Generado</span>
+        <div class="code-actions">
+          <button id="btn-download" class="btn btn-small" title="Descargar archivo Solidity">⬇ Descargar</button>
+          <button id="btn-copy" class="btn btn-small" title="Copiar al portapapeles">📋 Copiar</button>
+          <button id="btn-remix" class="btn btn-small btn-accent" title="Abrir en Remix IDE">🚀 Abrir en Remix</button>
+        </div>
+      </div>
+      <div class="code-wrapper">
+        <div id="lineNumbers" class="line-numbers" aria-hidden="true">1
+    2</div>
+        <pre><code id="solidityCode" class="language-solidity">// ⬅ Arrastra bloques y pulsa "Generar Solidity"
+// o escoge una plantilla rápida arriba.</code></pre>
+      </div>
+
+      <div class="compiler-panel" id="compilerPanel">
+        <div class="compiler-header">
+          <span id="compilerTitle" class="compiler-title">🛠 Diagnóstico del compilador</span>
+          <span id="compilerSummary" class="compiler-summary">Sin compilar</span>
+        </div>
+        <div id="compilerOutput" class="compiler-output">
+          Genera Solidity para ver errores y warnings del compilador.
+        </div>
+      </div>
+
+      <!-- Info / educación -->
+      <div class="info-box" id="infoBox">
+        <h3>¿Qué es un Smart Contract?</h3>
+        <p>Un <strong>contrato inteligente</strong> es un programa que vive en la blockchain. Se ejecuta automáticamente cuando se cumplen las condiciones acordadas, sin intermediarios.</p>
+        <ul>
+          <li>🔒 <strong>Inmutable</strong> — una vez desplegado, el código no cambia.</li>
+          <li>🌐 <strong>Descentralizado</strong> — corre en miles de nodos a la vez.</li>
+          <li>⚡ <strong>Trustless</strong> — no necesitas confiar en nadie, sólo en el código.</li>
+        </ul>
+        <p>Usa las <strong>plantillas rápidas</strong> para comenzar, o arrastra bloques desde la barra lateral.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       TOAST NOTIFICATION
+  ═══════════════════════════════════════════════════ -->
+  <div id="toast" class="toast"></div>
+
+  <!-- ═══════════════════════════════════════════════════
+       BLOCKLY XML TOOLBOX (inline, referenced by id)
+  ═══════════════════════════════════════════════════ -->
+  <xml id="toolbox" style="display:none">
+
+    <category data-category="contract" name="📝 Contrato" colour="#4F46E5">
+      <block type="sol_contract"></block>
+      <block type="sol_pragma"></block>
+      <block type="sol_license"></block>
+    </category>
+
+    <category data-category="state" name="📦 Variables de Estado" colour="#7C3AED">
+      <block type="sol_state_var_uint256"></block>
+      <block type="sol_state_var_string"></block>
+      <block type="sol_state_var_address"></block>
+      <block type="sol_state_var_bool"></block>
+      <block type="sol_state_var_mapping"></block>
+      <block type="sol_state_var_bytes32"></block>
+    </category>
+
+    <category data-category="functions" name="🔧 Funciones" colour="#0EA5E9">
+      <block type="sol_constructor"></block>
+      <block type="sol_function"></block>
+      <block type="sol_function_view"></block>
+      <block type="sol_function_payable"></block>
+      <block type="sol_modifier"></block>
+    </category>
+
+    <category data-category="events" name="🎯 Eventos" colour="#F59E0B">
+      <block type="sol_event"></block>
+      <block type="sol_emit"></block>
+    </category>
+
+    <category data-category="statements" name="⚙️ Sentencias" colour="#10B981">
+      <block type="sol_assign"></block>
+      <block type="sol_require"></block>
+      <block type="sol_if"></block>
+      <block type="sol_return"></block>
+      <block type="sol_mapping_set"></block>
+      <block type="sol_mapping_get"></block>
+      <block type="sol_transfer"></block>
+      <block type="sol_msg_sender"></block>
+      <block type="sol_msg_value"></block>
+    </category>
+
+    <category data-category="expressions" name="🔢 Expresiones" colour="#EF4444">
+      <block type="sol_number"></block>
+      <block type="sol_string_val"></block>
+      <block type="sol_bool_val"></block>
+      <block type="sol_address_val"></block>
+      <block type="sol_arithmetic"></block>
+      <block type="sol_compare"></block>
+      <block type="sol_logic_op"></block>
+      <block type="sol_var_ref"></block>
+      <block type="sol_param_ref"></block>
+    </category>
+
+    <category data-category="erc20" name="🪙 ERC-20 Helpers" colour="#D97706">
+      <block type="sol_erc20_header"></block>
+      <block type="sol_erc20_mint"></block>
+      <block type="sol_erc20_transfer_logic"></block>
+    </category>
+
+    <category data-category="erc721" name="🖼 ERC-721 Helpers" colour="#BE185D">
+      <block type="sol_erc721_header"></block>
+      <block type="sol_erc721_mint"></block>
+    </category>
+
+    <category data-category="security" name="🛡 Seguridad / Ownable" colour="#6B7280">
+      <block type="sol_ownable"></block>
+      <block type="sol_only_owner_modifier"></block>
+      <block type="sol_reentrancy_guard"></block>
+    </category>
+
+  </xml>
+
+  <!-- Scripts -->
+  <script src="js/blocks.js?v=20260413-4"></script>
+  <script src="js/generator.js?v=20260413-4"></script>
+  <script src="js/vendor/soljson-source.js?v=20260413-4"></script>
+  <script src="js/app.js?v=20260413-4"></script>
+
+</body>
+</html>
