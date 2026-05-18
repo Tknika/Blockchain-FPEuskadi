@@ -3,6 +3,13 @@
 # Ubuntu Desktop ingurunean blockchain sarearen hedapenerako behar diren tresnak instalatzen ditu.
 set -euo pipefail
 
+if [[ "${EUID}" -eq 0 ]]; then
+  echo "Errorea: ez exekutatu script osoa sudo bidez."
+  echo "Erabili zure erabiltzaile arruntarekin: bash ./software_install.sh"
+  echo "Scriptak sudo erabiliko du sistemako paketeak instalatzeko behar duenean."
+  exit 1
+fi
+
 ANSIBLE_VERSION="2.17.14"
 BESU_VERSION="26.2.0"
 WEBSOCAT_VERSION="1.14.1"
@@ -12,6 +19,20 @@ INSTALL_DIR="${HOME}/.local/opt"
 BIN_DIR="${HOME}/.local/bin"
 JAVA_HOME_DIR="${INSTALL_DIR}/jdk-25"
 PROFILE_FILE="${HOME}/.profile"
+
+export DEBIAN_FRONTEND=noninteractive
+
+repair_apt_state() {
+  # Aurreko apt/dpkg prozesuren bat erdian geratu bada, pakete-sistema konpontzen saiatzen da.
+  echo "Apt/dpkg egoera egiaztatzen eta behar izanez gero konpontzen..."
+  sudo dpkg --configure -a
+  sudo apt-get install -f -y
+}
+
+apt_install() {
+  repair_apt_state
+  sudo apt-get install -y "$@"
+}
 
 if [[ -r /etc/os-release ]]; then
   # shellcheck disable=SC1091
@@ -23,8 +44,9 @@ if [[ -r /etc/os-release ]]; then
 fi
 
 echo "Sistema eguneratzen eta oinarrizko paketeak instalatzen..."
-sudo apt update
-sudo apt install -y \
+repair_apt_state
+sudo apt-get update
+apt_install \
   curl \
   pipx \
   python3.10 \
@@ -34,9 +56,10 @@ sudo apt install -y \
   xz-utils
 
 mkdir -p "${INSTALL_DIR}" "${BIN_DIR}"
+export PATH="${BIN_DIR}:${PATH}"
 
 echo "Java 25 instalatzen..."
-if ! sudo apt install -y "${JAVA_PACKAGE}"; then
+if ! apt_install "${JAVA_PACKAGE}"; then
   echo "Apt bidez ${JAVA_PACKAGE} ez dago eskuragarri; Eclipse Temurin JDK 25 instalatuko da."
   rm -rf "${JAVA_HOME_DIR}"
   mkdir -p "${JAVA_HOME_DIR}"
