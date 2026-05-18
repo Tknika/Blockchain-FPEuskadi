@@ -476,6 +476,7 @@ Erabiltzen ari garen Ubuntu Desktop makinak jada honako hau dakar instalatuta:
 - Java 25 (Besu erremintak erabiltzeko)
 - Hyperledger Besu 26.2.0 (softwarea eta tresnak, ez nodo bat)
 - Python 3.10.12 (smart-contract baten hedapena egiteko eta klabe batzuk sortzeko)
+- Websocat 1.14.1 (websocket bidez nodoekin komunikatzeko)
 
 Ubuntu Server makinek ('Besu node 1-5') ez dute ezer instalatuta.
 

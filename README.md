@@ -6,3 +6,5 @@
 - Hardhat: *smart contract-ak* kudeatzeko.
 - WebServer: web zerbitzaria aplikazioetarako.
 - Pilotoak: Garatu diren aplikazioak.
+
+**Ikastaroak** karpetan 'Blockchain Sareen Hedapen eta Konfigurazioa' ikastaroan emandako eduki guztiak datoz euskaraz eta gazteleraz.

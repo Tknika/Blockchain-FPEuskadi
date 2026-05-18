@@ -484,6 +484,7 @@ La máquina Ubuntu Desktop con la que estamos trabajando ya trae instalado lo si
 - Java 25 (para utilizar las herramientas de Besu)
 - Hyperledger Besu 26.2.0 (el software con las herramientas, no un nodo)
 - Python 3.10.12 (para ejecutar el despliegue del smart-contract y generar algunas claves)
+- Websocat 1.14.1 (para comunicarnos con los nodos mediante websocket)
 
 Las máquinas Ubuntu Server (Besu node 1-5) no traen nada instalado.
 
