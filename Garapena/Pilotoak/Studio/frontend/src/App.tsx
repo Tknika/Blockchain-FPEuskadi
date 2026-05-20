@@ -2297,23 +2297,24 @@ function App() {
 
       const factory = new ContractFactory(selectedContract.abi, selectedContract.bytecode, signer);
       const deployedContract = await factory.deploy(...constructorArgs);
-    const deploymentTransaction = deployedContract.deploymentTransaction();
-    if (!deploymentTransaction) {
-    throw new Error(text.deployFailed);
-    }
+      const deploymentTransaction = deployedContract.deploymentTransaction();
+      if (!deploymentTransaction) {
+        throw new Error(text.deployFailed);
+      }
 
-    setDeploymentTxHash(deploymentTransaction.hash ?? "");
+      setDeploymentTxHash(deploymentTransaction.hash ?? "");
       setDeployStatus(text.waitingForBlock);
-    const deploymentReceipt = await deploymentTransaction.wait();
+      const deploymentReceipt = await deploymentTransaction.wait();
       const address = await deployedContract.getAddress();
-    setDeploymentBlockNumber(deploymentReceipt?.blockNumber ? String(deploymentReceipt.blockNumber) : "");
+      setDeploymentBlockNumber(deploymentReceipt?.blockNumber ? String(deploymentReceipt.blockNumber) : "");
       setDeployedAddress(address);
       setInteractionAddress(address);
       setActiveStep("interact");
       setDeployStatus(`${text.deployedAt(address)}\n${text.interactionReadyAfterDeploy}`);
       spotlightInteractionPanel();
     } catch (error) {
-      setDeployStatus(error instanceof Error ? error.message : text.deployFailed);
+      const errorMessage = error instanceof Error ? error.message : "";
+      setDeployStatus(errorMessage && errorMessage !== text.deployFailed ? `${text.deployFailed}\n${errorMessage}` : text.deployFailed);
     } finally {
       setDeployBusy(false);
     }
