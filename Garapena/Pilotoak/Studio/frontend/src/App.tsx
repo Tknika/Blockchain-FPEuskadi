@@ -589,6 +589,35 @@ function stringifyValue(value: unknown) {
   return JSON.stringify(serializable, null, 2);
 }
 
+function getThrownMessage(error: unknown): string {
+  if (error instanceof Error || typeof error === "string") {
+    return String(error instanceof Error ? error.message : error).trim();
+  }
+
+  if (!error || typeof error !== "object") {
+    return "";
+  }
+
+  const data = error as Record<string, unknown>;
+  const directMessage = [data.shortMessage, data.reason, data.message].find((value) => typeof value === "string" && value.trim());
+  if (typeof directMessage === "string") {
+    return directMessage.trim();
+  }
+
+  const nestedMessages: string | undefined = [data.error, data.info, data.data]
+    .map((value) => getThrownMessage(value))
+    .find((value) => value);
+  if (nestedMessages) {
+    return nestedMessages;
+  }
+
+  try {
+    return JSON.stringify(toSerializable(error), null, 2);
+  } catch {
+    return "";
+  }
+}
+
 function parseTupleValue(rawValue: unknown, components: AbiInput[], tupleJsonError: string) {
   if (Array.isArray(rawValue)) {
     return components.map((_, index) => rawValue[index]);
@@ -2313,7 +2342,7 @@ function App() {
       setDeployStatus(`${text.deployedAt(address)}\n${text.interactionReadyAfterDeploy}`);
       spotlightInteractionPanel();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "";
+      const errorMessage = getThrownMessage(error);
       setDeployStatus(errorMessage && errorMessage !== text.deployFailed ? `${text.deployFailed}\n${errorMessage}` : text.deployFailed);
     } finally {
       setDeployBusy(false);
