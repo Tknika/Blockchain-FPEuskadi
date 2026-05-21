@@ -18,8 +18,11 @@ Ejecutamos:
 
 - **ethstats**: el servidor de Ethereum Stats, situado en ../Pilotoak/Erremintak/ethstats. Estará accesible en el servidor accediendo al puerto definido en el fichero *docker-compose.yml*.
 - **mailserver**: el servidor de correo electrónico. Estará accesible en el servidor accediendo a los puertos definidos en el fichero *docker-compose.yml*.
-- **ziurtagiriak**: la aplicación Ziurtagiriak, situada en ../Pilotoak/ZiurtagiriakAPP. Estará accesible en el servidor accediendo con los nombres configurados en los ficheros de la carpeta *nginx/conf.d/*.
-- **etiketa**: la aplicación Etiqueta Inteligente, situada en ../Pilotoak/EtiketaAPP. Estará accesible en el servidor accediendo con los nombres configurados en los ficheros de la carpeta *nginx/conf.d/*.
-- **formakuntza**: la aplicación Formakuntza, situada en ../Pilotoak/FormakuntzakAPP. Estará accesible en el servidor accediendo con los nombres configurados en los ficheros de la carpeta *nginx/conf.d/*.
+- **ziurtagiriak**: la aplicación Ziurtagiriak, situada en ../Pilotoak/ZiurtagiriakAPP. 
+- **etiketa**: la aplicación Etiqueta Inteligente, situada en ../Pilotoak/EtiketaAPP.
+- **formakuntza**: la aplicación Formakuntza, situada en ../Pilotoak/FormakuntzakAPP.
+- **ekozir**: la aplicación Ekozir (Ekonomia Zirkularra), situada en ../Pilotoak/EkozirAPP.
+- **esploratzaile**: la aplicación Esploratzaile (un explorador de bloques), situada en ../Pilotoak/EsploratzaileAPP.
+- **studio**: la aplicación Studio (crear, compilar, desplegar e interactuar con Smart Contracts), situada en ../Pilotoak/Studio.
 - **webserver**: el servidor que hace de proxy para acceder a uno u otro servicio dependiendo del nombre con el que hayamos accedido. Escucha en el puerto 80.
 - **mariadb**: base de datos MariaDB que necesita la aplicación Ziurtagiriak pero que se podría reutilizar para cualquier otra aplicación que necesite una base de datos.
