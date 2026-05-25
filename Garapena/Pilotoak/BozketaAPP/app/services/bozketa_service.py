@@ -107,13 +107,17 @@ def get_ballot(ballot_id: int, include_participants: bool = True) -> dict[str, A
 
 def submit_vote(ballot_id: int, proposal_index: int, token: str) -> dict[str, Any]:
     """Cast one anonymous vote with an invitation token."""
-    token_bytes = _token_to_bytes(token)
     contract = get_contract()
-    receipt = send_transaction(contract.functions.vote(ballot_id, proposal_index, token_bytes))
+    commitment = _commitment_for_token(token)
+    if not contract.functions.verifyCommitment(ballot_id, commitment).call():
+        raise ValueError("Invitation token is not valid for this ballot.")
+
+    nullifier_hash = _nullifier_for_token(ballot_id, token)
+    receipt = send_transaction(contract.functions.vote(ballot_id, proposal_index, nullifier_hash))
 
     return {
         "transactionHash": receipt.transactionHash.hex(),
-        "nullifierHash": _nullifier_for_token(ballot_id, token).hex(),
+        "nullifierHash": nullifier_hash.hex(),
     }
 
 

@@ -89,20 +89,17 @@ contract Bozketa {
     }
 
     /**
-     * @dev Cast an anonymous vote by proving knowledge of an invitation secret.
-     * The plain secret is visible to the transaction sender/server, but the contract only stores a nullifier hash.
+     * @dev Record an anonymous vote after the trusted app server verifies an invitation token off-chain.
+     * The contract sees only an unlinkable nullifier hash and the chosen proposal.
      */
-    function vote(uint256 ballotId, uint256 proposalIndex, bytes32 tokenSecret) external {
+    function vote(uint256 ballotId, uint256 proposalIndex, bytes32 nullifierHash) external {
         Ballot storage ballot = _getBallot(ballotId);
 
+        require(msg.sender == ballot.creator, "Only ballot relayer can submit votes");
         require(block.timestamp >= ballot.startTime, "Ballot has not started");
         require(ballot.endTime == 0 || block.timestamp <= ballot.endTime, "Ballot has ended");
         require(proposalIndex < ballot.proposals.length, "Invalid proposal");
-
-        bytes32 commitment = keccak256(abi.encodePacked(tokenSecret, "BOZKETA_COMMITMENT"));
-        require(ballot.participantCommitments[commitment], "Invalid participant token");
-
-        bytes32 nullifierHash = keccak256(abi.encodePacked(ballotId, tokenSecret, "BOZKETA_NULLIFIER"));
+        require(nullifierHash != bytes32(0), "Nullifier is required");
         require(!ballot.usedNullifiers[nullifierHash], "Participant already voted");
 
         ballot.usedNullifiers[nullifierHash] = true;
