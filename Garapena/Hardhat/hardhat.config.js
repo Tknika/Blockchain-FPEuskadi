@@ -1,7 +1,8 @@
 require("@nomicfoundation/hardhat-toolbox");
 const fs = require('fs'); // Required to read files from the filesystem
 
-const { ziurtagiriakPK, etiketaPK, formakuntzakPK, ekozirPK } = require('./secrets.json'); // Import private keys from secrets.json
+const secrets = require('./secrets.json'); // Import private keys from secrets.json
+const { ziurtagiriakPK, etiketaPK, formakuntzakPK, ekozirPK, bozketaPK } = secrets;
 
 // Read the JWT token from a file named jwt.token
 const jwtToken = fs.readFileSync('JWT_1', 'utf8').trim();
@@ -50,8 +51,8 @@ module.exports = {
         etiketaPK, // Etiketa contract deployer private key
         formakuntzakPK, // Formakuntza contract deployer private key
         ekozirPK, // Ekozir contract deployer private key
-        // Additional private keys can be added here if needed
-      ],
+        bozketaPK, // Bozketa contract deployer private key, if configured
+      ].filter(Boolean),
       httpHeaders: {
         Authorization: `Bearer ${jwtToken}` // Use the JWT token read from jwt.token file for secured endpoints
       },

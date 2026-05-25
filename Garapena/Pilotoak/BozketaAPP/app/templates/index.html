@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="eu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BozketaAPP</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Blockchain FP Euskadi</p>
+      <h1>BozketaAPP</h1>
+      <p>Create private ballots, invite participants, and publish aggregate results without storing who chose what.</p>
+    </div>
+    <div class="network-card">
+      <strong>Besu chain</strong>
+      <span>{{ chain_id }}</span>
+      <small>{{ contract_address or "Contract not configured" }}</small>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <h2>Create ballot</h2>
+      <p class="hint">Invitation tokens are shown once. Share each token privately with its participant.</p>
+      <form id="create-ballot-form">
+        <label>
+          Ballot title
+          <input name="title" placeholder="Class representative" required>
+        </label>
+        <label>
+          Proposals, one per line
+          <textarea name="proposals" rows="4" placeholder="Option A&#10;Option B" required></textarea>
+        </label>
+        <label>
+          Participants, one per line
+          <textarea name="participants" rows="5" placeholder="Ane&#10;Jon&#10;Miren" required></textarea>
+        </label>
+        <button type="submit">Create ballot</button>
+      </form>
+      <div id="create-result" class="result hidden"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">
+        <h2>Vote</h2>
+        <button id="refresh-ballots" class="secondary" type="button">Refresh</button>
+      </div>
+      <form id="vote-form">
+        <label>
+          Ballot
+          <select name="ballotId" required></select>
+        </label>
+        <label>
+          Proposal
+          <select name="proposalIndex" required></select>
+        </label>
+        <label>
+          Invitation token
+          <input name="token" autocomplete="off" placeholder="64 hex characters" required>
+        </label>
+        <button type="submit">Submit vote</button>
+      </form>
+      <div id="vote-result" class="result hidden"></div>
+    </section>
+
+    <section class="panel full-width">
+      <h2>Ballots and results</h2>
+      <div id="ballot-list" class="ballot-list"></div>
+    </section>
+  </main>
+
+  <template id="ballot-template">
+    <article class="ballot-card">
+      <div class="ballot-heading">
+        <h3></h3>
+        <span></span>
+      </div>
+      <div class="columns">
+        <div>
+          <h4>Results</h4>
+          <ul class="proposal-list"></ul>
+        </div>
+        <div>
+          <h4>Participants</h4>
+          <ul class="participant-list"></ul>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <script>
+    const ballots = new Map();
+    const ballotSelect = document.querySelector('[name="ballotId"]');
+    const proposalSelect = document.querySelector('[name="proposalIndex"]');
+
+    document.getElementById('create-ballot-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = new FormData(event.target);
+      const payload = {
+        title: form.get('title'),
+        proposals: splitLines(form.get('proposals')),
+        participants: splitLines(form.get('participants')),
+      };
+      const result = await postJson('/api/ballots', payload);
+      showResult('create-result', result.ok ? renderInvitations(result.data) : result.error, result.ok);
+      if (result.ok) {
+        event.target.reset();
+        await loadBallots();
+      }
+    });
+
+    document.getElementById('vote-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = new FormData(event.target);
+      const result = await postJson(`/api/ballots/${form.get('ballotId')}/vote`, {
+        proposalIndex: Number(form.get('proposalIndex')),
+        token: form.get('token'),
+      });
+      showResult('vote-result', result.ok ? `Vote recorded. Transaction: ${result.data.transactionHash}` : result.error, result.ok);
+      if (result.ok) {
+        event.target.reset();
+        await loadBallots();
+      }
+    });
+
+    document.getElementById('refresh-ballots').addEventListener('click', loadBallots);
+    ballotSelect.addEventListener('change', updateProposalOptions);
+
+    function splitLines(value) {
+      return String(value || '').split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
+    }
+
+    async function postJson(url, payload) {
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload),
+        });
+        const body = await response.json();
+        return response.ok ? {ok: true, data: body.data} : {ok: false, error: body.error || 'Request failed'};
+      } catch (error) {
+        return {ok: false, error: error.message};
+      }
+    }
+
+    async function loadBallots() {
+      const response = await fetch('/api/ballots');
+      const body = await response.json();
+      if (!response.ok) {
+        document.getElementById('ballot-list').textContent = body.error || 'Unable to load ballots.';
+        return;
+      }
+
+      ballots.clear();
+      for (const summary of body.data) {
+        const detailResponse = await fetch(`/api/ballots/${summary.id}`);
+        const detailBody = await detailResponse.json();
+        if (detailResponse.ok) {
+          ballots.set(detailBody.data.id, detailBody.data);
+        }
+      }
+      renderBallots();
+      updateBallotOptions();
+    }
+
+    function renderBallots() {
+      const list = document.getElementById('ballot-list');
+      const template = document.getElementById('ballot-template');
+      list.innerHTML = '';
+
+      if (!ballots.size) {
+        list.innerHTML = '<p class="hint">No ballots have been created yet.</p>';
+        return;
+      }
+
+      for (const ballot of ballots.values()) {
+        const node = template.content.cloneNode(true);
+        node.querySelector('h3').textContent = ballot.title;
+        node.querySelector('.ballot-heading span').textContent = `${ballot.voteCount}/${ballot.participantCount} votes`;
+
+        const proposalList = node.querySelector('.proposal-list');
+        ballot.proposals.forEach((proposal) => {
+          const item = document.createElement('li');
+          item.textContent = `${proposal.name}: ${proposal.voteCount}`;
+          proposalList.appendChild(item);
+        });
+
+        const participantList = node.querySelector('.participant-list');
+        ballot.participants.forEach((participant) => {
+          const item = document.createElement('li');
+          item.textContent = participant.name;
+          participantList.appendChild(item);
+        });
+
+        list.appendChild(node);
+      }
+    }
+
+    function updateBallotOptions() {
+      const previous = ballotSelect.value;
+      ballotSelect.innerHTML = '';
+      for (const ballot of ballots.values()) {
+        const option = document.createElement('option');
+        option.value = ballot.id;
+        option.textContent = ballot.title;
+        ballotSelect.appendChild(option);
+      }
+      if (previous && ballots.has(Number(previous))) {
+        ballotSelect.value = previous;
+      }
+      updateProposalOptions();
+    }
+
+    function updateProposalOptions() {
+      proposalSelect.innerHTML = '';
+      const ballot = ballots.get(Number(ballotSelect.value));
+      if (!ballot) {
+        return;
+      }
+      ballot.proposals.forEach((proposal) => {
+        const option = document.createElement('option');
+        option.value = proposal.index;
+        option.textContent = proposal.name;
+        proposalSelect.appendChild(option);
+      });
+    }
+
+    function showResult(id, content, success) {
+      const element = document.getElementById(id);
+      element.classList.remove('hidden', 'success', 'error');
+      element.classList.add(success ? 'success' : 'error');
+      element.innerHTML = content;
+    }
+
+    function renderInvitations(data) {
+      const rows = data.invitations.map((invite) => `
+        <li><strong>${escapeHtml(invite.participantName)}</strong><code>${invite.token}</code></li>
+      `).join('');
+      return `<p>Ballot ${data.ballotId} created. Save these invitation tokens now:</p><ul class="token-list">${rows}</ul>`;
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;',
+      }[char]));
+    }
+
+    loadBallots();
+  </script>
+</body>
+</html>

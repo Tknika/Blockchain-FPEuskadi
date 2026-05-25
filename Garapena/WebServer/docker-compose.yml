@@ -108,6 +108,17 @@ services:
     networks:
       - server_network
 
+  bozketa:
+    build:
+      context: ../Pilotoak/BozketaAPP
+      dockerfile: Dockerfile
+    hostname: bozketa
+    restart: always
+    env_file:
+      - bozketa.env
+    networks:
+      - server_network
+
   esploratzaile:
     build:
       context: ../Pilotoak/EsploratzaileAPP
