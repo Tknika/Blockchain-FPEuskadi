@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="eu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BozketaAPP - Bozkatu</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header class="hero compact-hero">
+    <div>
+      <p class="eyebrow">Blockchain FP Euskadi</p>
+      <h1>BozketaAPP</h1>
+      <p>Erabili zure gonbidapen-esteka pertsonala behin bozkatzeko.</p>
+    </div>
+  </header>
+
+  <main class="layout single-column">
+    <section class="panel">
+      {% if error and not ballot %}
+        <div class="result error">{{ error }}</div>
+      {% elif ballot %}
+        <div class="panel-title">
+          <div>
+            <p class="eyebrow dark">{{ ballot.id }} bozketa</p>
+            <h2>{{ ballot.title }}</h2>
+          </div>
+          {% if ballot.hasVoted %}
+            <span class="status-pill">{{ ballot.voteCount }}/{{ ballot.participantCount }} boto</span>
+          {% else %}
+            <span class="status-pill">Oraindik bozkatu gabe</span>
+          {% endif %}
+        </div>
+
+        {% if success %}
+          <div class="result success">{{ success }}</div>
+        {% endif %}
+        {% if error %}
+          <div class="result error">{{ error }}</div>
+        {% endif %}
+
+        <label>
+          Partaidearen tokena
+          <input value="{{ token }}" readonly>
+        </label>
+
+        {% if ballot.hasVoted %}
+          <h3>Emaitzak</h3>
+          <p class="hint">Token honek dagoeneko bozkatu du. Uneko emaitzak behean ikus ditzakezu.</p>
+          <ul class="proposal-results">
+            {% for proposal in ballot.proposals %}
+              <li>
+                <span>{{ proposal.name }}</span>
+                <strong>{{ proposal.voteCount }}</strong>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <form method="post">
+            <fieldset>
+              <legend>Aukeratu aukera bat</legend>
+              {% for proposal in ballot.proposals %}
+                <label class="radio-row">
+                  <input type="radio" name="proposalIndex" value="{{ proposal.index }}" required>
+                  {{ proposal.name }}
+                </label>
+              {% endfor %}
+            </fieldset>
+            <button type="submit">Bidali botoa</button>
+          </form>
+        {% endif %}
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>

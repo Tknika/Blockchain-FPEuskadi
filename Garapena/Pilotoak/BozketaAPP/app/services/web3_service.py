@@ -41,7 +41,7 @@ def init_web3(app: Flask) -> None:
             break
 
     if web3_client is None:
-        raise ConnectionError("Unable to connect to any configured Besu RPC endpoint.")
+        raise ConnectionError("Ezin izan da konfiguratutako Besu RPC endpoint-ekin konektatu.")
 
     signer_account = None
     private_key = app.config.get("BOZKETA_PRIVATE_KEY", "")
@@ -66,36 +66,36 @@ def init_web3(app: Flask) -> None:
 def get_web3() -> Web3:
     """Return the shared Web3 client."""
     if _resources is None:
-        raise RuntimeError("Web3 has not been initialised.")
+        raise RuntimeError("Web3 ez da hasieratu.")
     return _resources.web3
 
 
 def get_contract() -> Contract:
     """Return the configured Bozketa contract."""
     if _resources is None or _resources.contract is None:
-        raise RuntimeError("Bozketa contract is not configured. Set BOZKETA_CONTRACT_ADDRESS.")
+        raise RuntimeError("Bozketa kontratua ez dago konfiguratuta. Ezarri BOZKETA_CONTRACT_ADDRESS.")
     return _resources.contract
 
 
 def get_signer_account() -> ChecksumAddress:
     """Return the server account that pays for Bozketa transactions."""
     if _resources is None:
-        raise RuntimeError("Web3 has not been initialised.")
+        raise RuntimeError("Web3 ez da hasieratu.")
     if _resources.signer_account is None:
-        raise RuntimeError("Server account not configured. Set BOZKETA_PRIVATE_KEY.")
+        raise RuntimeError("Zerbitzariaren kontua ez dago konfiguratuta. Ezarri BOZKETA_PRIVATE_KEY.")
     return _resources.signer_account
 
 
 def send_transaction(function_call, **kwargs: Any) -> TxReceipt:
     """Sign and submit a contract transaction with the configured server key."""
     if _resources is None:
-        raise RuntimeError("Web3 has not been initialised.")
+        raise RuntimeError("Web3 ez da hasieratu.")
 
     web3 = _resources.web3
     signer = get_signer_account()
     private_key = _normalise_private_key(current_app.config.get("BOZKETA_PRIVATE_KEY", ""))
     if not private_key:
-        raise RuntimeError("BOZKETA_PRIVATE_KEY is not configured.")
+        raise RuntimeError("BOZKETA_PRIVATE_KEY ez dago konfiguratuta.")
 
     nonce = web3.eth.get_transaction_count(signer, "pending")
     tx_params: dict[str, Any] = {
@@ -115,7 +115,7 @@ def send_transaction(function_call, **kwargs: Any) -> TxReceipt:
     receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
 
     if receipt.status == 0:
-        raise RuntimeError(f"Transaction reverted: {tx_hash.hex()}")
+        raise RuntimeError(f"Transakzioa atzera bota da: {tx_hash.hex()}")
 
     return receipt
 

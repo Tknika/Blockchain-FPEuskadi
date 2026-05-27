@@ -59,6 +59,11 @@ body {
   padding: 2rem clamp(1rem, 4vw, 4rem);
 }
 
+.single-column {
+  grid-template-columns: minmax(0, 52rem);
+  justify-content: center;
+}
+
 .panel {
   background: white;
   border-radius: 1rem;
@@ -118,6 +123,19 @@ button.secondary {
   color: #1f2933;
 }
 
+.button-link {
+  border-radius: 0.5rem;
+  display: inline-block;
+  font-weight: 700;
+  padding: 0.8rem 1rem;
+  text-decoration: none;
+}
+
+.secondary-link {
+  background: #e1e8f0;
+  color: #1f2933;
+}
+
 .result {
   border-radius: 0.75rem;
   margin-top: 1rem;
@@ -168,6 +186,73 @@ code {
   margin-top: 0.25rem;
   overflow-wrap: anywhere;
   padding: 0.35rem;
+}
+
+.inline-code {
+  display: inline;
+  margin: 0;
+}
+
+.compact-hero {
+  padding-block: 2rem;
+}
+
+.dark {
+  color: #66788a;
+}
+
+.status-pill {
+  background: #eef3f8;
+  border-radius: 999px;
+  color: #12345b;
+  font-weight: 700;
+  padding: 0.45rem 0.8rem;
+}
+
+fieldset {
+  border: 1px solid #dde5ee;
+  border-radius: 0.75rem;
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 1rem;
+}
+
+legend {
+  font-weight: 700;
+  padding: 0 0.4rem;
+}
+
+.radio-row {
+  align-items: center;
+  border: 1px solid #dde5ee;
+  border-radius: 0.6rem;
+  display: flex;
+  flex-direction: row;
+  font-weight: 600;
+  gap: 0.75rem;
+  padding: 0.8rem;
+}
+
+.radio-row input {
+  width: auto;
+}
+
+.proposal-results {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+}
+
+.proposal-results li {
+  align-items: center;
+  background: #f6f9fc;
+  border: 1px solid #dde5ee;
+  border-radius: 0.6rem;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.8rem;
 }
 
 @media (max-width: 800px) {

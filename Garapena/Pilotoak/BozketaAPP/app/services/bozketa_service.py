@@ -110,7 +110,7 @@ def submit_vote(ballot_id: int, proposal_index: int, token: str) -> dict[str, An
     contract = get_contract()
     commitment = _commitment_for_token(token)
     if not contract.functions.verifyCommitment(ballot_id, commitment).call():
-        raise ValueError("Invitation token is not valid for this ballot.")
+        raise ValueError("Gonbidapen-tokena ez da baliozkoa bozketa honetarako.")
 
     nullifier_hash = _nullifier_for_token(ballot_id, token)
     receipt = send_transaction(contract.functions.vote(ballot_id, proposal_index, nullifier_hash))
@@ -119,6 +119,28 @@ def submit_vote(ballot_id: int, proposal_index: int, token: str) -> dict[str, An
         "transactionHash": receipt.transactionHash.hex(),
         "nullifierHash": nullifier_hash.hex(),
     }
+
+
+def is_valid_token(ballot_id: int, token: str) -> bool:
+    """Return whether the token matches one of the ballot participant commitments."""
+    contract = get_contract()
+    return bool(contract.functions.verifyCommitment(ballot_id, _commitment_for_token(token)).call())
+
+
+def has_token_voted(ballot_id: int, token: str) -> bool:
+    """Return whether the token's anonymous nullifier has already voted."""
+    contract = get_contract()
+    return bool(contract.functions.hasVoted(ballot_id, _nullifier_for_token(ballot_id, token)).call())
+
+
+def get_ballot_for_voting(ballot_id: int, token: str) -> dict[str, Any]:
+    """Load a ballot and include the current token voting status."""
+    if not is_valid_token(ballot_id, token):
+        raise ValueError("Gonbidapen-tokena ez da baliozkoa bozketa honetarako.")
+
+    ballot = get_ballot(ballot_id, include_participants=False)
+    ballot["hasVoted"] = has_token_voted(ballot_id, token)
+    return ballot
 
 
 def _new_token_secret() -> str:
@@ -130,11 +152,11 @@ def _token_to_bytes(token: str) -> bytes:
     """Validate and decode a token into the bytes32 value expected by the contract."""
     cleaned = token.removeprefix("0x").strip()
     if len(cleaned) != 64:
-        raise ValueError("Invitation token must be 32 bytes encoded as 64 hex characters.")
+        raise ValueError("Gonbidapen-tokenak 32 byte izan behar ditu, 64 karaktere hamaseitarretan kodetuta.")
     try:
         return bytes.fromhex(cleaned)
     except ValueError as error:
-        raise ValueError("Invitation token must be valid hexadecimal.") from error
+        raise ValueError("Gonbidapen-tokenak balio hamaseitarra izan behar du.") from error
 
 
 def _commitment_for_token(token: str) -> bytes:
@@ -152,5 +174,5 @@ def _extract_ballot_id(receipt) -> int:
     contract = get_contract()
     events = contract.events.BallotCreated().process_receipt(receipt)
     if not events:
-        raise RuntimeError("BallotCreated event was not found in the transaction receipt.")
+        raise RuntimeError("BallotCreated gertaera ez da aurkitu transakzioaren egiaztagirian.")
     return int(events[0]["args"]["ballotId"])

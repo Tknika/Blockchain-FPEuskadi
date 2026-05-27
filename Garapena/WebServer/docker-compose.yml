@@ -114,6 +114,8 @@ services:
       dockerfile: Dockerfile
     hostname: bozketa
     restart: always
+    depends_on:
+      - mailserver
     env_file:
       - bozketa.env
     networks:
