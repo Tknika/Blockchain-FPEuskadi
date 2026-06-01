@@ -10,6 +10,7 @@ from eth_typing import ChecksumAddress
 from flask import Flask, current_app
 from web3 import Web3
 from web3.contract import Contract
+from web3.exceptions import TimeExhausted
 from web3.types import TxReceipt
 
 
@@ -112,7 +113,14 @@ def send_transaction(function_call, **kwargs: Any) -> TxReceipt:
     raw_transaction = getattr(signed, "rawTransaction", None) or signed.raw_transaction
     tx_hash = web3.eth.send_raw_transaction(raw_transaction)
     logging.info("Bozketa transaction sent: %s", tx_hash.hex())
-    receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+    try:
+        receipt = web3.eth.wait_for_transaction_receipt(
+            tx_hash,
+            timeout=current_app.config.get("BOZKETA_TX_RECEIPT_TIMEOUT", 120),
+            poll_latency=current_app.config.get("BOZKETA_TX_POLL_LATENCY", 1),
+        )
+    except TimeExhausted as error:
+        raise TimeoutError(f"Transakzioaren baieztapena denboraz kanpo geratu da: {tx_hash.hex()}") from error
 
     if receipt.status == 0:
         raise RuntimeError(f"Transakzioa atzera bota da: {tx_hash.hex()}")

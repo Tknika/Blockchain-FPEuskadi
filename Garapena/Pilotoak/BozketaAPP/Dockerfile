@@ -22,4 +22,4 @@ COPY . /app
 
 #EXPOSE 5003
 
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5003", "wsgi:application"]
+CMD ["gunicorn", "-w", "4", "--timeout", "150", "--graceful-timeout", "150", "-b", "0.0.0.0:5003", "wsgi:application"]

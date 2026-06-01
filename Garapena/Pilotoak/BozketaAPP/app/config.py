@@ -65,6 +65,8 @@ def load_config() -> dict[str, Any]:
         "BOZKETA_ABI_PATH": str(abi_path),
         "BOZKETA_CONTRACT_ABI": _load_contract_abi(abi_path),
         "BOZKETA_PUBLIC_URL": os.getenv("BOZKETA_PUBLIC_URL", "http://bozketa.localhost"),
+        "BOZKETA_TX_RECEIPT_TIMEOUT": int(os.getenv("BOZKETA_TX_RECEIPT_TIMEOUT", "120")),
+        "BOZKETA_TX_POLL_LATENCY": float(os.getenv("BOZKETA_TX_POLL_LATENCY", "1")),
         "SMTP_SERVER": os.getenv("SMTP_SERVER", "mailserver"),
         "SMTP_PORT": int(os.getenv("SMTP_PORT", "25")),
         "SMTP_USERNAME": os.getenv("SMTP_USERNAME", ""),
