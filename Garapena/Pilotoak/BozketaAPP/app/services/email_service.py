@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import smtplib
+import logging
 from html import escape
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -56,13 +57,17 @@ def _send_message(sender: str, recipient: str, message: MIMEMultipart) -> None:
 
     server_name = current_app.config["SMTP_SERVER"]
     port = current_app.config["SMTP_PORT"]
-    username = current_app.config["SMTP_USERNAME"]
-    password = current_app.config["SMTP_PASSWORD"]
+    username = current_app.config["SMTP_USERNAME"].strip()
+    password = current_app.config["SMTP_PASSWORD"].strip()
 
     smtp_class = smtplib.SMTP_SSL if current_app.config["SMTP_USE_SSL"] else smtplib.SMTP
     with smtp_class(server_name, port, timeout=20) as server:
+        server.ehlo()
         if current_app.config["SMTP_USE_STARTTLS"]:
             server.starttls()
-        if username and password:
+            server.ehlo()
+        if username and password and server.has_extn("auth"):
             server.login(username, password)
+        elif username and password:
+            logging.warning("SMTP credentials are configured, but %s:%s does not advertise AUTH.", server_name, port)
         server.sendmail(sender, recipient, message.as_string())
