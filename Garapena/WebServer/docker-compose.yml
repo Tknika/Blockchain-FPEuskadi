@@ -179,8 +179,11 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "8545:8545"
     networks:
-      - server_network
+      server_network:
+        aliases:
+          - bfpe-mainnet.blockchain.tkn.eus
     volumes:
       - ./nginx/:/etc/nginx/
       - ./nginx/5xx.html:/www/error_pages/5xx.html

@@ -6,7 +6,7 @@ import smtplib
 from html import escape
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.utils import formatdate
+from email.utils import formatdate, make_msgid
 
 from flask import current_app
 
@@ -48,6 +48,12 @@ def send_vote_invitation(recipient_name: str, recipient_email: str, ballot_title
 
 def _send_message(sender: str, recipient: str, message: MIMEMultipart) -> None:
     """Connect to the Docker mailserver or configured SMTP relay and send one message."""
+    # Some SMTP relays reject messages without RFC 5322 metadata.
+    if "Date" not in message:
+        message["Date"] = formatdate(localtime=True)
+    if "Message-ID" not in message:
+        message["Message-ID"] = make_msgid(domain=sender.split("@")[-1])
+
     server_name = current_app.config["SMTP_SERVER"]
     port = current_app.config["SMTP_PORT"]
     username = current_app.config["SMTP_USERNAME"]
